@@ -1,0 +1,177 @@
+.header-wrapper {
+  width: 100%;
+  z-index: var(--header-nav-z-index);
+}
+
+.site-header {
+  padding-block: var(--space-m);
+  text-decoration: none;
+  font-size: var(--size-step--1);
+
+  /* Use this if we want the header aligned with the
+    content of the page */
+  width: var(--content-width);
+  margin-inline: auto;
+
+  /* background: color-mix(in oklab, var(--body-bg) 35%, transparent); */
+  z-index: var(--header-nav-z-index);
+}
+
+.site-header__logo {
+  font-size: var(--size-step-0);
+  font-family: var(--font-heading);
+  font-weight: 300;
+  text-transform: uppercase;
+
+  text-shadow:
+    2px 2px 8px rgba(0, 0, 0, 0.8),
+    0 0 4px rgba(0, 0, 0, 0.9);
+}
+
+.site-header__logo a {
+  text-decoration: none;
+}
+
+.site-header__logo a:hover {
+  /* Option to add something if desired */
+}
+
+.site-header__nav-wrapper {
+  z-index: var(--header-nav-z-index);
+}
+
+.site-header__nav-toggle {
+  display: none;
+}
+
+.site-header__nav-list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-l);
+  padding: 0;
+  margin: 0;
+
+  list-style: none;
+  text-decoration: none;
+}
+
+.site-header__nav-list-item {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-header__nav-list-item[data-current="true"],
+.site-header__nav-list-item[aria-current="page"] {
+  /* text-decoration: underline; */
+}
+
+.site-header__nav-list-item:hover,
+.site-header__nav-list-item:focus {
+  /* Not doing anything by default */
+}
+
+.site-header__nav-toggle[aria-expanded="false"] .site-header__nav-toggle__icon-open {
+  display: block;
+}
+
+.site-header__nav-toggle[aria-expanded="true"] .site-header__nav-toggle__icon-open {
+  display: none;
+}
+
+.site-header__nav-toggle[aria-expanded="false"] .site-header__nav-toggle__icon-close {
+  display: none;
+}
+
+.site-header__nav-toggle[aria-expanded="true"] .site-header__nav-toggle__icon-close {
+  display: block;
+}
+
+/* @keyframes spin-counter-clockwise {
+  from {
+    transform: rotate(180deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes spin-clockwise {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(180deg);
+  }
+}
+
+.site-header__nav-toggle.was-clicked .site-header__nav-toggle__icon-open {
+  animation: spin-counter-clockwise 350ms ease-in-out;
+}
+
+.site-header__nav-toggle__icon-close {
+  animation: spin-clockwise 350ms ease-in-out;
+} */
+
+@media (max-width: 48rem) {
+  /* Removed fixed positioning from header-wrapper to prevent hero section shift.
+     The nav-list overlay is already position: fixed, so this is not needed. */
+  /* .header-wrapper:has(.site-header__nav-list[data-visible="true"]) {
+    position: fixed;
+    inset: 0;
+  } */
+
+  .site-header__nav-list {
+    position: fixed;
+    inset: 0 0 0 0;
+
+    padding-inline: var(--space-xl) !important;
+    padding-block: var(--space-m) !important;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-s);
+
+    font-size: var(--size-step-2);
+    visibility: hidden;
+    background: var(--body-bg);
+    opacity: 0;
+    transition:
+      opacity 250ms ease-in-out,
+      visibility 250ms ease-in-out;
+  }
+
+  .site-header__nav-list[data-visible="true"] {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .site-header__nav-toggle {
+    display: block;
+    background: transparent;
+    aspect-ratio: 1/1;
+    border: none;
+
+    position: absolute;
+    top: calc(var(--space-m) - 0.125rem);
+    right: 1rem;
+    cursor: pointer;
+    padding: 0;
+    cursor: pointer;
+    z-index: var(--header-nav-z-index);
+  }
+
+  .site-header__nav-toggle svg {
+    width: 2rem;
+    height: 2rem;
+    color: var(--color-text);
+  }
+}
+
+button.site-header__action-button {
+  font-size: var(--size-step-2);
+  border: 1px solid red;
+}

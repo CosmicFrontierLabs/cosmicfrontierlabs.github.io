@@ -1,0 +1,41 @@
+---
+import "../styles/main.scss";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content="Cosmic Frontier Labs is building a new class of scientific tools to accelerate discovery and exploration of the Universe through abundant space telescopes." />
+    <meta name="theme-color" content="#1a1a1f" />
+    <title>Cosmic Frontier Labs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Nata+Sans:wght@100..900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <script is:inline>
+      // Stop animations on resize
+      // https://css-tricks.com/stop-animations-during-window-resizing/
+      let resizeTimer;
+      window.addEventListener("resize", () => {
+        document.body.classList.add("resize-animation-stopper");
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          document.body.classList.remove("resize-animation-stopper");
+        }, 400);
+      });
+    </script>
+    <Header />
+    <main id="content">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

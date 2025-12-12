@@ -1,0 +1,64 @@
+.button {
+  --button-bg: var(--color-primary);
+  --button-text: var(--color-text-on-primary);
+  --button-x-padding: 1em;
+  --button-y-padding: 0.5em;
+  --button-gutter: 0.5ch;
+  --button-border: 1px solid var(--color-primary);
+  --button-color-focus: var(--color-primary);
+  --button-border-radius: var(--radius-s);
+  --button-font-size: var(--size-step-0);
+
+  display: inline-flex;
+  gap: var(--button-gutter);
+  align-items: center;
+  justify-content: center;
+  line-height: var(--leading-flat);
+  position: relative;
+  border: var(--button-border);
+  cursor: pointer;
+  background: var(--button-bg);
+  color: var(--button-text);
+  padding: var(--button-y-padding) var(--button-x-padding);
+  text-decoration: none;
+  font-size: var(--font-size);
+  font-weight: var(--font-regular);
+  border-radius: var(--button-border-radius);
+}
+
+.button:hover {
+  filter: brightness(105%);
+}
+
+.button:active {
+  transform: scale(99%);
+}
+
+.button[data-type="ghost"] {
+  /* Consider adding hover state */
+  --button-bg: transparent;
+  --button-text: var(--color-primary);
+  --button-border: 2px solid var(--color-primary);
+}
+
+.button[data-type="text"] {
+  --button-bg: transparent;
+  --button-text: inherit;
+}
+
+.button[data-type="circle-icon"] {
+  --button-x-padding: 0;
+  --button-y-padding: 0;
+  --button-border: none;
+  --button-border-radius: var(--radius-round);
+  --button-bg: var(--color-global-text);
+  aspect-ratio: 1/1;
+}
+
+.button[data-bigger] {
+  font-size: var(--size-step-1);
+}
+
+.button[data-smaller] {
+  font-size: var(--size-step--1);
+}

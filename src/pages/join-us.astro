@@ -1,0 +1,91 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { readFileSync } from "fs";
+import { join } from "path";
+import yaml from "js-yaml";
+
+const jobsYamlPath = join(process.cwd(), "src/site-content/jobs.yaml");
+const jobsFile = readFileSync(jobsYamlPath, "utf-8");
+const allPositions = yaml.load(jobsFile) as Array<{
+  title: string;
+  location: string;
+  greenhouseLink: string;
+  isDraft?: boolean;
+}>;
+const positions = allPositions.filter((p) => !p.isDraft);
+---
+
+<Layout>
+    <section class="flow join-us">
+        <h1>Join Us</h1>
+        {positions.length > 0 ? (
+            <ul class="flow">
+                {positions.map((position) => (
+                    <li>
+                        <article>
+                            <h2>
+                                <a 
+                                    target="_blank" 
+                                    href={position.greenhouseLink}
+                                    rel="noopener noreferrer"
+                                    aria-label={`${position.title} - ${position.location} (opens in new window)`}
+                                >
+                                    {position.title}
+                                </a>
+                            </h2>
+                            <p class="join-us__location">{position.location}</p>
+                        </article>
+                    </li>
+                ))}
+            </ul>
+        ) : (
+            <p class="join-us__coming-soon">Job posts coming soon</p>
+        )}
+    </section>
+</Layout>
+
+
+<style>
+    .join-us ul {
+        --flow-space: 1lh;
+
+        padding-inline: 0;
+        max-width: 800px;
+        margin-block-start: var(--space-l);
+        font-size: var(--size-step--1);
+    }
+
+    .join-us li {
+        list-style: none;
+    }
+
+    .join-us article {
+        display: flex;
+        row-gap: var(--space-3xs);
+        column-gap: var(--space-s);
+        align-items: baseline;
+        flex-wrap: wrap;
+    }
+
+    .join-us article h2 {
+        margin: 0;
+        font-size: inherit;
+        max-width: none;
+        font-family: var(--font-sans);
+        font-weight: 400;
+    }
+
+    .join-us__location {
+        opacity: 0.9;
+        font-size: var(--size-step--2);
+        white-space: nowrap;
+        margin: 0;
+    }
+
+    .join-us__coming-soon {
+        max-width: 800px;
+        margin-block-start: var(--space-l);
+        font-size: var(--size-step--1);
+        opacity: 0.9;
+    }
+</style>

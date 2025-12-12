@@ -1,0 +1,186 @@
+---
+import Menu from "@lucide/astro/icons/menu";
+import X from "@lucide/astro/icons/x";
+const currentPage = Astro.url.pathname;
+
+// A good, but dense, guide is:
+// https://piccalil.li/blog/build-a-fully-responsive-progressively-enhanced-burger-menu/
+
+const navItems = [
+    {
+        label: "Blog",
+        href: "/blog",
+        isCurrent: currentPage === "/blog",
+    },
+    {
+        label: "Join Us",
+        href: "/join-us",
+        isCurrent: currentPage === "/join-us",
+    },
+    {
+        label: "Contact",
+        href: "/contact",
+        isCurrent: currentPage === "/contact",
+    },
+];
+---
+
+<script>
+    interface HTMLElementWithFocusTrap extends HTMLElement {
+        _focusTrapCleanup?: () => void;
+    }
+
+    function getFocusableElements(container: HTMLElement) {
+        return container.querySelectorAll(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+    }
+
+    function trapFocus(container: HTMLElement, firstElement: HTMLElement, lastElement: HTMLElement) {
+        function handleTabKey(e: KeyboardEvent) {
+            if (e.key !== 'Tab') return;
+
+            if (e.shiftKey) {
+                // Shift + Tab
+                if (document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+            } else {
+                // Tab
+                if (document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement.focus();
+                }
+            }
+        }
+
+        container.addEventListener('keydown', handleTabKey);
+        return () => container.removeEventListener('keydown', handleTabKey);
+    }
+
+    function onNavToggle() {
+        const primaryNav = document.getElementById("primary-nav") as HTMLElementWithFocusTrap | null;
+        const navToggleButton = document.getElementById("nav-toggle");
+
+        if (!primaryNav || !navToggleButton) {
+            console.error("Primary nav or nav toggle button not found");
+            return;
+        }
+
+        // Set this so that animations can be triggered. These
+        // are animations that we don't want to run on first load.
+        navToggleButton.classList.add("was-clicked");
+
+        // Remove was-clicked class after animation ends
+        navToggleButton.addEventListener(
+            "animationend",
+            () => {
+                navToggleButton.classList.remove("was-clicked");
+            },
+            { once: true },
+        );
+
+        const isExpanded =
+            navToggleButton.getAttribute("aria-expanded")?.toString() !==
+            "true";
+
+        primaryNav.setAttribute("data-visible", isExpanded.toString());
+        navToggleButton.setAttribute("aria-expanded", isExpanded.toString());
+        navToggleButton.setAttribute(
+            "aria-label",
+            isExpanded ? "Close menu" : "Open menu",
+        );
+
+        // Focus management
+        if (isExpanded) {
+            // Menu is opening - trap focus
+            const focusableElements = getFocusableElements(primaryNav);
+            if (focusableElements.length > 0) {
+                const firstElement = focusableElements[0] as HTMLElement;
+                const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+                
+                // Focus first element
+                setTimeout(() => firstElement.focus(), 100);
+                
+                // Set up focus trap
+                primaryNav._focusTrapCleanup = trapFocus(primaryNav, firstElement, lastElement);
+            }
+        } else {
+            // Menu is closing - return focus to toggle button
+            navToggleButton.focus();
+            
+            // Clean up focus trap
+            if (primaryNav._focusTrapCleanup) {
+                primaryNav._focusTrapCleanup();
+                primaryNav._focusTrapCleanup = undefined;
+            }
+        }
+    }
+
+    function handleEscapeKey(e: KeyboardEvent) {
+        if (e.key === 'Escape') {
+            const primaryNav = document.getElementById("primary-nav");
+            const navToggleButton = document.getElementById("nav-toggle");
+            
+            if (primaryNav && navToggleButton) {
+                const isExpanded = navToggleButton.getAttribute("aria-expanded") === "true";
+                if (isExpanded) {
+                    onNavToggle();
+                }
+            }
+        }
+    }
+
+    const navToggle = document.getElementById("nav-toggle");
+    if (navToggle) {
+        navToggle.addEventListener("click", onNavToggle);
+    }
+
+    // Add Escape key handler
+    document.addEventListener("keydown", handleEscapeKey);
+</script>
+
+<div class="header-wrapper">
+<header class="site-header | repel">
+    <a class="skip-link visually-hidden" href="#content">Skip to main content</a
+    >
+    <div class="site-header__logo">
+        <a href="/">Cosmic Frontier Labs</a>
+    </div>
+    <div class="site-header__nav-wrapper">
+        <button
+            id="nav-toggle"
+            class="site-header__nav-toggle"
+            type="button"
+            aria-label="Open menu"
+            aria-controls="primary-nav"
+            aria-expanded="false">
+            <span class="visually-hidden" aria-hidden="true">Menu</span>
+            <Menu class="site-header__nav-toggle__icon-open" aria-hidden="true" />
+            <X class="site-header__nav-toggle__icon-close" aria-hidden="true" />
+        </button>
+        <nav class="site-header__nav" aria-label="Main navigation">
+            <ul
+                id="primary-nav"
+                role="list"
+                class="site-header__nav-list"
+                data-visible="false">
+                {
+                    navItems.map((item) => (
+                        <li>
+                            <a 
+                                class="site-header__nav-list-item" 
+                                href={item.href}
+                                aria-current={item.isCurrent ? "page" : undefined}
+                            >
+                                {item.label}
+                            </a>
+                        </li>
+                    ))
+                }
+            </ul>
+        </nav>
+    </div>
+</header>
+</div>
