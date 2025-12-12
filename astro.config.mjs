@@ -8,7 +8,7 @@ import glslifyPlugin from "vite-plugin-glslify";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://cosmicfrontier.org",
+  site: "https://www.cosmicfrontier.org",
   integrations: [sitemap(), svelte(), lenis()],
   vite: {
     plugins: [glslifyPlugin()],

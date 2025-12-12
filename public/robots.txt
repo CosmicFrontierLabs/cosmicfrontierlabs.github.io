@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://cosmicfrontier.org/sitemap-index.xml
+Sitemap: https://www.cosmicfrontier.org/sitemap-index.xml
