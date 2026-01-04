@@ -1,0 +1,15 @@
+.site-footer {
+  min-height: 25vh;
+  /* background: var(--footer-bg); */
+  background: rgba(0, 0, 0, 0);
+  color: var(--color-text-on-primary);
+  font-size: var(--size-step--1);
+}
+
+.site-footer__inner {
+  --repel-vertical-alignment: flex-end;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  height: 100%;
+  padding-block-end: var(--space-l);
+}

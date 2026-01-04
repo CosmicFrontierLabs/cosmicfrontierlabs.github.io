@@ -1,0 +1,130 @@
+:root {
+  /* Colors */
+  /* Dark space theme: gray scale with subtle blue/purple tints for space atmosphere */
+  --color-gray-50: oklch(8% 0.01 260);
+  --color-gray-100: oklch(12% 0.015 260);
+  --color-gray-200: oklch(18% 0.02 260);
+  --color-gray-300: oklch(25% 0.025 260);
+  --color-gray-400: oklch(35% 0.03 260);
+  --color-gray-500: oklch(45% 0.035 260);
+  --color-gray-600: oklch(55% 0.04 260);
+  --color-gray-700: oklch(70% 0.03 260);
+  --color-gray-800: oklch(85% 0.02 260);
+  --color-gray-850: oklch(90% 0.01 260);
+  --color-gray-900: oklch(95% 0.01 260);
+
+  // Color from bloomparis's gray bg
+  --bloomparis-gray: oklch(0.881 0.0135 262.38);
+
+  --color-primary: oklch(55% 0.15 270);
+  --color-primary-light: oklch(70% 0.12 270);
+  --color-primary-dark: oklch(40% 0.18 270);
+
+  --body-bg: var(--color-gray-100);
+  --footer-bg: var(--color-gray-100);
+  --color-text: var(--bloomparis-gray);
+  --color-text-on-primary: var(--color-gray-850);
+  --color-text-mid: var(--color-gray-700);
+  --color-heading: var(--color-primary-light);
+  --color-focus: var(--color-primary-light);
+
+  --content-width: clamp(min(calc(100% - 2rem), 400px), calc(100% - 2rem), 74rem);
+  --content-width-narrow: clamp(min(100%, 250px), calc(100% - 2rem), 40rem);
+
+  /* Typography */
+  --font-mono:
+    "Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-heading: "Nata Sans", system-ui, sans-serif;
+  --font-base: var(--font-sans);
+  --font-decorative: var(--font-sans);
+
+  /* Font Weights */
+  --font-light: 300;
+  --font-regular: 400;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 500;
+  --font-bold: 700;
+  --font-black: 900;
+
+  /* Leading (Line Height) */
+  --leading-loose: 1.5;
+  --leading-tight: 1.2;
+  --leading-flat: 1;
+
+  /* Flow Space */
+  --flow-space: 1em;
+
+  /* Borders */
+  --stroke: 1px solid rgba(255, 255, 255, 0.15);
+  --stroke-solid: 1px solid var(--color-gray-600);
+
+  /* Border Radius */
+  --radius-s: 0.25rem;
+  --radius-m: 0.5rem;
+  --radius-l: 1rem;
+  --radius-xl: 2rem;
+  --radius-2xl: 4rem;
+
+  /* Forms */
+  --form-input-bg: var(--color-gray-100);
+
+  /* Focus */
+  --focus-offset: 0.2em;
+
+  /* Z-index */
+  --header-nav-z-index: 100;
+
+  /* Others */
+  --hr-stroke: var(--stroke);
+  --gutter: var(--space-m);
+  --wrapper-max-width: 108rem;
+
+  /* Breakpoints */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 72rem;
+}
+
+/* @link https://utopia.fyi/type/calculator?c=320,18,1.2,1240,20,1.25,7,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
+
+:root {
+  --size-step--2: clamp(0.7813rem, 0.7747rem + 0.0326vw, 0.8rem);
+  --size-step--1: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
+  --size-step-0: clamp(1.125rem, 1.0815rem + 0.2174vw, 1.25rem);
+  --size-step-1: clamp(1.35rem, 1.2761rem + 0.3696vw, 1.5625rem);
+  --size-step-2: clamp(1.62rem, 1.5041rem + 0.5793vw, 1.9531rem);
+  --size-step-3: clamp(1.944rem, 1.771rem + 0.8651vw, 2.4414rem);
+  --size-step-4: clamp(2.3328rem, 2.0827rem + 1.2504vw, 3.0518rem);
+  --size-step-5: clamp(2.7994rem, 2.4462rem + 1.7658vw, 3.8147rem);
+  --size-step-6: clamp(3.3592rem, 2.8691rem + 2.4507vw, 4.7684rem);
+  --size-step-7: clamp(4.0311rem, 3.36rem + 3.3555vw, 5.9605rem);
+}
+
+/* @link https://utopia.fyi/space/calculator?c=320,18,1.2,1240,20,1.25,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
+
+:root {
+  --space-3xs: clamp(0.3125rem, 0.3125rem + 0vw, 0.3125rem);
+  --space-2xs: clamp(0.5625rem, 0.5408rem + 0.1087vw, 0.625rem);
+  --space-xs: clamp(0.875rem, 0.8533rem + 0.1087vw, 0.9375rem);
+  --space-s: clamp(1.125rem, 1.0815rem + 0.2174vw, 1.25rem);
+  --space-m: clamp(1.6875rem, 1.6223rem + 0.3261vw, 1.875rem);
+  --space-l: clamp(2.25rem, 2.163rem + 0.4348vw, 2.5rem);
+  --space-xl: clamp(3.375rem, 3.2446rem + 0.6522vw, 3.75rem);
+  --space-2xl: clamp(4.5rem, 4.3261rem + 0.8696vw, 5rem);
+  --space-3xl: clamp(6.75rem, 6.4891rem + 1.3043vw, 7.5rem);
+
+  /* One-up pairs */
+  --space-3xs-2xs: clamp(0.3125rem, 0.2038rem + 0.5435vw, 0.625rem);
+  --space-2xs-xs: clamp(0.5625rem, 0.4321rem + 0.6522vw, 0.9375rem);
+  --space-xs-s: clamp(0.875rem, 0.7446rem + 0.6522vw, 1.25rem);
+  --space-s-m: clamp(1.125rem, 0.8641rem + 1.3043vw, 1.875rem);
+  --space-m-l: clamp(1.6875rem, 1.4049rem + 1.413vw, 2.5rem);
+  --space-l-xl: clamp(2.25rem, 1.7283rem + 2.6087vw, 3.75rem);
+  --space-xl-2xl: clamp(3.375rem, 2.8098rem + 2.8261vw, 5rem);
+  --space-2xl-3xl: clamp(4.5rem, 3.4565rem + 5.2174vw, 7.5rem);
+
+  /* Custom pairs */
+  --space-s-l: clamp(1.125rem, 0.6467rem + 2.3913vw, 2.5rem);
+}

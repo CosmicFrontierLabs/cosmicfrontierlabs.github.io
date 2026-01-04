@@ -1,0 +1,24 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+    let blogs = await getCollection("blog");
+    // blogs = blogs.filter((blog) => !blog.data.isDraft);
+
+    return blogs.map((blog) => ({
+        params: { slug: blog.data.slug },
+        props: { blog },
+    }));
+}
+
+const { blog } = Astro.props;
+const { Content } = await render(blog);
+---
+
+<Layout>
+    <section class="flow blog-post">
+        <h1>{blog.data.title}</h1>
+        <Content />
+    </section>
+</Layout>

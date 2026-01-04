@@ -1,0 +1,65 @@
+.visually-hidden:not(:focus):not(:active) {
+  /* https://www.a11yproject.com/posts/how-to-hide-content/ */
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1rem;
+  background: var(--body-bg);
+  z-index: calc(var(--header-nav-z-index) + 1);
+  width: auto;
+  height: auto;
+  clip: auto;
+  clip-path: none;
+}
+
+.resize-animation-stopper * {
+  animation: none !important;
+  transition: none !important;
+}
+
+.max-w-normal {
+  max-width: var(--content-width);
+}
+
+.max-w-narrow {
+  max-width: var(--content-width-narrow);
+}
+
+.max-w-full {
+  max-width: 100%;
+}
+
+.align-start {
+  align-self: flex-start;
+}
+
+.full-bleed {
+  /* https: //piccalil.li/blog/creating-a-full-bleed-css-utility/ */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+.bg-glass {
+  /* From https://css.glass */
+
+  --bg-glass-color: var(--color-primary);
+  --bg-glass-opacity: 0.7;
+  --bg-glass-blur: 16px;
+
+  background: rgb(from var(--bg-glass-color) r g b / var(--bg-glass-opacity));
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(var(--bg-glass-blur));
+  -webkit-backdrop-filter: blur(var(--bg-glass-blur));
+  border: 1px solid rgb(from var(--bg-glass-color) r g b / 0.21);
+}
