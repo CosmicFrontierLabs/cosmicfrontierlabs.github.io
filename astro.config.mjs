@@ -13,7 +13,7 @@ export default defineConfig({
   vite: {
     plugins: [glslifyPlugin()],
     ssr: {
-      noExternal: ["@lucide/astro"],
+      noExternal: ["@lucide/astro", "gsap"],
     },
   },
   devToolbar: {
