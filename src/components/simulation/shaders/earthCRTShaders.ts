@@ -17,7 +17,7 @@ export const earthCRTVertexShader = `
  */
 export const earthCRTFragmentShader = `
   const vec3 BG_COLOR = vec3(0.15);
-  const vec3 CYAN = vec3(0.0, 1.0, 1.0);
+  const vec3 CYAN = vec3(0.1, 0.75, 0.75);
   uniform sampler2D uTexture;
   uniform float uGridDensity;
   uniform float uGridThickness;
@@ -51,13 +51,15 @@ export const earthCRTFragmentShader = `
     float cyanEdge = 0.05;
     // Define three bands for the cyan effect
     vec2 bands[3];
-    bands[0] = vec2(0.0, 0.05);
-    bands[1] = vec2(0.3, 0.35);
-    bands[2] = vec2(0.65, 0.70);
+    bands[0] = vec2(0.0, 0.03);
+    bands[1] = vec2(0.3, 0.33);
+    bands[2] = vec2(0.67, 0.70);
     float tCyan = 0.0;
+
+    float timeAdj = remap(sin(0.2 * uTime), -1.0, 1.0, 0.0, 1.0);
     for (int i = 0; i < 3; ++i) {
       vec2 band = bands[i];
-      band = fract(band + sin(.1 * uTime));
+      band = fract(band + timeAdj);
       float t =
         smoothstep(band.x - cyanEdge, band.x + cyanEdge, vUv.y) *
         (1.0 - smoothstep(band.y - cyanEdge, band.y + cyanEdge, vUv.y));
