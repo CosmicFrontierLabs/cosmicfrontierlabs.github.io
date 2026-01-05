@@ -17,12 +17,21 @@ export const earthCRTVertexShader = `
  */
 export const earthCRTFragmentShader = `
   const vec3 BG_COLOR = vec3(0.15);
+  const vec3 CYAN = vec3(0.0, 1.0, 1.0);
   uniform sampler2D uTexture;
   uniform float uGridDensity;
   uniform float uGridThickness;
   uniform float uGridAntialiasWidth;
   uniform vec3 uGridColor;
   varying vec2 vUv;
+
+  float inverseLerp(float value, float inMin, float inMax) {
+    return (value - inMin) / (inMax - inMin);
+  }
+  
+  float remap(float value, float inMin, float inMax, float outMin, float outMax) {
+    return inverseLerp(value, inMin, inMax) * (outMax - outMin) + outMin;
+  }
 
   void main() {
     vec3 color = BG_COLOR;
@@ -38,6 +47,13 @@ export const earthCRTFragmentShader = `
     color = mix(color, uGridColor, gridLine);
 
     // Apply the cyan effect
+    float cyanEdge = 0.05;
+    vec2 band = vec2(0.7, 0.9);
+    float t1 =
+      smoothstep(band.x - cyanEdge, band.x + cyanEdge, vUv.y) * 
+      (1.0 - smoothstep(band.y - cyanEdge, band.y + cyanEdge, vUv.y));
+    t1 = remap(t1, 0.0, 1.0, 0.0, 1.0);
+    color = mix(color, CYAN, t1 * gridLine);
 
     // Mask out water to the background color
     vec4 texture = texture2D(uTexture, vUv);
