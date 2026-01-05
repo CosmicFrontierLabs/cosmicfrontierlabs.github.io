@@ -1,10 +1,28 @@
-- title: "Senior Software Engineer"
-  location: "San Francisco"
-  greenhouseLink: "https://boards.greenhouse.io/example/senior-software-engineer"
-  isDraft: true
+- title: "Firmware Engineer"
+  location: "SF Bay Area"
+  description: |
+    We're looking for a firmware engineer to build the systems that control our telescopes—bridging high-level software and low-level electronics.
 
-- title: "Space Engineer"
-  location: "San Francisco"
-  greenhouseLink: "https://boards.greenhouse.io/example/space-engineer"
-  isDraft: true
+    You'll work on embedded systems, real-time control, and the interfaces between flight software and hardware. Experience with the NVIDIA Orin ecosystem is valuable. Rust experience is a plus. Hardware-in-the-loop (HIL) testing experience is a bonus.
+
+    Intrinsic motivation matters most. If you care deeply about building reliable systems for space, we want to talk.
+  isDraft: false
+
+- title: "Test Engineer"
+  location: "SF Bay Area"
+  description: |
+    We're looking for a test engineer to validate hardware and software across our telescope systems—making sure what we build actually works.
+
+    You'll design and run tests, build test fixtures, write automation, and help us understand how our systems behave under real conditions. Experience with sensor characterization is a bonus—optical systems, gyros, thermal control loops, or similar.
+
+    If you love finding edge cases and breaking things before they break themselves, we want to talk.
+  isDraft: false
+
+- title: "Write Your Own Role"
+  location: "SF Bay Area"
+  description: |
+    Don't see your role listed? We're building something new, and we might need skills we haven't thought to ask for yet.
+
+    Tell us what you do, why you're excited about abundant space telescopes, and what you'd bring to the mission.
+  isDraft: false
 

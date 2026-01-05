@@ -19,8 +19,9 @@
       id: "problem",
       title: "Space Astronomy is at risk",
       text: [
-        "By 2050, we may have no operational space telescopes. The tools that power discovery, inspire new scientists, and expand our understanding of the universe are on track to disappear.",
-        "Today's model of building single, massive observatories is slow, expensive, and fragile. Each mission takes decades and carries enormous risk. If one telescope fails, an entire generation of science can stall with it.",
+        "Humanity peers at the cosmos through a handful of telescopes. The waiting lists stretch for years. Most proposals never get time. The universe is vast, but our windows into it are few.",
+        "Today's model of building single, massive observatories is slow, expensive, and fragile. Each mission takes decades. When everything rides on one launch, costs and schedules balloon.",
+        "When telescope time is scarce and missions can't fail, only 'safe' science gets funded. Incremental questions win over bold ones. The proposals most likely to revolutionize our understanding—the ones that challenge assumptions and risk being wrong—are the first to be cut. We're optimizing for caution when we should be optimizing for discovery.",
       ],
       image: "/images/problem.jpg",
     },
@@ -28,9 +29,9 @@
       id: "vision",
       title: "Abundant space telescopes",
       text: [
-        "Imagine expanding humanity's cosmic horizons by scaling up the number and capability of orbital observatories, bringing Hubble-quality to fleets of telescopes rather than single flagships. By redesigning precision instruments for manufacturability and iteration, the team is moving space astronomy from an era of scarcity to one of abundance, continuous innovation, and exponential discovery.",
-        "These telescopes will form a platform for science that evolves as quickly as the questions we ask. We will build the platform iteratively, to continuously integrate new detectors, optics, and algorithms on successive units.",
-        "In this near future, exploring the cosmos won't depend on waiting decades for the next great observatory, but on a living, growing constellation of instruments; each a window into the expanding frontier of human understanding.",
+        "Cosmic Frontier is taking the space telescope through a technoeconomic phase change. We're redesigning orbital observatories from first principles—collapsing costs, compressing timelines, and advancing performance simultaneously. Not incremental improvement. Fundamental transformation.",
+        "We build iteratively. Each telescope informs the next. New detectors, refined optics, lessons from orbit—integrated continuously rather than frozen into decade-long development cycles. A platform that evolves as fast as the science demands.",
+        "The result: fleets of capable telescopes instead of lone flagships. Telescope time that isn't rationed. Ambitious science that doesn't wait. Access to the cosmos at the scale of human curiosity.",
       ],
       image: "/images/vision.jpg",
     },
@@ -38,9 +39,9 @@
       id: "impact",
       title: "Unlock Scientific Discovery",
       text: [
-        "A larger constellation increases observing time, expands coverage across the sky, and captures events that single observatories routinely miss. With many instruments working together, scientists can study the Universe with higher cadence, greater detail, and unprecedented breadth.",
-        "This scale enables research impossible with one or two flagship missions. We can monitor dynamic phenomena continuously, survey vast regions of space in parallel, and follow up discoveries in real time. Every additional telescope multiplies the scientific return.",
-        "When we increase the capacity of space astronomy, we accelerate discovery itself, opening the door to insights we can't yet imagine.",
+        "More telescopes means more than just more time. It means flying newer instruments—incorporating the latest detectors and techniques instead of technology frozen years before launch. It means variety: different wavelengths, specialized sensors, instruments purpose-built for specific questions.",
+        "Our platform opens space to research groups who've never had a path to orbit. Universities and labs can fly their own instruments, pursuing science that would never survive the flagship proposal process. This isn't just more observing time—it's more observers, more questions, more ways of seeing.",
+        "When we broaden access to space, we broaden what gets discovered. The next breakthrough won't come from a single flagship. It will come from the instrument no one expected, asking the question no one else thought to ask.",
       ],
       image: "/images/impact.jpg",
     },
@@ -232,7 +233,7 @@
 <div class="hero">
   <div class="hero__content">
     <div class="hero__content__text">
-      <span class="hero__subtitle">Building the future of space astronomy</span>
+      <span class="hero__subtitle">Every unanswered question is a telescope we haven't built</span>
     </div>
     <div class="hero__content__simulation">
       <SimulationComponent />

@@ -9,77 +9,132 @@ const jobsFile = readFileSync(jobsYamlPath, "utf-8");
 const allPositions = yaml.load(jobsFile) as Array<{
   title: string;
   location: string;
-  greenhouseLink: string;
+  description: string;
   isDraft?: boolean;
 }>;
 const positions = allPositions.filter((p) => !p.isDraft);
+
+// ROT-13 encode the email to deter simple scrapers
+const rot13 = (str: string) => str.replace(/[a-zA-Z]/g, (c) =>
+  String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c.charCodeAt(0) + 13) ? c.charCodeAt(0) + 13 : c.charCodeAt(0) - 13)
+);
+const obfuscatedEmail = rot13("jobs@cosmicfrontier.org");
+const keyword = "LANIAKEA";
 ---
 
 <Layout>
     <section class="flow join-us">
         <h1>Join Us</h1>
+        <p class="join-us__subtitle">Telescope wanted for hazardous journey. Vacuum, radiation, thermal extremes. Safe return doubtful. Honour and recognition in event of success.</p>
+        <p class="join-us__cta">Help us build it.</p>
         {positions.length > 0 ? (
-            <ul class="flow">
+            <div class="join-us__positions flow">
                 {positions.map((position) => (
-                    <li>
-                        <article>
-                            <h2>
-                                <a 
-                                    target="_blank" 
-                                    href={position.greenhouseLink}
-                                    rel="noopener noreferrer"
-                                    aria-label={`${position.title} - ${position.location} (opens in new window)`}
-                                >
-                                    {position.title}
-                                </a>
-                            </h2>
-                            <p class="join-us__location">{position.location}</p>
-                        </article>
-                    </li>
+                    <details class="join-us__position">
+                        <summary>
+                            <span class="join-us__position-title">{position.title}</span>
+                            <span class="join-us__position-location">{position.location}</span>
+                        </summary>
+                        <div class="join-us__position-description">
+                            {position.description.split('\n\n').map((paragraph: string) => (
+                                <p>{paragraph}</p>
+                            ))}
+                        </div>
+                    </details>
                 ))}
-            </ul>
+                <p class="join-us__apply">
+                    To apply, email <a class="obfuscated-email" data-encoded={obfuscatedEmail} href="#">[enable JavaScript to see email]</a> with
+                    the subject line including <strong>"{keyword}"</strong> and the position title.
+                </p>
+            </div>
         ) : (
             <p class="join-us__coming-soon">Job posts coming soon</p>
         )}
     </section>
+
+    <script>
+        // ROT-13 decode for obfuscated emails
+        const rot13 = (str: string) => str.replace(/[a-zA-Z]/g, (c) =>
+            String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c.charCodeAt(0) + 13) ? c.charCodeAt(0) + 13 : c.charCodeAt(0) - 13)
+        );
+
+        document.querySelectorAll('.obfuscated-email').forEach((el) => {
+            const encoded = el.getAttribute('data-encoded');
+            if (encoded) {
+                const decoded = rot13(encoded);
+                el.textContent = decoded;
+                el.setAttribute('href', `mailto:${decoded}`);
+            }
+        });
+    </script>
 </Layout>
 
 
 <style>
-    .join-us ul {
-        --flow-space: 1lh;
-
-        padding-inline: 0;
+    .join-us__positions {
+        --flow-space: var(--space-s);
         max-width: 800px;
         margin-block-start: var(--space-l);
-        font-size: var(--size-step--1);
     }
 
-    .join-us li {
-        list-style: none;
+    .join-us__position {
+        border: 1px solid var(--color-gray-700);
+        padding: var(--space-s);
     }
 
-    .join-us article {
+    .join-us__position[open] {
+        padding-block-end: var(--space-m);
+    }
+
+    .join-us__position summary {
+        cursor: pointer;
         display: flex;
+        flex-wrap: wrap;
         row-gap: var(--space-3xs);
         column-gap: var(--space-s);
         align-items: baseline;
-        flex-wrap: wrap;
+        list-style: none;
     }
 
-    .join-us article h2 {
-        margin: 0;
-        font-size: inherit;
-        max-width: none;
-        font-family: var(--font-sans);
+    .join-us__position summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .join-us__position summary::before {
+        content: "+";
         font-weight: 400;
+        margin-inline-end: var(--space-xs);
     }
 
-    .join-us__location {
-        opacity: 0.9;
-        font-size: var(--size-step--2);
-        white-space: nowrap;
-        margin: 0;
+    .join-us__position[open] summary::before {
+        content: "−";
+    }
+
+    .join-us__position-title {
+        font-weight: 500;
+    }
+
+    .join-us__position-location {
+        opacity: 0.7;
+        font-size: var(--size-step--1);
+    }
+
+    .join-us__position-description {
+        margin-block-start: var(--space-m);
+        padding-inline-start: var(--space-m);
+        font-size: var(--size-step--1);
+        max-width: 60ch;
+    }
+
+    .join-us__position-description p {
+        margin-block: var(--space-s);
+    }
+
+    .join-us__apply {
+        margin-block-start: var(--space-l);
+        padding-block-start: var(--space-m);
+        border-top: 1px solid var(--color-gray-700);
+        font-size: var(--size-step--1);
     }
 
     .join-us__coming-soon {
@@ -87,5 +142,19 @@ const positions = allPositions.filter((p) => !p.isDraft);
         margin-block-start: var(--space-l);
         font-size: var(--size-step--1);
         opacity: 0.9;
+    }
+
+    .join-us__subtitle {
+        max-width: 50ch;
+        font-size: var(--size-step-0);
+        font-style: italic;
+        margin: 0;
+    }
+
+    .join-us__cta {
+        font-size: var(--size-step-1);
+        font-weight: 600;
+        font-style: normal;
+        margin-block-start: var(--space-m);
     }
 </style>
