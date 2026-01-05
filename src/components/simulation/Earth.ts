@@ -13,12 +13,14 @@ export class Earth {
   private texture: THREE.Texture | null = null;
   private rotationSpeed: number;
   private scene: THREE.Scene;
+  private time: number;
 
   constructor(scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
     const config = simulationConfig.earth;
     this.scene = scene;
     this.rotationSpeed = config.rotationSpeed;
     this.geometry = new THREE.SphereGeometry(config.radius, config.segments, config.segments);
+    this.time = 0.0;
 
     // Load texture asynchronously
     const textureLoader = new THREE.TextureLoader();
@@ -45,6 +47,7 @@ export class Earth {
             uGridThickness: { value: 0.2 }, // Grid line thickness
             uGridAntialiasWidth: { value: 0.5 }, // Antialiasing width for smooth grid edges
             uGridColor: { value: new THREE.Color(simulationConfig.baseColor) }, // Bright neon CRT green
+            uTime: { value: this.time },
           },
           transparent: false,
           depthTest: true,
@@ -70,6 +73,11 @@ export class Earth {
   update(delta: number): void {
     if (this.mesh) {
       this.mesh.rotation.y += this.rotationSpeed * delta;
+    }
+
+    if (this.material) {
+      this.time += delta;
+      this.material.uniforms.uTime.value = this.time; 
     }
   }
 
