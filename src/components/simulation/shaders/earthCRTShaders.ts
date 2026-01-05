@@ -17,7 +17,7 @@ export const earthCRTVertexShader = `
  */
 export const earthCRTFragmentShader = `
   const vec3 BG_COLOR = vec3(0.15);
-  const vec3 CYAN = vec3(0.1, 0.75, 0.75);
+  const vec3 CYAN = vec3(0.55, 1.00, 1.00);
   uniform sampler2D uTexture;
   uniform float uGridDensity;
   uniform float uGridThickness;
@@ -56,19 +56,21 @@ export const earthCRTFragmentShader = `
 
     float cyanEdge = 0.05;
     float tCyan = 0.0;
-    float timeAdj = remap(sin(0.2 * uTime), -1.0, 1.0, 0.0, 1.0);
     for (int i = 0; i < 3; ++i) {
       vec2 band = bands[i];
-      band = fract(band + timeAdj);
       float t =
         smoothstep(band.x - cyanEdge, band.x + cyanEdge, vUv.y) *
         (1.0 - smoothstep(band.y - cyanEdge, band.y + cyanEdge, vUv.y));
       t = remap(t, 0.0, 1.0, 0.0, 1.0);
       tCyan += t;
     }
-    // TODO: Could also adjust the intensity of the cyan randomly or over time
+    
     tCyan = clamp(tCyan, 0.0, 1.0);
     color = mix(color, CYAN, tCyan * gridLine);
+
+    // Add in the red.
+    // TODO: localize the red to around the bands
+    color = mix(color, vec3(1.0, 0.85, 0.85), gridLine * (1.0 - tCyan));
 
     // Mask out water to the background color
     vec4 texture = texture2D(uTexture, vUv);
