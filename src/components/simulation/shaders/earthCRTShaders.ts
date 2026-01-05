@@ -48,14 +48,14 @@ export const earthCRTFragmentShader = `
     color = mix(color, uGridColor, gridLine);
 
     // Apply the cyan effect
-    float cyanEdge = 0.05;
     // Define three bands for the cyan effect
     vec2 bands[3];
     bands[0] = vec2(0.0, 0.03);
     bands[1] = vec2(0.3, 0.33);
     bands[2] = vec2(0.67, 0.70);
-    float tCyan = 0.0;
 
+    float cyanEdge = 0.05;
+    float tCyan = 0.0;
     float timeAdj = remap(sin(0.2 * uTime), -1.0, 1.0, 0.0, 1.0);
     for (int i = 0; i < 3; ++i) {
       vec2 band = bands[i];
@@ -66,6 +66,7 @@ export const earthCRTFragmentShader = `
       t = remap(t, 0.0, 1.0, 0.0, 1.0);
       tCyan += t;
     }
+    // TODO: Could also adjust the intensity of the cyan randomly or over time
     tCyan = clamp(tCyan, 0.0, 1.0);
     color = mix(color, CYAN, tCyan * gridLine);
 
