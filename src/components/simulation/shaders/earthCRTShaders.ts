@@ -19,6 +19,7 @@ export const earthCRTFragmentShader = `
   const vec3 BG_COLOR = vec3(0.16, 0.15, 0.15);
   const vec3 GRID_COLOR = vec3(0.99, 0.92, 0.92);
   const vec3 CYAN = vec3(0.55, 0.95, 0.95);
+  const vec3 RED = vec3(0.95, 0.65, 0.65);
 
   uniform sampler2D uTexture;
   uniform float uGridDensity;
@@ -62,6 +63,24 @@ export const earthCRTFragmentShader = `
     float gridLine = 1.0 - smoothstep(edge0, edge1, gridDist);
     color = mix(color, GRID_COLOR, gridLine);
 
+    // Red bands
+    vec2 redBand = vec2(0.70, 0.71);
+    float tRed = applyBand(redBand);
+    color = mix(color, RED, tRed * gridLine);
+
+    redBand = vec2(0.65, 0.66);
+    tRed = applyBand(redBand);
+    color = mix(color, RED, tRed * gridLine);
+
+    redBand = vec2(0.72, 0.73);
+    tRed = applyBand(redBand);
+    color = mix(color, RED, tRed * gridLine);
+
+    redBand = vec2(0.77, 0.78);
+    tRed = applyBand(redBand);
+    color = mix(color, RED, tRed * gridLine);
+
+    // Cyan bands
     vec2 cyanBand = vec2(0.66, 0.70);
     float tCyan = applyBand(cyanBand);
     color = mix(color, CYAN, tCyan * gridLine);
@@ -73,6 +92,7 @@ export const earthCRTFragmentShader = `
     cyanBand = vec2(0.75, 0.76);
     tCyan = applyBand(cyanBand);
     color = mix(color, CYAN, tCyan * gridLine);
+
 
     // Mask out water to the background color
     vec4 texture = texture2D(uTexture, vUv);
