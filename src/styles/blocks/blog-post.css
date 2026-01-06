@@ -1,0 +1,16 @@
+.blog-post {
+  max-width: 60ch;
+  margin-inline: auto;
+}
+
+.blog-post h1 {
+  margin-block-end: var(--space-l);
+  line-height: var(--leading-flat);
+}
+
+.blog-post img {
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  margin-block: var(--space-m);
+}
