@@ -23,7 +23,7 @@
         "Today's model of building single, massive observatories is slow, expensive, and fragile. Each mission takes decades. When everything rides on one launch, costs and schedules balloon.",
         "When telescope time is scarce and missions can't fail, only 'safe' science gets funded. Incremental questions win over bold ones. The proposals most likely to revolutionize our understanding—the ones that challenge assumptions and risk being wrong—are the first to be cut. We're optimizing for caution when we should be optimizing for discovery.",
       ],
-      image: "/images/problem.jpg",
+      image: "/images/0-Space-512w.jpg",
     },
     {
       id: "vision",
@@ -33,7 +33,7 @@
         "We build iteratively. Each telescope informs the next. New detectors, refined optics, lessons from orbit—integrated continuously rather than frozen into decade-long development cycles. A platform that evolves as fast as the science demands.",
         "The result: fleets of capable telescopes instead of lone flagships. Telescope time that isn't rationed. Ambitious science that doesn't wait. Access to the cosmos at the scale of human curiosity.",
       ],
-      image: "/images/vision.jpg",
+      image: "/images/1-TelescopesOrbiting-512w.jpg",
     },
     {
       id: "impact",
@@ -43,7 +43,7 @@
         "Our platform opens space to research groups who've never had a path to orbit. Universities and labs can fly their own instruments, pursuing science that would never survive the flagship proposal process. This isn't just more observing time—it's more observers, more questions, more ways of seeing.",
         "When we broaden access to space, we broaden what gets discovered. The next breakthrough won't come from a single flagship. It will come from the instrument no one expected, asking the question no one else thought to ask.",
       ],
-      image: "/images/impact.jpg",
+      image: "/images/2-TheLab-512w.jpg",
     },
   ];
 
@@ -542,6 +542,7 @@
     margin-block-start: 1lh;
 
     @media (min-width: 48rem) {
+      grid-row: 1 / -1;
       margin-block-start: 0;
       padding: 0;
     }
