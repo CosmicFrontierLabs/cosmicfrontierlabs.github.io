@@ -19,26 +19,28 @@ export const earthCRTFragmentShader = `
   const vec3 BG_COLOR = vec3(0.16, 0.15, 0.15);
   const vec3 GRID_COLOR = vec3(0.99, 0.92, 0.92);
   const vec3 CYAN = vec3(0.55, 0.95, 0.95);
-  const vec3 RED = vec3(0.95, 0.65, 0.65);
+  const vec3 RED = vec3(0.99, 0.55, 0.55);
 
   // Band configuration
   const float BAND_EDGE_WIDTH = 0.04;
-  const int NUM_RED_BANDS = 4;
+  const int NUM_RED_BANDS = 6;
   const int NUM_CYAN_BANDS = 3;
   
   // Red band positions (y-coordinate ranges)
-  const vec2 RED_BANDS[NUM_RED_BANDS] = vec2[](
-    vec2(0.70, 0.71),
-    vec2(0.65, 0.66),
-    vec2(0.72, 0.73),
-    vec2(0.77, 0.78)
+  const float RED_BANDS[NUM_RED_BANDS] = float[](
+    0.52,
+    0.55,
+    0.65,
+    0.70,
+    0.73,
+    0.78
   );
   
   // Cyan band positions (y-coordinate ranges)
   const vec2 CYAN_BANDS[NUM_CYAN_BANDS] = vec2[](
-    vec2(0.66, 0.70),
     vec2(0.53, 0.55),
-    vec2(0.75, 0.76)
+    vec2(0.66, 0.70),
+    vec2(0.75, 0.77)
   );
 
   uniform sampler2D uTexture;
@@ -84,8 +86,9 @@ export const earthCRTFragmentShader = `
 
     // Apply red bands
     for (int i = 0; i < NUM_RED_BANDS; i++) {
-      float t = applyBand(RED_BANDS[i], BAND_EDGE_WIDTH);
-      color = mix(color, RED, t * gridLine);
+      vec2 band = vec2(RED_BANDS[i], RED_BANDS[i] + 0.01);
+      float t = applyBand(band, BAND_EDGE_WIDTH);
+      color = mix(color, RED, t * gridLine * (0.6 + vUv.y));
     }
 
     // Apply cyan bands
