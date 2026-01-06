@@ -19,7 +19,7 @@ export const earthCRTFragmentShader = `
   const vec3 BG_COLOR = vec3(0.16, 0.15, 0.15);
   const vec3 GRID_COLOR = vec3(0.99, 0.92, 0.92);
   const vec3 CYAN = vec3(0.55, 0.95, 0.95);
-  const vec3 RED = vec3(0.99, 0.35, 0.35);
+  const vec3 RED = vec3(0.99, 0.45, 0.45);
 
   // Band configuration
   const float BAND_EDGE_WIDTH = 0.04;
@@ -94,7 +94,7 @@ export const earthCRTFragmentShader = `
 
     // Apply red bands
     for (int i = 0; i < NUM_RED_BANDS; i++) {
-      vec2 band = vec2(RED_BANDS[i], RED_BANDS[i] + 0.003);
+      vec2 band = vec2(RED_BANDS[i], RED_BANDS[i] + 0.002);
       float t = applyBand(band, BAND_EDGE_WIDTH);
       // color = mix(color, RED, t * gridLine * (0.6 + vUv.y));
       color = mix(color, RED, t * gridLine);
