@@ -46,7 +46,6 @@ export class Earth {
             uGridDensity: { value: 180.0 }, // Grid density (higher = more lines)
             uGridThickness: { value: 0.2 }, // Grid line thickness
             uGridAntialiasWidth: { value: 0.5 }, // Antialiasing width for smooth grid edges
-            uGridColor: { value: new THREE.Color(simulationConfig.baseColor) }, // Bright neon CRT green
             uTime: { value: this.time },
           },
           transparent: false,

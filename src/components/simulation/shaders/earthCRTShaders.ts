@@ -16,13 +16,14 @@ export const earthCRTVertexShader = `
  * Converts greenish pixels to black and overlays green grid on white areas
  */
 export const earthCRTFragmentShader = `
-  const vec3 BG_COLOR = vec3(0.15);
-  const vec3 CYAN = vec3(0.55, 1.00, 1.00);
+  const vec3 BG_COLOR = vec3(0.15, 0.15, 0.15);
+  const vec3 GRID_COLOR = vec3(.99, 0.94, 0.93);
+  const vec3 CYAN = vec3(0.55, 0.95, 0.95);
+
   uniform sampler2D uTexture;
   uniform float uGridDensity;
   uniform float uGridThickness;
   uniform float uGridAntialiasWidth;
-  uniform vec3 uGridColor;
   uniform float uTime;
   varying vec2 vUv;
 
@@ -34,6 +35,14 @@ export const earthCRTFragmentShader = `
     return inverseLerp(value, inMin, inMax) * (outMax - outMin) + outMin;
   }
 
+  float applyBand(vec2 band) {
+    float edge = 0.04;
+    float t =
+      smoothstep(band.x - edge, band.x + edge, vUv.y) *
+      (1.0 - smoothstep(band.y - edge, band.y + edge, vUv.y));
+    return t;
+  }
+
   void main() {
     vec3 color = BG_COLOR;
 
@@ -41,36 +50,30 @@ export const earthCRTFragmentShader = `
     vec2 gridUV = vUv * uGridDensity * 1.0;
     vec2 grid = abs(fract(gridUV) - 0.5);
     float gridDist = min(grid.x, grid.y);
-    float distDeriv = fwidth(gridDist);
-    float edge0 = uGridThickness - uGridAntialiasWidth * distDeriv;
-    float edge1 = uGridThickness + uGridAntialiasWidth * distDeriv;
+
+    // For Anti-aliasing.
+    // Disable anti-aliasing for a more CRT-like texture to the earth
+    // float distDeriv = fwidth(gridDist);
+    // float edge0 = uGridThickness - uGridAntialiasWidth * distDeriv;
+    // float edge1 = uGridThickness + uGridAntialiasWidth * distDeriv;
+
+    float edge0 = uGridThickness;
+    float edge1 = uGridThickness;
+
     float gridLine = 1.0 - smoothstep(edge0, edge1, gridDist);
-    color = mix(color, uGridColor, gridLine);
+    color = mix(color, GRID_COLOR, gridLine);
 
-    // Apply the cyan effect
-    // Define three bands for the cyan effect
-    vec2 bands[3];
-    bands[0] = vec2(0.0, 0.03);
-    bands[1] = vec2(0.3, 0.33);
-    bands[2] = vec2(0.67, 0.70);
-
-    float cyanEdge = 0.05;
-    float tCyan = 0.0;
-    for (int i = 0; i < 3; ++i) {
-      vec2 band = bands[i];
-      float t =
-        smoothstep(band.x - cyanEdge, band.x + cyanEdge, vUv.y) *
-        (1.0 - smoothstep(band.y - cyanEdge, band.y + cyanEdge, vUv.y));
-      t = remap(t, 0.0, 1.0, 0.0, 1.0);
-      tCyan += t;
-    }
-    
-    tCyan = clamp(tCyan, 0.0, 1.0);
+    vec2 cyanBand = vec2(0.66, 0.70);
+    float tCyan = applyBand(cyanBand);
     color = mix(color, CYAN, tCyan * gridLine);
 
-    // Add in the red.
-    // TODO: localize the red to around the bands
-    color = mix(color, vec3(1.0, 0.85, 0.85), gridLine * (1.0 - tCyan));
+    cyanBand = vec2(0.53, 0.55);
+    tCyan = applyBand(cyanBand);
+    color = mix(color, CYAN, tCyan * gridLine);
+
+    cyanBand = vec2(0.75, 0.76);
+    tCyan = applyBand(cyanBand);
+    color = mix(color, CYAN, tCyan * gridLine);
 
     // Mask out water to the background color
     vec4 texture = texture2D(uTexture, vUv);
