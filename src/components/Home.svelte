@@ -319,6 +319,9 @@
 </div>
 
 <style lang="scss">
+  /* Use 56rem as the breakpoint because the sticky sections
+  need a big area to switch over to make sure all the text is visible
+  */ 
   /* HERO */
   .hero {
     min-height: 95lvh;
@@ -333,7 +336,7 @@
     align-items: center;
     height: 80lvh;
 
-    @media (min-width: 48rem) {
+    @media (min-width: 56rem) {
       margin-block-start: 4lvh;
     }
   }
@@ -356,7 +359,7 @@
     text-wrap: balance;
     margin-block-start: 0.125em;
 
-    @media (min-width: 48rem) {
+    @media (min-width: 56rem) {
       font-size: var(--size-step-5);
     }
   }
@@ -435,7 +438,7 @@
     gap: 1rem;
     display: none;
 
-    @media (min-width: 48rem) {
+    @media (min-width: 56rem) {
       display: flex;
     }
   }
@@ -484,7 +487,7 @@
     row-gap: 1lh;
     column-gap: 1lh;
 
-    @media (min-width: 48rem) {
+    @media (min-width: 56rem) {
       min-height: 95lvh;
       position: sticky;
       top: -2px; /* -2px to offset the border */
@@ -515,7 +518,7 @@
     opacity: 0.7;
     display: inline;
 
-    @media (min-width: 48rem) {
+    @media (min-width: 56rem) {
       display: none;
     }
   }
@@ -528,7 +531,7 @@
     max-width: 55ch;
     font-family: var(--font-sans);
 
-    @media (min-width: 48rem) {
+    @media (min-width: 56rem) {
 
     & > p:first-of-type {
       margin-block-start: 0;
@@ -545,7 +548,7 @@
     grid-row: 2 / -1;
     margin-block-start: 1lh;
 
-    @media (min-width: 48rem) {
+    @media (min-width: 56rem) {
       grid-row: 1 / -1;
       margin-block-start: 0;
       padding: 0;
