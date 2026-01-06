@@ -21,6 +21,26 @@ export const earthCRTFragmentShader = `
   const vec3 CYAN = vec3(0.55, 0.95, 0.95);
   const vec3 RED = vec3(0.95, 0.65, 0.65);
 
+  // Band configuration
+  const float BAND_EDGE_WIDTH = 0.04;
+  const int NUM_RED_BANDS = 4;
+  const int NUM_CYAN_BANDS = 3;
+  
+  // Red band positions (y-coordinate ranges)
+  const vec2 RED_BANDS[NUM_RED_BANDS] = vec2[](
+    vec2(0.70, 0.71),
+    vec2(0.65, 0.66),
+    vec2(0.72, 0.73),
+    vec2(0.77, 0.78)
+  );
+  
+  // Cyan band positions (y-coordinate ranges)
+  const vec2 CYAN_BANDS[NUM_CYAN_BANDS] = vec2[](
+    vec2(0.66, 0.70),
+    vec2(0.53, 0.55),
+    vec2(0.75, 0.76)
+  );
+
   uniform sampler2D uTexture;
   uniform float uGridDensity;
   uniform float uGridThickness;
@@ -35,11 +55,10 @@ export const earthCRTFragmentShader = `
     return inverseLerp(value, inMin, inMax) * (outMax - outMin) + outMin;
   }
 
-  float applyBand(vec2 band) {
-    float edge = 0.04;
+  float applyBand(vec2 band, float edgeWidth) {
     float t =
-      smoothstep(band.x - edge, band.x + edge, vUv.y) *
-      (1.0 - smoothstep(band.y - edge, band.y + edge, vUv.y));
+      smoothstep(band.x - edgeWidth, band.x + edgeWidth, vUv.y) *
+      (1.0 - smoothstep(band.y - edgeWidth, band.y + edgeWidth, vUv.y));
     return t;
   }
 
@@ -63,36 +82,17 @@ export const earthCRTFragmentShader = `
     float gridLine = 1.0 - smoothstep(edge0, edge1, gridDist);
     color = mix(color, GRID_COLOR, gridLine);
 
-    // Red bands
-    vec2 redBand = vec2(0.70, 0.71);
-    float tRed = applyBand(redBand);
-    color = mix(color, RED, tRed * gridLine);
+    // Apply red bands
+    for (int i = 0; i < NUM_RED_BANDS; i++) {
+      float t = applyBand(RED_BANDS[i], BAND_EDGE_WIDTH);
+      color = mix(color, RED, t * gridLine);
+    }
 
-    redBand = vec2(0.65, 0.66);
-    tRed = applyBand(redBand);
-    color = mix(color, RED, tRed * gridLine);
-
-    redBand = vec2(0.72, 0.73);
-    tRed = applyBand(redBand);
-    color = mix(color, RED, tRed * gridLine);
-
-    redBand = vec2(0.77, 0.78);
-    tRed = applyBand(redBand);
-    color = mix(color, RED, tRed * gridLine);
-
-    // Cyan bands
-    vec2 cyanBand = vec2(0.66, 0.70);
-    float tCyan = applyBand(cyanBand);
-    color = mix(color, CYAN, tCyan * gridLine);
-
-    cyanBand = vec2(0.53, 0.55);
-    tCyan = applyBand(cyanBand);
-    color = mix(color, CYAN, tCyan * gridLine);
-
-    cyanBand = vec2(0.75, 0.76);
-    tCyan = applyBand(cyanBand);
-    color = mix(color, CYAN, tCyan * gridLine);
-
+    // Apply cyan bands
+    for (int i = 0; i < NUM_CYAN_BANDS; i++) {
+      float t = applyBand(CYAN_BANDS[i], BAND_EDGE_WIDTH);
+      color = mix(color, CYAN, t * gridLine);
+    }
 
     // Mask out water to the background color
     vec4 texture = texture2D(uTexture, vUv);
