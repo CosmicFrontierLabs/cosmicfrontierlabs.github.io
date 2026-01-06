@@ -17,7 +17,7 @@ export const earthCRTVertexShader = `
  */
 export const earthCRTFragmentShader = `
   const vec3 BG_COLOR = vec3(0.16, 0.15, 0.15);
-  const vec3 GRID_COLOR = vec3(.99, 0.92, 0.92);
+  const vec3 GRID_COLOR = vec3(0.99, 0.92, 0.92);
   const vec3 CYAN = vec3(0.55, 0.95, 0.95);
 
   uniform sampler2D uTexture;
