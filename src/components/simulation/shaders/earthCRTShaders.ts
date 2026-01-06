@@ -16,50 +16,100 @@ export const earthCRTVertexShader = `
  * Converts greenish pixels to black and overlays green grid on white areas
  */
 export const earthCRTFragmentShader = `
+  const vec3 BG_COLOR = vec3(0.16, 0.15, 0.15);
+  const vec3 GRID_COLOR = vec3(0.99, 0.92, 0.92);
+  const vec3 CYAN = vec3(0.55, 0.95, 0.95);
+  const vec3 RED = vec3(0.99, 0.45, 0.45);
+
+  // Band configuration
+  const float BAND_EDGE_WIDTH = 0.04;
+  const int NUM_RED_BANDS = 11;
+  const int NUM_CYAN_BANDS = 6;
+  
+  // Red band positions (y-coordinate ranges)
+  const float RED_BANDS[NUM_RED_BANDS] = float[](
+    0.08,
+    0.24,
+    0.27,
+    0.39,
+    0.42,
+    0.52,
+    0.55,
+    0.65,
+    0.70,
+    0.79,
+    0.83
+  );
+  
+  // Cyan band positions (y-coordinate ranges)
+  const vec2 CYAN_BANDS[NUM_CYAN_BANDS] = vec2[](
+    vec2(0.05, 0.08),
+    vec2(0.25, 0.27),
+    vec2(0.40, 0.43),
+    vec2(0.53, 0.55),
+    vec2(0.66, 0.70),
+    vec2(0.80, 0.83)
+  );
+
   uniform sampler2D uTexture;
   uniform float uGridDensity;
   uniform float uGridThickness;
   uniform float uGridAntialiasWidth;
-  uniform vec3 uGridColor;
   varying vec2 vUv;
 
-  // Calculate luminance from RGB (renamed to avoid conflict with built-in functions)
-  float calculateLuminance(vec3 color) {
-    return dot(color, vec3(0.299, 0.587, 0.114));
+  float inverseLerp(float value, float inMin, float inMax) {
+    return (value - inMin) / (inMax - inMin);
+  }
+  
+  float remap(float value, float inMin, float inMax, float outMin, float outMax) {
+    return inverseLerp(value, inMin, inMax) * (outMax - outMin) + outMin;
+  }
+
+  float applyBand(vec2 band, float edgeWidth) {
+    float t =
+      smoothstep(band.x - edgeWidth, band.x + edgeWidth, vUv.y) *
+      (1.0 - smoothstep(band.y - edgeWidth, band.y + edgeWidth, vUv.y));
+    return t;
   }
 
   void main() {
-    // Sample the original texture
-    vec4 texColor = texture2D(uTexture, vUv);
-    vec3 color = texColor.rgb;
-    
-    // Mask out the water, which are areas of green.
-    bool isWater = color.g < 0.5;
-    if (isWater) {
-      // color = vec3(0.0117647059, 0.0235294118, 0.0431372549);
-      color = vec3(0.15);
-    } else {
-      // Grid lines - detect both horizontal and vertical lines
-      vec2 gridUV = vUv * uGridDensity;
-      vec2 grid = abs(fract(gridUV) - 0.5);
-    
-      // Calculate distance from grid line center (either horizontal or vertical)
-      // grid.x is small near vertical lines, grid.y is small near horizontal lines
-      float dist = min(grid.x, grid.y);
-    
-      // Calculate screen-space derivative for distance-based antialiasing
-      float distDeriv = fwidth(dist);
-    
-      // Use smoothstep with antialiasing for smooth grid line transitions
-      // Edge0: start fading at (thickness - antialiasWidth)
-      // Edge1: fully opaque at thickness
-      float edge0 = uGridThickness - uGridAntialiasWidth * distDeriv;
-      float edge1 = uGridThickness + uGridAntialiasWidth * distDeriv;
-      float onLine = 1.0 - smoothstep(edge0, edge1, dist);
-    
-      // Use bright neon green for grid lines with glow effect
-      color = mix(vec3(0.0), uGridColor, onLine);
+    vec3 color = BG_COLOR;
+
+    // Add the grid
+    vec2 gridUV = vUv * uGridDensity * 1.0;
+    vec2 grid = abs(fract(gridUV) - 0.5);
+    float gridDist = min(grid.x, grid.y);
+
+    // For Anti-aliasing.
+    // Disable anti-aliasing for a more CRT-like texture to the earth
+    // float distDeriv = fwidth(gridDist);
+    // float edge0 = uGridThickness - uGridAntialiasWidth * distDeriv;
+    // float edge1 = uGridThickness + uGridAntialiasWidth * distDeriv;
+
+    float edge0 = uGridThickness;
+    float edge1 = uGridThickness;
+
+    float gridLine = 1.0 - smoothstep(edge0, edge1, gridDist);
+    color = mix(color, GRID_COLOR, gridLine);
+
+    // Apply red bands
+    for (int i = 0; i < NUM_RED_BANDS; i++) {
+      vec2 band = vec2(RED_BANDS[i], RED_BANDS[i] + 0.002);
+      float t = applyBand(band, BAND_EDGE_WIDTH);
+      // color = mix(color, RED, t * gridLine * (0.6 + vUv.y));
+      color = mix(color, RED, t * gridLine);
     }
+
+    // Apply cyan bands
+    for (int i = 0; i < NUM_CYAN_BANDS; i++) {
+      float t = applyBand(CYAN_BANDS[i], BAND_EDGE_WIDTH);
+      color = mix(color, CYAN, t * gridLine);
+    }
+
+    // Mask out water to the background color
+    vec4 texture = texture2D(uTexture, vUv);
+    float isWater = 1.0 - step(0.5, texture.g);
+    color = mix(color, BG_COLOR, isWater);
 
     gl_FragColor = vec4(color, 1.0);
   }
