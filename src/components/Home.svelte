@@ -325,13 +325,17 @@
   }
 
   .hero__content {
-    margin-block-start: 4lvh;
+    margin-block-start: 0.5lvh;
     display: grid;
     grid-template-rows: auto 1fr;
     grid-template-columns: 1fr;
     justify-content: center;
     align-items: center;
     height: 80lvh;
+
+    @media (min-width: 48rem) {
+      margin-block-start: 4lvh;
+    }
   }
 
   .hero__content__text {
