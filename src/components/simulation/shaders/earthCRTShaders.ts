@@ -24,7 +24,6 @@ export const earthCRTFragmentShader = `
   uniform float uGridDensity;
   uniform float uGridThickness;
   uniform float uGridAntialiasWidth;
-  uniform float uTime;
   varying vec2 vUv;
 
   float inverseLerp(float value, float inMin, float inMax) {
