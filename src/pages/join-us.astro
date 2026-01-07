@@ -6,13 +6,78 @@ import yaml from "js-yaml";
 
 const jobsYamlPath = join(process.cwd(), "src/site-content/jobs.yaml");
 const jobsFile = readFileSync(jobsYamlPath, "utf-8");
-const allPositions = yaml.load(jobsFile) as Array<{
+type DescriptionBlock =
+  | { type: "paragraph"; text: string }
+  | { type: "list"; items: string[] };
+
+type Position = {
   title: string;
   location: string;
   description: string;
   isDraft?: boolean;
-}>;
-const positions = allPositions.filter((p) => !p.isDraft);
+};
+
+type ParsedPosition = Position & { descriptionBlocks: DescriptionBlock[] };
+
+const parseDescription = (description: string): DescriptionBlock[] => {
+  const blocks: DescriptionBlock[] = [];
+  const lines = description.split(/\r?\n/);
+  let paragraphLines: string[] = [];
+  let listItems: string[] = [];
+
+  const flushParagraph = () => {
+    if (paragraphLines.length === 0) {
+      return;
+    }
+
+    const text = paragraphLines.join(" ").trim();
+    if (text) {
+      blocks.push({ type: "paragraph", text });
+    }
+    paragraphLines = [];
+  };
+
+  const flushList = () => {
+    if (listItems.length === 0) {
+      return;
+    }
+
+    blocks.push({ type: "list", items: listItems });
+    listItems = [];
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    if (line.startsWith("- ")) {
+      flushParagraph();
+      listItems.push(line.slice(2).trim());
+      continue;
+    }
+
+    flushList();
+    paragraphLines.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return blocks;
+};
+
+const allPositions = yaml.load(jobsFile) as Position[];
+const positions: ParsedPosition[] = allPositions
+  .filter((p) => !p.isDraft)
+  .map((position) => ({
+    ...position,
+    descriptionBlocks: parseDescription(position.description),
+  }));
 
 // ROT-13 encode the email to deter simple scrapers
 const rot13 = (str: string) => str.replace(/[a-zA-Z]/g, (c) =>
@@ -36,9 +101,17 @@ const keyword = "LANIAKEA";
                             <span class="join-us__position-location">{position.location}</span>
                         </summary>
                         <div class="join-us__position-description">
-                            {position.description.split('\n\n').map((paragraph: string) => (
-                                <p>{paragraph}</p>
-                            ))}
+                            {position.descriptionBlocks.map((block) =>
+                                block.type === "paragraph" ? (
+                                    <p>{block.text}</p>
+                                ) : (
+                                    <ul>
+                                        {block.items.map((item) => (
+                                            <li>{item}</li>
+                                        ))}
+                                    </ul>
+                                )
+                            )}
                         </div>
                     </details>
                 ))}
@@ -128,6 +201,15 @@ const keyword = "LANIAKEA";
 
     .join-us__position-description p {
         margin-block: var(--space-s);
+    }
+
+    .join-us__position-description ul {
+        margin-block: var(--space-s);
+        padding-inline-start: var(--space-m);
+    }
+
+    .join-us__position-description li {
+        margin-block: var(--space-2xs);
     }
 
     .join-us__apply {
