@@ -26,6 +26,8 @@ The metering structure maintains the critical spacing between the primary and se
 
 ![Assembly detail](/images/blog-fit-check/detail-3.png)
 
+![Assembly detail](/images/blog-fit-check/detail-4.png)
+
 ## What's Next
 
 With fit check complete, the mass simulator moves into vibration testing. Data from these tests will correlate our structural models and validate our assembly procedures before we commit to flight hardware.
