@@ -160,6 +160,24 @@
     If you love breaking things before they break themselves, we want to talk.
   isDraft: false
 
+- title: "Intern"
+  location: "SF Bay Area"
+  description: |
+    We’re looking for interns across engineering and science. Any job listed above can be an internship depending on timing and fit.
+
+    You will
+    - Work alongside the team shipping real hardware and software
+    - Take ownership of a scoped project with clear success criteria
+    - Learn fast, document what you learned, and make the next build better
+
+    In your first 90 days
+    - Ramp on a subsystem and deliver a useful artifact (design, analysis, test, or code)
+    - Present your work and what you would do next
+    - Leave behind documentation or tooling that makes the team faster
+
+    If you want to build real space hardware and learn by doing, we want to talk.
+  isDraft: false
+
 - title: "Write Your Own Role"
   location: "SF Bay Area"
   description: |

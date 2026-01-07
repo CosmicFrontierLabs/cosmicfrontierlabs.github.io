@@ -13,3 +13,63 @@
   height: 100%;
   padding-block-end: var(--space-l);
 }
+
+.site-footer__brand {
+  max-width: 28ch;
+}
+
+.site-footer__signup {
+  max-width: 28rem;
+}
+
+.site-footer__signup-shell {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.site-footer__signup-alert {
+  margin: 0;
+  padding: var(--space-xs);
+  border-radius: var(--radius-s);
+  border: 1px solid var(--color-gray-600);
+  background: var(--color-gray-100);
+  color: var(--color-text);
+  font-size: var(--size-step--2);
+  list-style: none;
+}
+
+.site-footer__signup-alert:empty {
+  display: none;
+}
+
+.site-footer__signup-alert.formkit-alert-success {
+  border-color: var(--color-primary);
+}
+
+.site-footer__signup-title {
+  font-size: var(--size-step-0);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.site-footer__signup-copy {
+  margin: 0;
+}
+
+.site-footer__signup-form {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.site-footer__signup-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+@media (max-width: 40rem) {
+  .site-footer__signup-fields {
+    grid-template-columns: 1fr;
+  }
+}
