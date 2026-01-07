@@ -7,6 +7,9 @@ category: "Engineering"
 We've completed the Manufacturing Readiness Review (MRR) for our dynamic test model, marking a key milestone in our telescope development program.
 
 ![Mass simulator rendering](/images/blog-mass-simulator-mrr/mass-simulator-rendering.png)
+![Mass simulator rendering 2](/images/blog-mass-simulator-mrr/mass-simulator-rendering-2.png)
+
+
 
 ## What is a Dynamic Test Model (DTM)?
 
@@ -19,8 +22,6 @@ Our mass simulator serves two primary purposes:
 **Proving Assembly Processes** — Before assembling flight hardware, we need confidence that our procedures work. The mass simulator lets us rehearse integration sequences, verify tooling, and train technicians on handling procedures. Any issues discovered here are far cheaper to fix than problems found during flight unit assembly.
 
 **Vibration Testing and Model Validation** — We selected materials specifically to match the dynamic behavior of flight hardware. This gives us realistic vibration modes during testing, allowing us to validate our structural models against physical data. Accurate models are essential for predicting how the telescope will respond to launch loads.
-
-![Mass simulator schematic](/images/blog-mass-simulator-mrr/mass-simulator-schematic.png)
 
 ## What's Next
 
