@@ -4,7 +4,7 @@ date: 2025-12-18
 category: "Engineering"
 ---
 
-We've completed our spacecraft bus provider downselect, a critical decision that shapes nearly every aspect of our STAR Demonstration mission. After months of detailed evaluation across multiple candidates, we've selected a partner to provide the spacecraft platform that will carry our telescope to orbit.
+We've completed our spacecraft bus provider downselect, a critical decision that shapes nearly every aspect of our demonstration mission. After months of detailed evaluation across multiple candidates, we've selected a partner to provide the spacecraft platform that will carry our telescope to orbit.
 
 ## Why the Bus Matters
 
@@ -26,7 +26,7 @@ Rather than optimizing for a single metric, we developed threshold requirements 
 
 ### 3. Launch Cadence Security
 
-The STAR Demonstration is the first of many missions. We prioritized vendors who could reliably deliver on schedule and scale with us over time. A provider with the best specifications but uncertain delivery timelines creates unacceptable program risk.
+The demonstration mission is the first of many missions. We prioritized vendors who could reliably deliver on schedule and scale with us over time. A provider with the best specifications but uncertain delivery timelines creates unacceptable program risk.
 
 ### 4. Standardized Instrument Interface
 
@@ -78,7 +78,7 @@ A lower-cost bus that requires us to develop more payload complexity isn't neces
 
 ### Scaling for the Future
 
-The STAR Demonstration is our first mission, not our last. We evaluated each provider's:
+The demonstration mission is our first mission, not our last. We evaluated each provider's:
 
 - **Quantity scaling**: Factory capacity and production rate capabilities for constellation-scale operations
 - **Aperture scaling**: Ability to accommodate larger telescopes as we grow our aperture over time
@@ -100,7 +100,7 @@ Some providers operate spacecraft as a service, delivering data products rather 
 
 ## The Demonstration Mission Context
 
-Our spacecraft selection serves the broader objectives of the STAR Demonstration mission:
+Our spacecraft selection serves the broader objectives of the demonstration mission:
 
 **Technical Demonstration**: Validate our fine-guidance and jitter control system, achieving diffraction-limited imaging over long integrations. Demonstrate telescope architecture that scales in aperture and quantity. Prove integration with a commercial bus requiring minimal engineering changes.
 
