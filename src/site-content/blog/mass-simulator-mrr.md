@@ -1,16 +1,16 @@
 ---
-title: "Mass Simulator Manufacturing Readiness Review Complete"
+title: "Dynamic Test Model Manufacturing Readiness Review Complete"
 date: 2024-11-11
 category: "Engineering"
 ---
 
-We've completed the Manufacturing Readiness Review (MRR) for our mass simulator, marking a key milestone in our telescope development program.
+We've completed the Manufacturing Readiness Review (MRR) for our dynamic test model, marking a key milestone in our telescope development program.
 
 ![Mass simulator rendering](/images/blog-mass-simulator-mrr/mass-simulator-rendering.png)
 
-## What is a Mass Simulator?
+## What is a Dynamic Test Model (DTM)?
 
-A mass simulator is a purpose-built test article that replicates the mass properties and structural characteristics of flight hardware without the complexity and cost of building the actual system. It's a critical tool for validating manufacturing and assembly processes before committing to flight units.
+A DTM/mass simulator is a purpose-built test article that replicates the mass properties and structural characteristics of flight hardware without the complexity and cost of building the actual system. It's a critical tool for validating manufacturing and assembly processes before committing to flight units.
 
 ## Why Build One?
 

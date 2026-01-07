@@ -14,4 +14,4 @@ Zerodur is a glass-ceramic with an extremely low coefficient of thermal expansio
 
 ## What's Next
 
-With blanks in hand, our optical partner begins the precision work of grinding and polishing. This process takes time—you can't rush optics—but we're on track to have finished mirrors ready well ahead of our [Q4 2027 launch](/blog/launch-booked-for-q4-2027) integration timeline.
+With blanks in hand, our optical partner begins the precision work of grinding and polishing. This process takes time—you can't rush optics—but we're on track to have finished mirrors by July 1, setting our pace to be ready for integration.
