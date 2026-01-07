@@ -14,38 +14,39 @@
     impact: 0,
   });
 
-  const itemData = [
-    {
-      id: "problem",
-      title: "Space Astronomy is at risk",
-      text: [
-        "Humanity peers at the cosmos through a handful of telescopes. The waiting lists stretch for years. Most proposals never get time. The universe is vast, but our windows into it are few.",
-        "Today's model of building single, massive observatories is slow, expensive, and fragile. Each mission takes decades. When everything rides on one launch, costs and schedules balloon.",
-        "When telescope time is scarce and missions can't fail, only 'safe' science gets funded. Incremental questions win over bold ones. The proposals most likely to revolutionize our understanding—the ones that challenge assumptions and risk being wrong—are the first to be cut. We're optimizing for caution when we should be optimizing for discovery.",
-      ],
-      image: "/images/0-Space-512w.jpg",
-    },
-    {
-      id: "vision",
-      title: "Abundant space telescopes",
-      text: [
-        "Cosmic Frontier is taking the space telescope through a technoeconomic phase change. We're redesigning orbital observatories from first principles—collapsing costs, compressing timelines, and advancing performance simultaneously. Not incremental improvement. Fundamental transformation.",
-        "We build iteratively. Each telescope informs the next. New detectors, refined optics, lessons from orbit—integrated continuously rather than frozen into decade-long development cycles. A platform that evolves as fast as the science demands.",
-        "The result: fleets of capable telescopes instead of lone flagships. Telescope time that isn't rationed. Ambitious science that doesn't wait. Access to the cosmos at the scale of human curiosity.",
-      ],
-      image: "/images/1-TelescopesOrbiting-512w.jpg",
-    },
-    {
-      id: "impact",
-      title: "Unlock Scientific Discovery",
-      text: [
-        "More telescopes means more than just more time. It means flying newer instruments—incorporating the latest detectors and techniques instead of technology frozen years before launch. It means variety: different wavelengths, specialized sensors, instruments purpose-built for specific questions.",
-        "Our platform opens space to research groups who've never had a path to orbit. Universities and labs can fly their own instruments, pursuing science that would never survive the flagship proposal process. This isn't just more observing time—it's more observers, more questions, more ways of seeing.",
-        "When we broaden access to space, we broaden what gets discovered. The next breakthrough won't come from a single flagship. It will come from the instrument no one expected, asking the question no one else thought to ask.",
-      ],
-      image: "/images/2-TheLab-512w.jpg",
-    },
-  ];
+const itemData = [
+  {
+    id: "problem",
+    title: "Discovery is Bottlenecked",
+    text: [
+      "Humanity studies the cosmos through a handful of instruments. The waitlists are years long. Most proposals never get time. The universe is vast, but our access to it is scarce.",
+      "The dominant model is to build one massive observatory at a time. It is slow, expensive, and brittle. Each mission takes a decade or more. When everything rides on one launch, cost and schedule explode.",
+      "Scarcity shapes the science. When telescope time is rationed and missions cannot fail, the system selects for safe bets. Incremental questions win over bold ones. The proposals most likely to change our understanding, the ones that challenge assumptions and risk being wrong, are the first to get cut. We are optimizing for caution when we should be optimizing for discovery.",
+    ],
+    image: "/images/0-Space-512w.jpg",
+  },
+  {
+    id: "vision",
+    title: "Make Exploration Abundant",
+    text: [
+      "Cosmic Frontier is driving a technoeconomic phase change in space science hardware. We are rebuilding orbital observatories from first principles to collapse cost, compress timelines, and push performance at the same time. Not incremental improvement. A different regime.",
+      "We build iteratively. Each mission informs the next. New detectors, better optics, lessons from flight, and improvements in test and integration flow straight into the next build. The platform evolves continuously instead of freezing technology into decade-long cycles.",
+      "The result is fleets of capable observatories instead of lone flagships. Telescope time that is not rationed. Ambitious science that does not wait. Access to the cosmos on the scale of human curiosity.",
+    ],
+    image: "/images/1-TelescopesOrbiting-512w.jpg",
+  },
+  {
+    id: "impact",
+    title: "Unlock Scientific Discovery",
+    text: [
+      "Abundance changes the shape of science. More observatories is not just more time. It means flying newer instruments, with the latest detectors and techniques, instead of hardware that was locked in years before launch. It means variety. Different wavelengths, specialized sensors, and instruments built for specific questions.",
+      "A repeatable platform opens space to research groups that have never had a path to orbit. Universities and labs can fly their own instruments and pursue science that would never survive the flagship proposal process. This is not just more observing time. It is more observers, more questions, and more ways of seeing.",
+      "When we broaden access to space, we broaden what gets discovered. The next breakthrough will not come only from a single flagship. It will come from the instrument no one expected, asking the question no one else thought to ask.",
+    ],
+    image: "/images/2-TheLab-512w.jpg",
+  },
+];
+
 
   function scrollTo(id: "problem" | "vision" | "impact") {
     window.scrollTo({ top: offsets[id], behavior: "smooth" });
@@ -233,7 +234,7 @@
 <div class="hero">
   <div class="hero__content">
     <div class="hero__content__text">
-      <span class="hero__subtitle">Every unanswered question is a telescope we haven't built</span>
+      <span class="hero__subtitle">Open more windows to the Universe </span>
     </div>
     <div class="hero__content__simulation">
       <SimulationComponent />
@@ -243,7 +244,7 @@
 
 <div class="subhero">
   <p id="subhero__text">
-    We're building a new class of scientific tools to accelerate discovery and exploration of the Universe.
+    We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
   </p>
 </div>
 
