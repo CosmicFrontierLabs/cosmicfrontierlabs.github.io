@@ -3,9 +3,9 @@ import Layout from "../layouts/Layout.astro";
 
 import { getCollection } from "astro:content";
 
-const blogs = await getCollection("blog", ({ data }) => {
+const blogs = (await getCollection("blog", ({ data }) => {
   return !data.isDraft;
-});
+})).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
 <Layout>
