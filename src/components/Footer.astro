@@ -1,9 +1,41 @@
 <footer class="site-footer">
     <div class="site-footer__inner | repel">
-        <p>
-            Cosmic Frontier Labs
-            <br />
-            USA, Earth, Milky Way, Laniakea Supercluster
-        </p>
+        <div class="site-footer__brand">
+            <p>
+                Cosmic Frontier Labs
+                <br />
+                USA, Earth, Milky Way, Laniakea Supercluster
+            </p>
+        </div>
+        <div class="site-footer__signup flow">
+            <h2 class="site-footer__signup-title">Get updates</h2>
+            <p class="site-footer__signup-copy">Sign up for mission updates and new roles.</p>
+            <form class="site-footer__signup-form" data-newsletter-form>
+                <label class="visually-hidden" for="updates-email">Email address</label>
+                <input
+                    id="updates-email"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="you@example.com"
+                    required
+                />
+                <button class="button" type="submit" data-smaller>Join list</button>
+            </form>
+            <p class="site-footer__signup-note">No email provider yet. This opens your email client.</p>
+        </div>
     </div>
+    <script is:inline>
+        const form = document.querySelector("[data-newsletter-form]");
+        if (form instanceof HTMLFormElement) {
+            form.addEventListener("submit", (event) => {
+                event.preventDefault();
+                const emailInput = form.querySelector('input[name="email"]');
+                const email = emailInput instanceof HTMLInputElement ? emailInput.value.trim() : "";
+                const subject = encodeURIComponent("Updates list signup");
+                const body = encodeURIComponent(`Please add me to the updates list.\n\nEmail: ${email}`);
+                window.location.href = `mailto:contact@cosmicfrontier.org?subject=${subject}&body=${body}`;
+            });
+        }
+    </script>
 </footer>

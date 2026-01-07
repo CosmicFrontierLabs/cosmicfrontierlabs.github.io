@@ -13,3 +13,40 @@
   height: 100%;
   padding-block-end: var(--space-l);
 }
+
+.site-footer__brand {
+  max-width: 28ch;
+}
+
+.site-footer__signup {
+  max-width: 28rem;
+}
+
+.site-footer__signup-title {
+  font-size: var(--size-step-0);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.site-footer__signup-copy {
+  margin: 0;
+}
+
+.site-footer__signup-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.site-footer__signup-note {
+  margin: 0;
+  font-size: var(--size-step--2);
+  color: var(--color-text-mid);
+}
+
+@media (max-width: 40rem) {
+  .site-footer__signup-form {
+    grid-template-columns: 1fr;
+  }
+}
