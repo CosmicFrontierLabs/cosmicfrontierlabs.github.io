@@ -1,28 +1,176 @@
+- title: "Telescope Systems Engineer"
+  location: "SF Bay Area"
+  description: |
+    We’re looking for a systems engineer to own the end to end architecture of our telescope platform and keep the whole system coherent as it evolves.
+
+    You will:  
+    - Drive requirements, interfaces, and trade studies across optics, structures, thermal, avionics, and software
+    - Own system budgets and margins (mass, power, pointing, thermal stability) and keep them honest as designs change
+    - Plan verification and integration milestones so we learn fast without losing rigor
+
+    In your first 90 days
+    - Publish a v1 system budget with margin policy and the interfaces that matter most
+    - Turn the next integration milestone into a concrete verification plan and test matrix
+    - Unblock at least two cross discipline decisions with clear trades, rationale, and owners
+
+    If you can balance rigor with velocity and keep complex systems aligned toward mission goals, we should talk.
+  isDraft: false
+
+- title: "Instrument Scientist"
+  location: "SF Bay Area"
+  description: |
+    We’re looking for an instrument scientist to bridge science goals and instrument design, defining what our telescopes should measure and how we prove the data delivers.
+
+    You will
+    - Translate science questions into requirements, observing modes, calibration strategy, and data quality metrics
+    - Drive trades across optics, detectors, readout, and operations with a bias toward flight worthy simplicity
+    - Be hands on from lab characterization through commissioning and on orbit calibration
+
+    In your first 90 days
+    - Produce a v1 science to requirements map for the first instrument suite and observing modes
+    - Write the calibration and commissioning plan, including what we measure on the ground versus in orbit
+    - Define a v1 pipeline and validation approach tied to lab truth data and on orbit checks
+
+    If you want to shape the questions we can answer and make sure the data is actually good, we want to talk.
+  isDraft: false
+
+- title: "Computational Optics Engineer"
+  location: "SF Bay Area"
+  description: |
+    We’re looking for a computational optics engineer to model, simulate, and improve the imaging performance of our space telescopes, and to connect those models to what we build and measure.
+
+    You will
+    - Build and own wavefront and image performance models (PSF, MTF, WFE budgets) and make them useful for design decisions
+    - Work on stray light modeling, tolerancing, and reconstruction methods where they actually buy performance
+    - Correlate models to lab data, define acceptance tests, and help close the loop between design, build, and test
+
+    In your first 90 days
+    - Stand up a v1 simulation pipeline in Python that produces the metrics we will track program wide
+    - Deliver a v1 performance and stability budget and identify the top sensitivity drivers
+    - Define an optical verification plan that ties lab measurements to on orbit performance
+
+    If you love turning physics into capability and can translate models into buildable hardware, we want to talk.
+  isDraft: false
+
+- title: "Optomechanical Engineer"
+  location: "SF Bay Area"
+  description: |
+    We’re looking for an optomechanical engineer to design and build the structures that keep precision optics aligned through launch and stable on orbit.
+
+    You will
+    - Design mounts, benches, kinematic interfaces, and alignment features that preserve optical performance through vibration and thermal swings
+    - Own tolerancing and alignment strategy, including what we measure, how we shim, and how we verify
+    - Work closely with fabrication and metrology to turn designs into real parts that assemble cleanly
+
+    In your first 90 days
+    - Produce a v1 mechanical architecture for the optical bench and mount strategy with tolerances that close
+    - Define the alignment flow and metrology plan for the next build
+    - Deliver a short list of the top mechanical stability risks and the design changes that retire them
+
+    If you enjoy making optics survive the real world without losing performance, we want to talk.
+  isDraft: false
+
+- title: "Thermal + Structural Modeling Engineer"
+  location: "SF Bay Area"
+  description: |
+    We’re looking for a thermal and structural modeling engineer to predict how our telescopes behave under launch loads and the extremes of orbit, and to turn those predictions into confident design decisions.
+
+    You will
+    - Build coupled thermal and structural models (thermoelastic stability matters as much as strength) and use them to drive design
+    - Analyze deformation, stability, and margin under both launch and on orbit environments
+    - Correlate models to test data and keep the program honest about what is known versus assumed
+
+    In your first 90 days
+    - Deliver a v1 coupled model that answers the questions we are currently hand waving
+    - Define the test correlation plan and what data we need to collect during TVAC and vibe
+    - Identify the top stability drivers and propose concrete mitigations with quantified impact
+
+    If you like turning analysis into decisions and decisions into hardware, we want to talk.
+  isDraft: false
+
+- title: "Precision Mechanisms Engineer"
+  location: "SF Bay Area"
+  description: |
+    We’re looking for a precision mechanisms engineer to design reliable moving systems for space telescopes that must work in vacuum, across thermal extremes, for years.
+
+    You will
+    - Design and build precision mechanisms such as focus stages, filter wheels, shutters, deployables, and latches
+    - Own trades in actuators, bearings, flexures, and sensors with a focus on reliability, repeatability, and testability
+    - Plan and execute life testing, lubrication and materials choices, and qualification focused on real failure modes
+
+    In your first 90 days
+    - Propose the v1 mechanism architectures for the next build, including interfaces and test approach
+    - Build or upgrade a life test or characterization setup that produces actionable data quickly
+    - Retire at least one high risk mechanism unknown with a focused experiment or prototype
+
+    If you love building mechanisms that work every time in the hardest conditions, we want to talk.
+  isDraft: false
+
+- title: "Controls Engineer"
+  location: "SF Bay Area"
+  description: |
+    We’re looking for a controls engineer to design the feedback systems that keep our telescopes stable, pointed, and precise, and to prove it in simulation and hardware in the loop.
+
+    You will
+    - Develop control laws and estimation filters for attitude control, fine pointing, and focus or wavefront control where needed
+    - Build and maintain the simulation and HIL environments that make control performance real before flight
+    - Work closely with avionics and software to integrate, tune, and validate control loops on hardware
+
+    In your first 90 days
+    - Deliver a v1 end to end pointing and stability simulation that produces the metrics we care about
+    - Define the sensing and actuation interfaces and the data rates that the rest of the system must support
+    - Run one HIL style validation on a real subsystem and document what it changed in the design
+
+    If you care about precision and enjoy turning math into stable hardware, we want to talk.
+  isDraft: false
+
 - title: "Firmware Engineer"
   location: "SF Bay Area"
   description: |
-    We're looking for a firmware engineer to build the systems that control our telescopes—bridging high-level software and low-level electronics.
+    We’re looking for a firmware engineer to build the embedded layer that makes the telescope behave, bridging sensors, actuators, timing, and flight software.
 
-    You'll work on embedded systems, real-time control, and the interfaces between flight software and hardware. Experience with the NVIDIA Orin ecosystem is valuable. Rust experience is a plus. Hardware-in-the-loop (HIL) testing experience is a bonus.
+    You will
+    - Write and maintain firmware for embedded controllers that interface with sensors and mechanisms, with deterministic timing and robust fault handling
+    - Own hardware bring up, drivers, and communications interfaces between embedded controllers and higher level compute
+    - Build test hooks and HIL infrastructure so firmware can be validated continuously, not only at the end
 
-    Intrinsic motivation matters most. If you care deeply about building reliable systems for space, we want to talk.
+    In your first 90 days
+    - Bring up one real board or subsystem end to end and make it boring and reliable
+    - Establish a repeatable firmware build, test, and hardware regression loop
+    - Define the interface and telemetry contract that flight software will depend on
+
+    If you care deeply about reliability and like living close to the hardware, we want to talk.
   isDraft: false
 
 - title: "Test Engineer"
   location: "SF Bay Area"
   description: |
-    We're looking for a test engineer to validate hardware and software across our telescope systems—making sure what we build actually works.
+    We’re looking for a test engineer to validate hardware and software across our telescope systems and to build the test infrastructure that turns iteration into a competitive advantage.
 
-    You'll design and run tests, build test fixtures, write automation, and help us understand how our systems behave under real conditions. Experience with sensor characterization is a bonus—optical systems, gyros, thermal control loops, or similar.
+    You will
+    - Design and run test campaigns across subsystems and integrated builds, from bench tests to vibe and TVAC
+    - Build fixtures, write automation, and create the instrumentation and data pipelines that make results trustworthy
+    - Hunt edge cases early and turn failures into design changes, not paperwork
 
-    If you love finding edge cases and breaking things before they break themselves, we want to talk.
+    In your first 90 days
+    - Stand up a v1 automated test and data capture workflow that the team can reuse
+    - Run one end to end subsystem test campaign and produce a clear report with actions
+    - Improve one piece of test infrastructure that directly increases iteration speed or confidence
+
+    If you love breaking things before they break themselves, we want to talk.
   isDraft: false
 
 - title: "Write Your Own Role"
   location: "SF Bay Area"
   description: |
-    Don't see your role listed? We're building something new, and we might need skills we haven't thought to ask for yet.
+    Don’t see your role listed We might still need you.
 
-    Tell us what you do, why you're excited about abundant space telescopes, and what you'd bring to the mission.
+    Tell us what you do, what you have built, and what you think we should be building next to make space discovery abundant.
+
+    In your first 90 days
+    - Identify a concrete gap we have and propose how you would close it
+    - Ship something real, whether that is hardware, software, a test capability, or a design that unblocks a build
+    - Make the team faster by making one messy interface or process cleaner
+
+    If you are the kind of person who turns ambiguity into shipped capability, we want to hear from you.
   isDraft: false
-
