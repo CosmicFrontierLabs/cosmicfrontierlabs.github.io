@@ -16,15 +16,15 @@ A fit check is a critical verification step where we physically assemble major s
 
 The optical bench is the structural backbone of the telescope payload. It holds the primary mirror, focal plane array, and gyroscope. The mass simulator version replicates the mounting interfaces and mass properties of the flight design, letting us validate assembly sequences and tooling.
 
-![Optical bench detail](/images/blog-fit-check/detail-2.png)
+![Optical bench detail](/images/blog-fit-check/detail-1.png)
 
 ## Metering Structure
 
 The metering structure maintains the critical spacing between the primary and secondary mirrors. This component holds the secondary mirror at the correct distance and orientation relative to the optical bench. During vibration testing, we'll validate that the metering structure's dynamic behavior matches our finite element models.
 
-![Metering structure detail](/images/blog-fit-check/detail-3.png)
+![Metering structure detail](/images/blog-fit-check/detail-2.png)
 
-![Assembly detail](/images/blog-fit-check/detail-4.png)
+![Assembly detail](/images/blog-fit-check/detail-3.png)
 
 ## What's Next
 
