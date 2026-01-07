@@ -92,6 +92,10 @@ const keyword = "LANIAKEA";
         <h1>Join Us</h1>
         <p class="join-us__subtitle">Telescope wanted for hazardous journey. Vacuum, radiation, thermal extremes. Safe return doubtful. Honour and recognition in event of success.</p>
         <p class="join-us__cta">Help us build it.</p>
+        <p class="join-us__apply">
+            To apply, email <a class="obfuscated-email" data-encoded={obfuscatedEmail} href="#">[enable JavaScript to see email]</a> with
+            the subject line including <strong>"{keyword}"</strong> and the position title.
+        </p>
         {positions.length > 0 ? (
             <div class="join-us__positions flow">
                 {positions.map((position) => (
@@ -115,10 +119,6 @@ const keyword = "LANIAKEA";
                         </div>
                     </details>
                 ))}
-                <p class="join-us__apply">
-                    To apply, email <a class="obfuscated-email" data-encoded={obfuscatedEmail} href="#">[enable JavaScript to see email]</a> with
-                    the subject line including <strong>"{keyword}"</strong> and the position title.
-                </p>
             </div>
         ) : (
             <p class="join-us__coming-soon">Job posts coming soon</p>
