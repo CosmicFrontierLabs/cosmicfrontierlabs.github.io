@@ -1,3 +1,16 @@
+---
+const kitFormOptions = {
+    settings: {
+        after_subscribe: {
+            action: "message",
+            success_message: "Success! You’re on the list.",
+            redirect_url: "",
+        },
+    },
+    version: "5",
+};
+---
+
 <footer class="site-footer">
     <div class="site-footer__inner | repel">
         <div class="site-footer__brand">
@@ -18,19 +31,26 @@
                 data-uid="170ae5b1d6"
                 data-format="inline"
                 data-version="5"
+                data-options={JSON.stringify(kitFormOptions)}
             >
-                <label class="visually-hidden" for="updates-email">Email address</label>
-                <input
-                    id="updates-email"
-                    name="email_address"
-                    type="email"
-                    autocomplete="email"
-                    placeholder="you@example.com"
-                    required
-                />
-                <button class="button" type="submit" data-smaller>Join list</button>
+                <div class="site-footer__signup-shell" data-style="clean">
+                    <ul class="site-footer__signup-alert formkit-alert formkit-alert-error" data-element="errors" data-group="alert"></ul>
+                    <div class="site-footer__signup-fields" data-element="fields" data-stacked="false">
+                        <label class="visually-hidden" for="updates-email">Email address</label>
+                        <input
+                            id="updates-email"
+                            name="email_address"
+                            type="email"
+                            autocomplete="email"
+                            placeholder="you@example.com"
+                            required
+                        />
+                        <button class="button formkit-submit" type="submit" data-element="submit" data-smaller>
+                            Join list
+                        </button>
+                    </div>
+                </div>
             </form>
-            <p class="site-footer__signup-note">Check your inbox to confirm.</p>
         </div>
     </div>
     <script src="https://f.convertkit.com/ckjs/ck.5.js" async></script>
