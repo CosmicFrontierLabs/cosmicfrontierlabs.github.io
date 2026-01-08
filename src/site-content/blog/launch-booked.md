@@ -4,7 +4,7 @@ date: 2025-11-13
 category: "News"
 ---
 
-We've booked a launch for Q4 2027. While we can't share specifics yet, having a confirmed slot on the manifest changes everything.
+We've booked a launch for Q4 2027. Having a confirmed slot on the manifest changes everything.
 
 ## A Real Date
 
