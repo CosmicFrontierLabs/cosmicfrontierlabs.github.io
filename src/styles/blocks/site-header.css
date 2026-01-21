@@ -36,6 +36,29 @@
   /* Option to add something if desired */
 }
 
+.site-header__renphil {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  font-size: var(--size-step--2);
+  font-family: var(--font-sans);
+  font-weight: var(--font-regular);
+  text-transform: none;
+  color: var(--color-text);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.site-header__renphil:hover {
+  opacity: 1;
+}
+
+.site-header__renphil-icon {
+  height: 1.25em;
+  width: auto;
+}
+
 .site-header__nav-wrapper {
   z-index: var(--header-nav-z-index);
 }
