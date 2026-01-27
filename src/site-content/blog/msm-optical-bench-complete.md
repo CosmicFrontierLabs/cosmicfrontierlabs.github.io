@@ -4,7 +4,7 @@ date: 2026-01-26
 category: "Engineering"
 ---
 
-The optical bench for our Mass Simulator Model (MSM) is complete. This precision-machined aluminum structure forms the foundation of the telescope payload, and seeing it fully assembled marks a significant step toward vibration testing.
+The optical bench for our Mass Simulator Model (MSM) is complete. This precision-machined stainless steel structure forms the foundation of the telescope, and seeing it fully assembled marks a significant step toward vibration testing.
 
 ![Optical bench interior view](/images/blog-msm-optical-bench/optical-bench-1.png)
 
