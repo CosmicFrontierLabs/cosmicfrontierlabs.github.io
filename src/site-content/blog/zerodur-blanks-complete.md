@@ -4,7 +4,7 @@ date: 2025-12-22
 category: "Engineering"
 ---
 
-Our Zerodur mirror blanks have been completed and handed off to our optical integration partner for grinding and polishing. This marks a major milestone in our telescope program—we now have flight-quality glass in work.
+Our Zerodur mirror blanks have been completed and handed off to our optical fabrication partner for grinding and polishing. This marks a major milestone in our telescope program—we now have flight-quality glass in work.
 
 ![Zerodur blank](/images/blog-zerodur-blanks/zerodur-blank-1.jpg)
 

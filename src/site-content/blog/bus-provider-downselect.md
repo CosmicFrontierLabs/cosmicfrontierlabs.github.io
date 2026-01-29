@@ -130,7 +130,7 @@ With our bus provider selected, we move into the detailed design phase. Our team
 
 Meanwhile, the rest of our program continues to advance:
 
-- Our [Zerodur mirror blanks](/blog/zerodur-mirror-blanks-complete) are with our optical integration partner for grinding and polishing
+- Our [Zerodur mirror blanks](/blog/zerodur-mirror-blanks-complete) are with our optical fabrication partner for grinding and polishing
 - [Mass simulator parts](/blog/first-parts-received-for-mass-simulator) are arriving for assembly process validation
 - Our [launch slot for Q4 2027](/blog/launch-booked-for-q4-2027) gives us a firm timeline to execute against
 

@@ -6,7 +6,7 @@ category: "Engineering"
 
 The optical bench for our Mass Simulator Model (MSM) is complete. This precision-machined stainless steel structure forms the foundation of the telescope, and seeing it fully assembled marks a significant step toward vibration testing.
 
-![Optical bench interior view](/images/blog-msm-optical-bench/optical-bench-1.png)
+![Optical bench interior view](/images/blog-msm-optical-bench/optical-bench-4.png)
 
 ## Precision Manufacturing
 
@@ -20,7 +20,7 @@ The optical bench is machined from stainless steel to mimic the material propert
 
 The bench includes mounting provisions for all major payload components: the primary mirror, focal plane array, and gyroscope. Each interface has been verified during our recent [fit check](/blog/fit-check), confirming that the assembly sequence works as planned.
 
-![Integrated assembly view](/images/blog-msm-optical-bench/optical-bench-4.png)
+![Integrated assembly view](/images/blog-msm-optical-bench/optical-bench-1.png)
 
 ![Top-down view of optical bench](/images/blog-msm-optical-bench/optical-bench-5.png)
 
