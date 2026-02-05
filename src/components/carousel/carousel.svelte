@@ -781,8 +781,8 @@
   <!-- The mouseMove can be here since the overlay-content is the exact same size.
 	 They're both position fixed with inset 0. -->
   <div class="overlay-content" onmousemove={handleMousemove} aria-label="Stuff" role="application">
-    <div>
-      <div class="description-wrapper bg-glass2">
+    <div class="bg-glass2">
+      <div class="description-wrapper">
         <h2 bind:this={titleEl}>{curCarouselItemIndex + 1}. {carouselData[curCarouselItemIndex].title}</h2>
         <p bind:this={descriptionEl}>{carouselData[curCarouselItemIndex].description}</p>
       </div>
@@ -836,7 +836,7 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    height: 100%;
+    height: 80%;
     width: 100%;
   }
 
@@ -849,7 +849,8 @@
   }
 
   .carousel-controls {
-    margin-block-start: 1rem;
+    margin-block: 1rem;
+	padding-inline: 1rem;
     display: flex;
     align-items: center;
     gap: 12px;
