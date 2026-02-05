@@ -390,8 +390,9 @@ section[data-big-start-margin] {
 main {
   width: var(--content-width);
   margin-inline: auto;
-  margin-block-start: var(--space-s);
+  margin-block-start: var(--space-xl);
   margin-block-end: 0;
+  padding-inline: var(--space-xs);
 }
 
 @media (prefers-reduced-motion: reduce) {

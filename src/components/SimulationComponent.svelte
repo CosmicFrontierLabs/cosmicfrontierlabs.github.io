@@ -13,7 +13,6 @@
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
   let telescopes: Telescope[] = [];
@@ -34,7 +33,7 @@
 
   // Frame tracking for initialization opacity
   // minFrameForReady is really big, but it seemed good to make sure things are ready
-  const minFramesForReady = 100; 
+  const minFramesForReady = 100;
   let framesRendered = $state(0);
   let isReady = $derived(framesRendered > minFramesForReady);
 
@@ -124,7 +123,7 @@
       const width = container.offsetWidth || container.clientWidth;
       const height = container.offsetHeight || container.clientHeight;
       const aspect = width && height ? width / height : 1;
-      
+
       camera.left = (-cameraFrustumSize / 2) * aspect;
       camera.right = (cameraFrustumSize / 2) * aspect;
       camera.top = cameraFrustumSize / 2;
@@ -132,7 +131,6 @@
       camera.updateProjectionMatrix();
     }
   }
-
 
   function startAnimationLoop(): () => void {
     if (!scene || !camera || !renderer || !telescopes || !earth || !reactiveStarfield) {
@@ -212,7 +210,8 @@
     if (!checkWebGLSupport()) {
       console.warn("WebGL not supported in this browser");
       webglSupported = false;
-      initError = "WebGL is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.";
+      initError =
+        "WebGL is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.";
       return;
     }
 
@@ -334,13 +333,13 @@
         container.removeEventListener("click", handleMouseClick);
       }
       scrollTriggerInstance?.kill();
-      
+
       // Dispose individual telescopes
       telescopes.forEach((telescope) => telescope.dispose());
       telescopes = [];
       // Dispose static shared telescope resources
       Telescope.disposeStaticResources();
-      
+
       earth?.dispose();
       reactiveStarfield?.dispose();
       perf?.dispose();
@@ -356,9 +355,9 @@
       <p class="fallback-message">{initError}</p>
     </div>
   </div>
-{:else}
-  <div bind:this={container} class="simulation-viewer" class:ready={isReady}></div>
 {/if}
+
+<div bind:this={container} class="simulation-viewer" class:ready={isReady}></div>
 
 <style>
   .simulation-viewer {
@@ -402,15 +401,15 @@
   .fallback-stars {
     position: absolute;
     inset: 0;
-    background-image: 
+    background-image:
       radial-gradient(2px 2px at 20px 30px, white, transparent),
-      radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
       radial-gradient(1px 1px at 90px 40px, white, transparent),
-      radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
       radial-gradient(1px 1px at 160px 120px, white, transparent),
-      radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1px 1px at 200px 50px, rgba(255, 255, 255, 0.7), transparent),
       radial-gradient(2px 2px at 250px 150px, white, transparent),
-      radial-gradient(1px 1px at 300px 100px, rgba(255,255,255,0.5), transparent);
+      radial-gradient(1px 1px at 300px 100px, rgba(255, 255, 255, 0.5), transparent);
     background-size: 350px 200px;
     opacity: 0.5;
   }

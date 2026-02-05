@@ -1,10 +1,15 @@
 .header-wrapper {
   width: 100%;
   z-index: var(--header-nav-z-index);
+
+  position: fixed;
+  top: 0;
+  padding-block: var(--space-s);
 }
 
 .site-header {
-  padding-block: var(--space-m);
+  padding-block: var(--space-2xs);
+  padding-inline: var(--space-s);
   text-decoration: none;
   font-size: var(--size-step--1);
 
@@ -15,6 +20,17 @@
 
   /* background: color-mix(in oklab, var(--body-bg) 35%, transparent); */
   z-index: var(--header-nav-z-index);
+
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-l);
+
+  /* Add glassmorphism */
+  background: color-mix(in oklab, var(--body-bg) 35%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in oklab, var(--color-text) 35%, transparent);
+
+  box-shadow: 0 4px 30px rgba(255, 255, 255, 0.12);
 }
 
 .site-header__logo {
