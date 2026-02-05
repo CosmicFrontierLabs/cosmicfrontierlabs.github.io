@@ -1,5 +1,6 @@
 <script lang="ts">
   import SimulationComponent from "../components/SimulationComponent.svelte";
+  import Carousel from "./carousel/carousel.svelte";
 
   const itemData = [
     {
@@ -69,6 +70,11 @@
       </div>
     </div>
   {/each}
+</div>
+<div class="divider"></div>
+
+<div class="carousel-section">
+  <Carousel/>
 </div>
 
 <div class="join-us">
@@ -249,6 +255,15 @@
     }
   }
 
+  // Carousel Section
+  .carousel-section {
+
+    position: relative;
+    min-height: 100lvh;
+    z-index: 12;
+  }
+
+
   /* JOIN US */
   .join-us {
     min-height: 90lvh;
@@ -308,5 +323,12 @@
     aspect-ratio: 1 / 1;
     background: var(--color-text);
     border-radius: 50%;
+  }
+
+  .divider {
+    position: relative;
+    height: 50lvh;
+    background: var(--body-bg);
+    z-index: 11;
   }
 </style>
