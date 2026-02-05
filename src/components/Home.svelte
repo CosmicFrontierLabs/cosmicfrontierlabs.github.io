@@ -49,7 +49,8 @@
 
 <div class="subhero">
   <p id="subhero__text">
-    We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
+    We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard
+    platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
   </p>
 </div>
 
@@ -74,7 +75,7 @@
 <div class="divider"></div>
 
 <div class="carousel-section">
-  <Carousel/>
+  <Carousel />
 </div>
 
 <div class="join-us">
@@ -93,7 +94,7 @@
 <style lang="scss">
   /* Use 56rem as the breakpoint because the sticky sections
   need a big area to switch over to make sure all the text is visible
-  */ 
+  */
   /* HERO */
   .hero {
     min-height: 95lvh;
@@ -143,7 +144,6 @@
     background: var(--body-bg);
     z-index: 1;
 
-
     // TODO: This isn't working robustly and not sure why
     // &, &:hover, &:active {
     //   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><rect width='8' height='8' fill='white'/></svg>") 4 4, auto;
@@ -189,7 +189,7 @@
     top: calc(var(--card-top) + var(--index) * var(--card-offset));
     min-height: calc(90vh - var(--index) * var(--card-offset));
     z-index: calc(10 + var(--index));
-    
+
     background: var(--items-background-color);
     border-radius: 16px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
@@ -224,7 +224,6 @@
   .item__heading__number {
     font-size: var(--size-step-2);
     font-weight: 700;
-
   }
 
   .item .item__text {
@@ -257,12 +256,28 @@
 
   // Carousel Section
   .carousel-section {
-
     position: relative;
-    min-height: 100lvh;
+    min-height: 80lvh;
     z-index: 12;
-  }
 
+    border-radius: 96px;
+    border: 1px solid var(--color-text);
+    overflow: clip;
+    corner-shape: squircle;
+
+    // Full bleed
+    // width: 100lvw;
+    // margin-inline: calc(50% - 50lvw);
+
+    background-image: url("/images/join-us.jpg");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    // Note that ios doesn't support background-attachment: fixed
+    // for performance reasons
+    background-attachment: fixed;
+  }
 
   /* JOIN US */
   .join-us {
@@ -330,5 +345,6 @@
     height: 50lvh;
     background: var(--body-bg);
     z-index: 11;
+
   }
 </style>
