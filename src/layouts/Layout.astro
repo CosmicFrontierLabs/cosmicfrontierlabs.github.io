@@ -1,6 +1,7 @@
 ---
 import "../styles/main.scss";
-import Header from "../components/Header.astro";
+// import Header from "../components/Header.astro";
+import Header from "../components/Header.svelte";
 import Footer from "../components/Footer.astro";
 ---
 
@@ -54,7 +55,9 @@ import Footer from "../components/Footer.astro";
         }, 400);
       });
     </script>
-    <Header />
+    <div>
+      <Header client:load />
+    </div>
     <main id="content">
       <slot />
     </main>

@@ -158,9 +158,6 @@
     position: sticky;
     top: 0lvh;
 
-    width: 100lvw;
-    margin-inline: calc(50% - 50vw);
-
     & > p {
       max-width: 40ch;
       text-align: center;
