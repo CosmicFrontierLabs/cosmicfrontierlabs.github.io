@@ -150,6 +150,6 @@ export const simulationConfig: SimulationConfig = {
     },
   },
   perf: {
-    enabled: true,
+    enabled: false,
   },
 };

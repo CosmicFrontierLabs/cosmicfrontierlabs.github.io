@@ -1,6 +1,10 @@
 import * as THREE from "three";
 // @ts-expect-error: no type definitions for 'glslify'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as tagged template literal below
 import glslify from "glslify";
+// Mark glslify as used so Vite doesn't warn about unused import
+// (it's used as a tagged template literal for GrainShader.fragmentShader)
+void glslify;
 
 /**
  * Draws a debug point (red sphere) at the specified position in the scene
@@ -138,7 +142,7 @@ export function grid3d(center: THREE.Vector3, radius: number, numPoints: number)
   return grid;
 }
 
-export function sampleArray(arr: any[], numPoints: number): any[] {
+export function sampleArray<T>(arr: T[], numPoints: number): T[] {
   return arr.sort(() => Math.random() - 0.5).slice(0, numPoints);
 }
 

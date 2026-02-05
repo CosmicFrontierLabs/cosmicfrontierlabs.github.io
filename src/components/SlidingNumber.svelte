@@ -87,12 +87,14 @@
   });
 </script>
 
-<div class="sliding-number-container">
-  <div class="sliding-number-carousel" bind:this={carouselEl}>
+<div class="sliding-number-container" aria-live="polite" aria-atomic="true">
+  <div class="sliding-number-carousel" bind:this={carouselEl} aria-hidden="true">
     {#each numbers as number}
       <span class="sliding-number">{number}</span>
     {/each}
   </div>
+  <!-- Visually hidden current value for screen readers -->
+  <span class="visually-hidden">{currentNumber}</span>
 </div>
 
 <style lang="scss">

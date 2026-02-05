@@ -10,11 +10,13 @@ import { convertWorldRadiusToNDC, lineSphereIntersection, projectWorldPositionsT
  */
 export class ReactiveStarfield {
   private bgMesh: THREE.Mesh;
+  private scene: THREE.Scene;
   private worldRadius: number;
   private frustumTargetsArray: THREE.Vector2[];
   private frustumIntersectionsArray: THREE.Vector2[];
 
   constructor(scene: THREE.Scene, width: number, height: number, renderer?: THREE.WebGLRenderer) {
+    this.scene = scene;
     const config = simulationConfig.background;
     this.worldRadius = config.circleRadius;
 
@@ -158,5 +160,27 @@ export class ReactiveStarfield {
       }
     }
     material.uniforms.uFrustumIntersections.value = this.frustumIntersectionsArray;
+  }
+
+  /**
+   * Disposes of all Three.js resources to prevent memory leaks
+   * Should be called when the component unmounts
+   */
+  dispose(): void {
+    const material = this.bgMesh.material as THREE.ShaderMaterial;
+
+    // Dispose texture if it exists
+    if (material.uniforms.uTexture.value) {
+      material.uniforms.uTexture.value.dispose();
+    }
+
+    // Dispose material
+    material.dispose();
+
+    // Dispose geometry
+    this.bgMesh.geometry.dispose();
+
+    // Remove from scene
+    this.scene.remove(this.bgMesh);
   }
 }

@@ -4,7 +4,7 @@ import { getCollection, render } from "astro:content";
 
 export async function getStaticPaths() {
     let blogs = await getCollection("blog");
-    // blogs = blogs.filter((blog) => !blog.data.isDraft);
+    blogs = blogs.filter((blog) => !blog.data.isDraft);
 
     return blogs.map((blog) => ({
         params: { slug: blog.data.slug },

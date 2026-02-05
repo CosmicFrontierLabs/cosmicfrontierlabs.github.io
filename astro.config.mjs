@@ -15,6 +15,22 @@ export default defineConfig({
     ssr: {
       noExternal: ["@lucide/astro", "gsap"],
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            // Split Three.js and related libraries into their own chunk
+            if (id.includes("node_modules/three")) {
+              return "three";
+            }
+            // Split GSAP into its own chunk
+            if (id.includes("node_modules/gsap")) {
+              return "gsap";
+            }
+          },
+        },
+      },
+    },
   },
   devToolbar: {
     enabled: false,

@@ -99,4 +99,16 @@ export class ArcLoader {
     }
     this.group.position.copy(position);
   }
+
+  dispose(): void {
+    // Dispose all tube meshes in the group
+    for (let i = this.group.children.length - 1; i >= 0; i--) {
+      const tubeMesh = this.group.children[i] as THREE.Mesh;
+      tubeMesh.geometry.dispose();
+      (tubeMesh.material as THREE.Material).dispose();
+      this.group.remove(tubeMesh);
+    }
+    // Remove the group from its parent (scene)
+    this.group.parent?.remove(this.group);
+  }
 }

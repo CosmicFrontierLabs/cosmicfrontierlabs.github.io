@@ -29,13 +29,6 @@
   let renderPass: RenderPass | null = null;
   let grainPass: ShaderPass | null = null;
 
-  // Camera rotation state
-  let cameraSpherical: THREE.Spherical | null = null;
-  let targetSpherical: THREE.Spherical | null = null;
-  let userInteracting: boolean = false;
-  let lastInteractionTime: number = 0;
-  let cameraRotationStartTime: number = 0;
-
   // Mouse position tracking
   let mouseTracker: MouseTracker | null = null;
 
@@ -44,6 +37,23 @@
   const minFramesForReady = 100; 
   let framesRendered = $state(0);
   let isReady = $derived(framesRendered > minFramesForReady);
+
+  // Error boundary state
+  let initError = $state<string | null>(null);
+  let webglSupported = $state(true);
+
+  /**
+   * Check if WebGL is supported in the current browser
+   */
+  function checkWebGLSupport(): boolean {
+    try {
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      return !!gl;
+    } catch {
+      return false;
+    }
+  }
 
   function createRenderer(container: HTMLDivElement): THREE.WebGLRenderer {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -198,116 +208,157 @@
   }
 
   onMount(() => {
-    gsap.registerPlugin(ScrollTrigger);
-
-    const config = simulationConfig;
-    scene = new THREE.Scene();
-    scene.background = null;
-
-    // Initialize orthographic camera with proper aspect ratio
-    camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
-    camera.position.set(0, 0, 300);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-    updateCamera(); // Set initial aspect ratio
-
-    renderer = createRenderer(container);
-    renderer.setClearColor(0x000000, 0); // Transparent background
-
-    if (perf && config.perf.enabled) {
-      perf = new ThreePerf({
-        anchorX: "left",
-        anchorY: "top",
-        domElement: container,
-        renderer: renderer,
-      });
+    // Check WebGL support before attempting initialization
+    if (!checkWebGLSupport()) {
+      console.warn("WebGL not supported in this browser");
+      webglSupported = false;
+      initError = "WebGL is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.";
+      return;
     }
 
-    setupLighting();
+    let cleanupAnimation: (() => void) | null = null;
+    let scrollTriggerInstance: ScrollTrigger | null = null;
+    let handleMouseMove: ((event: MouseEvent) => void) | null = null;
+    let handleMouseClick: ((event: MouseEvent) => void) | null = null;
 
-    const width = container.offsetWidth || container.clientWidth;
-    const height = container.offsetHeight || container.clientHeight;
-    reactiveStarfield = new ReactiveStarfield(scene, width, height, renderer);
-    earth = new Earth(scene, renderer);
+    try {
+      gsap.registerPlugin(ScrollTrigger);
 
-    // Set up telescopes
-    const originGridPoints: THREE.Vector3[] = grid3d(
-      simulationConfig.earth.position,
-      simulationConfig.earth.radius * simulationConfig.telescope.orbitalRadiusScalar,
-      1600
-    );
-    const origins = sampleArray(originGridPoints, simulationConfig.telescope.numTelescopes);
+      const config = simulationConfig;
+      scene = new THREE.Scene();
+      scene.background = null;
 
-    // Create telescopes with 25% randomly selected to track the mouse
-    const numMouseTrackingTelescopes = simulationConfig.telescope.numMouseTrackingTelescopes;
-    telescopes = origins.map((origin, index) => {
-      const shouldTrackMouse = index < numMouseTrackingTelescopes;
-      if (!scene) {
-        throw new Error("Scene not initialized");
+      // Initialize orthographic camera with proper aspect ratio
+      camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
+      camera.position.set(0, 0, 300);
+      camera.lookAt(new THREE.Vector3(0, 0, 0));
+      updateCamera(); // Set initial aspect ratio
+
+      renderer = createRenderer(container);
+      renderer.setClearColor(0x000000, 0); // Transparent background
+
+      if (config.perf.enabled) {
+        perf = new ThreePerf({
+          anchorX: "left",
+          anchorY: "top",
+          domElement: container,
+          renderer: renderer,
+        });
       }
-      return new Telescope(scene, origin, shouldTrackMouse);
-    });
 
-    // Initialize mouse tracker
-    mouseTracker = new MouseTracker();
+      setupLighting();
 
-    camera.updateMatrixWorld();
+      const width = container.offsetWidth || container.clientWidth;
+      const height = container.offsetHeight || container.clientHeight;
+      reactiveStarfield = new ReactiveStarfield(scene, width, height, renderer);
+      earth = new Earth(scene, renderer);
 
-    // Set up scroll-based camera zoom
-    const scrollTriggerInstance = ScrollTrigger.create({
-      start: "top top",
-      end: "bottom top",
-      scrub: true,
-      onUpdate: (self) => {
-        // Animate cameraFrustumSize from initialCameraFrustumSize to 0.5 as user scrolls
-        const zoomScaleFactor = 3.0;
-        cameraFrustumSize = initialCameraFrustumSize - self.progress * zoomScaleFactor;
-        updateCamera();
-      },
-    });
+      // Set up telescopes
+      const originGridPoints: THREE.Vector3[] = grid3d(
+        simulationConfig.earth.position,
+        simulationConfig.earth.radius * simulationConfig.telescope.orbitalRadiusScalar,
+        1600
+      );
+      const origins = sampleArray(originGridPoints, simulationConfig.telescope.numTelescopes);
 
-    resizeObserver = setupResizeObserver();
-    const cleanupAnimation = startAnimationLoop();
+      // Create telescopes with 25% randomly selected to track the mouse
+      const numMouseTrackingTelescopes = simulationConfig.telescope.numMouseTrackingTelescopes;
+      telescopes = origins.map((origin, index) => {
+        const shouldTrackMouse = index < numMouseTrackingTelescopes;
+        if (!scene) {
+          throw new Error("Scene not initialized");
+        }
+        return new Telescope(scene, origin, shouldTrackMouse);
+      });
 
-    // Set up mouse position tracking
-    const handleMouseMove = (event: MouseEvent) => {
-      if (container && mouseTracker) {
-        const rect = container.getBoundingClientRect();
-        const width = container.offsetWidth || container.clientWidth;
-        const height = container.offsetHeight || container.clientHeight;
-        const x = ((event.clientX - rect.left) / width) * 2 - 1;
-        const y = -((event.clientY - rect.top) / height) * 2 + 1;
-        mouseTracker.updateMousePositionNDC(x, y);
-      }
-    };
-    container.addEventListener("mousemove", handleMouseMove);
+      // Initialize mouse tracker
+      mouseTracker = new MouseTracker();
 
-    // Set up mouse click tracking for debug point
-    const handleMouseClick = (event: MouseEvent) => {
-      if (container && mouseTracker && camera) {
-        const rect = container.getBoundingClientRect();
-        const width = container.offsetWidth || container.clientWidth;
-        const height = container.offsetHeight || container.clientHeight;
-        const x = ((event.clientX - rect.left) / width) * 2 - 1;
-        const y = -((event.clientY - rect.top) / height) * 2 + 1;
-        mouseTracker.updateMousePositionNDC(x, y);
-        mouseTracker.update(camera);
-      }
-    };
-    container.addEventListener("click", handleMouseClick);
+      camera.updateMatrixWorld();
+
+      // Set up scroll-based camera zoom
+      scrollTriggerInstance = ScrollTrigger.create({
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+        onUpdate: (self) => {
+          // Animate cameraFrustumSize from initialCameraFrustumSize to 0.5 as user scrolls
+          const zoomScaleFactor = 3.0;
+          cameraFrustumSize = initialCameraFrustumSize - self.progress * zoomScaleFactor;
+          updateCamera();
+        },
+      });
+
+      resizeObserver = setupResizeObserver();
+      cleanupAnimation = startAnimationLoop();
+
+      // Set up mouse position tracking
+      handleMouseMove = (event: MouseEvent) => {
+        if (container && mouseTracker) {
+          const rect = container.getBoundingClientRect();
+          const width = container.offsetWidth || container.clientWidth;
+          const height = container.offsetHeight || container.clientHeight;
+          const x = ((event.clientX - rect.left) / width) * 2 - 1;
+          const y = -((event.clientY - rect.top) / height) * 2 + 1;
+          mouseTracker.updateMousePositionNDC(x, y);
+        }
+      };
+      container.addEventListener("mousemove", handleMouseMove);
+
+      // Set up mouse click tracking for debug point
+      handleMouseClick = (event: MouseEvent) => {
+        if (container && mouseTracker && camera) {
+          const rect = container.getBoundingClientRect();
+          const width = container.offsetWidth || container.clientWidth;
+          const height = container.offsetHeight || container.clientHeight;
+          const x = ((event.clientX - rect.left) / width) * 2 - 1;
+          const y = -((event.clientY - rect.top) / height) * 2 + 1;
+          mouseTracker.updateMousePositionNDC(x, y);
+          mouseTracker.update(camera);
+        }
+      };
+      container.addEventListener("click", handleMouseClick);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Simulation initialization failed:", error);
+      initError = `Failed to initialize 3D simulation: ${errorMessage}`;
+      return;
+    }
 
     return () => {
       resizeObserver?.disconnect();
-      container.removeEventListener("mousemove", handleMouseMove);
-      container.removeEventListener("click", handleMouseClick);
+      if (handleMouseMove) {
+        container.removeEventListener("mousemove", handleMouseMove);
+      }
+      if (handleMouseClick) {
+        container.removeEventListener("click", handleMouseClick);
+      }
       scrollTriggerInstance?.kill();
+      
+      // Dispose individual telescopes
+      telescopes.forEach((telescope) => telescope.dispose());
+      telescopes = [];
+      // Dispose static shared telescope resources
+      Telescope.disposeStaticResources();
+      
       earth?.dispose();
+      reactiveStarfield?.dispose();
       perf?.dispose();
-      cleanupAnimation();
+      cleanupAnimation?.();
     };
   });
 </script>
 
-<div bind:this={container} class="simulation-viewer" class:ready={isReady}></div>
+{#if initError}
+  <div class="simulation-fallback">
+    <div class="fallback-content">
+      <div class="fallback-stars"></div>
+      <p class="fallback-message">{initError}</p>
+    </div>
+  </div>
+{:else}
+  <div bind:this={container} class="simulation-viewer" class:ready={isReady}></div>
+{/if}
 
 <style>
   .simulation-viewer {
@@ -320,5 +371,47 @@
 
   .simulation-viewer.ready {
     opacity: 1;
+  }
+
+  .simulation-fallback {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .fallback-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: var(--space-m);
+  }
+
+  .fallback-message {
+    color: var(--color-text-muted, #888);
+    font-size: var(--size-step--1, 0.875rem);
+    max-width: 40ch;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* Static starfield background for fallback */
+  .fallback-stars {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(2px 2px at 20px 30px, white, transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1px 1px at 90px 40px, white, transparent),
+      radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 160px 120px, white, transparent),
+      radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(2px 2px at 250px 150px, white, transparent),
+      radial-gradient(1px 1px at 300px 100px, rgba(255,255,255,0.5), transparent);
+    background-size: 350px 200px;
+    opacity: 0.5;
   }
 </style>

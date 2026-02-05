@@ -8,6 +8,9 @@ import { ArcLoader } from "./ArcLoader";
  * Used to visualize viewing volumes or light cones.
  */
 export class Telescope {
+  // Static constant for up vector (avoids allocation in update loop)
+  private static readonly UP_VECTOR = new THREE.Vector3(0, 1, 0);
+
   // Static shared resources for better performance
   static hasInitializedStaticResources: boolean = false;
   static frustumMaterial: THREE.MeshBasicMaterial | null = null;
@@ -276,7 +279,7 @@ export class Telescope {
     // 3. Update frustum
     this.originToTargetMidPoint.addVectors(this.origin, this.target).multiplyScalar(0.5);
     this.frustumMesh.position.copy(this.originToTargetMidPoint);
-    this.frustumMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), this.originToTargetVector);
+    this.frustumMesh.quaternion.setFromUnitVectors(Telescope.UP_VECTOR, this.originToTargetVector);
     this.frustumMesh.scale.y = originToTargetDistance / simulationConfig.telescope.telescopeLength;
 
     // 4. Update telescope mesh
@@ -300,5 +303,49 @@ export class Telescope {
     });
     this.trailCubes = [];
     this.scene.remove(this.trailGroup);
+
+    // Clean up frustum mesh
+    this.scene.remove(this.frustumMesh);
+
+    // Clean up telescope mesh
+    this.scene.remove(this.telescopeMesh);
+
+    // Clean up radio arc loader
+    this.radioArcLoader.dispose();
+  }
+
+  /**
+   * Disposes all static shared resources.
+   * Call this when the simulation is completely torn down to prevent memory leaks.
+   */
+  static disposeStaticResources(): void {
+    if (!Telescope.hasInitializedStaticResources) return;
+
+    Telescope.frustumMaterial?.dispose();
+    Telescope.frustumMaterial = null;
+
+    Telescope.frustumGeometry?.dispose();
+    Telescope.frustumGeometry = null;
+
+    Telescope.telescopeMaterial?.dispose();
+    Telescope.telescopeMaterial = null;
+
+    Telescope.trailMaterial?.dispose();
+    Telescope.trailMaterial = null;
+
+    Telescope.trailCubeGeometry?.dispose();
+    Telescope.trailCubeGeometry = null;
+
+    // Dispose geometries from the telescope group
+    if (Telescope.telescopeGroup) {
+      Telescope.telescopeGroup.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry?.dispose();
+        }
+      });
+      Telescope.telescopeGroup = null;
+    }
+
+    Telescope.hasInitializedStaticResources = false;
   }
 }
