@@ -42,8 +42,8 @@
   // Mouse position tracking
   let mouseTracker: MouseTracker | null = null;
 
-  // Active scene: "simulation" or "carousel"
-  let activeScene = $state<"simulation" | "carousel">("simulation");
+  // Active scene: "simulation" (hero), "carousel" (model viewer), or "idle" (past carousel, canvas hidden)
+  let activeScene = $state<"simulation" | "carousel" | "idle">("simulation");
 
   // Carousel scene instance
   let carouselScene: CarouselScene | null = null;
@@ -424,19 +424,19 @@
   });
 
   // React to carouselTriggerEl prop changes
-  let carouselScrollTrigger: ScrollTrigger | null = null;
+  let carouselEnterTrigger: ScrollTrigger | null = null;
+  let carouselExitTrigger: ScrollTrigger | null = null;
   let heroFadeOutTrigger: ScrollTrigger | null = null;
 
   $effect(() => {
     // Clean up previous triggers
-    carouselScrollTrigger?.kill();
+    carouselEnterTrigger?.kill();
+    carouselExitTrigger?.kill();
     heroFadeOutTrigger?.kill();
 
     if (!carouselTriggerEl) return;
 
     // Hero fade-out: as user scrolls past the hero, fade canvas to 0
-    // We find the hero element by looking at carouselTriggerEl's context
-    // The hero section is the first section on the page
     const heroEl = document.querySelector(".hero") as HTMLElement | null;
     if (heroEl) {
       heroFadeOutTrigger = ScrollTrigger.create({
@@ -445,7 +445,6 @@
         end: "bottom top",
         scrub: true,
         onUpdate: (self) => {
-          // Only apply hero fade when simulation is active
           if (activeScene === "simulation") {
             canvasOpacity = 1 - self.progress;
           }
@@ -453,8 +452,8 @@
       });
     }
 
-    // Carousel section: when it enters viewport, switch to carousel scene and fade in
-    carouselScrollTrigger = ScrollTrigger.create({
+    // Carousel fade-in: approaching the carousel section from above
+    carouselEnterTrigger = ScrollTrigger.create({
       trigger: carouselTriggerEl,
       start: "top 80%",
       end: "top 20%",
@@ -468,13 +467,36 @@
         stopAutoplay();
       },
       onUpdate: (self) => {
-        // Fade canvas back in as we enter carousel section
-        canvasOpacity = self.progress;
+        if (activeScene === "carousel" || self.direction === 1) {
+          canvasOpacity = self.progress;
+        }
+      },
+    });
+
+    // Carousel fade-out: scrolling past the carousel section downward
+    carouselExitTrigger = ScrollTrigger.create({
+      trigger: carouselTriggerEl,
+      start: "bottom 80%",
+      end: "bottom 20%",
+      scrub: true,
+      onLeave: () => {
+        activeScene = "idle";
+        stopAutoplay();
+      },
+      onEnterBack: () => {
+        activeScene = "carousel";
+        startAutoplay();
+      },
+      onUpdate: (self) => {
+        if (activeScene === "carousel" || activeScene === "idle") {
+          canvasOpacity = 1 - self.progress;
+        }
       },
     });
 
     return () => {
-      carouselScrollTrigger?.kill();
+      carouselEnterTrigger?.kill();
+      carouselExitTrigger?.kill();
       heroFadeOutTrigger?.kill();
     };
   });
