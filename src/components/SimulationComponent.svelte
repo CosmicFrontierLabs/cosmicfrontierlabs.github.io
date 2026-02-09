@@ -446,10 +446,11 @@
 
 <!-- Carousel overlay: only visible when carousel is active and UI has faded in -->
 {#if activeScene === "carousel"}
-  <div class="carousel-overlay" onmousemove={handleCarouselMousemove} role="application" aria-label="3D model carousel" style="opacity: {Math.min(canvasOpacity, carouselUIOpacity)}; pointer-events: {carouselUIOpacity > 0.8 ? 'auto' : 'none'};">
+  <div class="carousel-overlay" onmousemove={handleCarouselMousemove} role="application" aria-label="3D model carousel" style="opacity: {Math.min(canvasOpacity, carouselUIOpacity)};">
+    <h2>Explore our telescope</h2>
     <div class="carousel-glass">
       <div class="description-wrapper">
-        <h2 bind:this={titleEl}>{curCarouselItemIndex + 1}. {carouselData[curCarouselItemIndex].title}</h2>
+        <h3 bind:this={titleEl}>{curCarouselItemIndex + 1}. {carouselData[curCarouselItemIndex].title}</h3>
         <p bind:this={descriptionEl}>{carouselData[curCarouselItemIndex].description}</p>
       </div>
 
@@ -500,16 +501,36 @@
   /* Carousel overlay - fixed over the canvas, only shown when carousel is active */
   .carousel-overlay {
     position: fixed;
-    inset: 0;
+    top: 12lvh;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: var(--content-width);
+    margin-inline: auto;
     z-index: 14;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
+    justify-content: space-between;
+    align-items: start;
     padding-block-end: 2%;
     padding-inline: 2rem;
-    /* pointer-events enabled via inline style once fully visible */
     transition: opacity 0.15s ease-out;
+  }
+
+  .carousel-overlay h2 {
+    text-shadow:
+      2px 2px 8px rgba(0, 0, 0, 0.8),
+      0 0 4px rgba(0, 0, 0, 0.9);
+    text-transform: uppercase;
+    font-size: var(--size-step-4);
+    font-weight: 500;
+    line-height: 1;
+    text-wrap: balance;
+    margin-block-start: 0.125em;
+
+    @media (min-width: 56rem) {
+      font-size: var(--size-step-5);
+    }
   }
 
   .carousel-glass {
@@ -527,7 +548,7 @@
     min-height: 8lh;
   }
 
-  .description-wrapper h2 {
+  .description-wrapper h3 {
     font-size: 1.325rem;
     text-wrap: balance;
     margin-block-start: 0lh;
@@ -539,6 +560,8 @@
     padding-inline: 1rem;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
+    margin-inline-end: auto;
     gap: 12px;
   }
 

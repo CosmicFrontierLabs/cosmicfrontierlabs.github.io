@@ -398,15 +398,6 @@ export class CarouselScene {
   dispose(): void {
     this.reactiveStarfield.dispose();
 
-    // Dispose rings
-    this.rings.children.forEach((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.geometry.dispose();
-        if (child.material instanceof THREE.Material) child.material.dispose();
-      }
-    });
-
-    // Dispose models
     const disposeGroup = (group: THREE.Group | null) => {
       if (!group) return;
       group.traverse((child) => {
