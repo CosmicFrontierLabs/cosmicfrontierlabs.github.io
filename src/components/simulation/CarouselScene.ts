@@ -83,7 +83,7 @@ export const carouselData: CarouselItem[] = [
       "The full assembly integrates high-gain antennas and power distribution systems that connect the telescope to ground stations worldwide. With data transmission rates exceeding 100 Gbps, the complete system enables real-time delivery of high-resolution scientific data.",
     model: "fullAssy",
     camera: {
-      position: { x: 0, y: -2, z: 10 },
+      position: { x: 0, y: -2, z: 4 },
       lookAt: { x: 0, y: 1.5, z: 0 },
     },
   },
@@ -126,6 +126,12 @@ export class CarouselScene {
   mousePosition = { x: 0.5, y: 0.5 };
   enableCameraReaction = true;
 
+  /**
+   * When true, the visible model auto-rotates and the camera stays fixed.
+   * Set to false once the carousel UI is visible and interactive.
+   */
+  introMode = true;
+
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
     RectAreaLightUniformsLib.init();
 
@@ -165,7 +171,7 @@ export class CarouselScene {
 
     // Reactive starfield
     this.reactiveStarfield = new ReactiveStarfield(this.scene, width, height, renderer, {
-      radius: 10,
+      radius: 15,
       opacityBase: 0.4,
       opacityHover: 1.0,
       brightness: 2.5,
@@ -245,6 +251,18 @@ export class CarouselScene {
    */
   update(deltaTimeSeconds: number): void {
     this.totTime += deltaTimeSeconds;
+
+    // Intro mode: auto-rotate the visible model, camera stays fixed
+    if (this.introMode) {
+      const rotationSpeed = 0.3;
+      if (this.telescope?.visible) {
+        this.telescope.rotation.y += deltaTimeSeconds * rotationSpeed;
+      }
+      if (this.fullAssy?.visible) {
+        this.fullAssy.rotation.y += deltaTimeSeconds * rotationSpeed;
+      }
+      return;
+    }
 
     // Mouse-reactive camera
     if (this.enableCameraReaction) {

@@ -18,9 +18,11 @@
     canvasOpacity: number;
     /** 0–1 scroll progress through the hero section, drives camera zoom */
     heroScrollProgress: number;
+    /** 0–1 opacity for carousel UI (text + controls), driven by scroll */
+    carouselUIOpacity: number;
   }
 
-  let { activeScene, canvasOpacity, heroScrollProgress }: Props = $props();
+  let { activeScene, canvasOpacity, heroScrollProgress, carouselUIOpacity }: Props = $props();
 
   // $inspect(heroScrollProgress);
 
@@ -406,9 +408,18 @@
     updateCamera();
   });
 
-  // Watch activeScene to start/stop carousel autoplay
+  // Drive carousel introMode and autoplay based on UI opacity
   $effect(() => {
-    if (activeScene === "carousel") {
+    if (carouselScene) {
+      const uiVisible = carouselUIOpacity > 0.8;
+      carouselScene.introMode = !uiVisible;
+      carouselScene.enableCameraReaction = uiVisible;
+    }
+  });
+
+  // Watch activeScene + carouselUIOpacity to start/stop carousel autoplay
+  $effect(() => {
+    if (activeScene === "carousel" && carouselUIOpacity > 0.8) {
       startAutoplay();
     } else {
       stopAutoplay();
@@ -433,9 +444,9 @@
   style="opacity: {canvasOpacity};"
 ></div>
 
-<!-- Carousel overlay: only visible when carousel is active -->
+<!-- Carousel overlay: only visible when carousel is active and UI has faded in -->
 {#if activeScene === "carousel"}
-  <div class="carousel-overlay" onmousemove={handleCarouselMousemove} role="application" aria-label="3D model carousel" style="opacity: {canvasOpacity}; pointer-events: {canvasOpacity > 0.8 ? 'auto' : 'none'};">
+  <div class="carousel-overlay" onmousemove={handleCarouselMousemove} role="application" aria-label="3D model carousel" style="opacity: {Math.min(canvasOpacity, carouselUIOpacity)}; pointer-events: {carouselUIOpacity > 0.8 ? 'auto' : 'none'};">
     <div class="carousel-glass">
       <div class="description-wrapper">
         <h2 bind:this={titleEl}>{curCarouselItemIndex + 1}. {carouselData[curCarouselItemIndex].title}</h2>

@@ -14,6 +14,7 @@
   let canvasOpacity = $state(1);
   let heroScrollProgress = $state(0);
   let subheroVisible = $state(true);
+  let carouselUIOpacity = $state(0);
 
   onMount(() => {
     // 1. Hero: fade canvas out and drive camera zoom
@@ -49,6 +50,7 @@
       onLeaveBack: () => {
         activeScene = "simulation";
         subheroVisible = true;
+        carouselUIOpacity = 0;
         // Restore hero-driven opacity so there's no jump
         const heroProgress = heroTrigger.progress;
         const p = Math.max(0, Math.min(1, 1.5 * heroProgress));
@@ -62,7 +64,24 @@
       },
     });
 
-    // 3. Carousel fade-out: scrolling past the carousel section downward
+    // 3. Carousel UI fade-in: once the canvas is fully visible, fade in text + controls
+    const carouselUITrigger = ScrollTrigger.create({
+      trigger: carouselSectionEl,
+      start: "top top",
+      end: "15% top",
+      scrub: true,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        if (activeScene === "carousel") {
+          carouselUIOpacity = self.progress;
+        }
+      },
+      onLeaveBack: () => {
+        carouselUIOpacity = 0;
+      },
+    });
+
+    // 4. Carousel fade-out: scrolling past the carousel section downward
     const carouselExitTrigger = ScrollTrigger.create({
       trigger: carouselSectionEl,
       start: "bottom 80%",
@@ -72,10 +91,12 @@
       onLeave: () => {
         activeScene = "idle";
         canvasOpacity = 0;
+        carouselUIOpacity = 0;
       },
       onEnterBack: () => {
         activeScene = "carousel";
         // Sync opacity to current progress so there's no discontinuous jump
+        // Set the simulation z-index via CSS custom property on :root
         canvasOpacity = 1 - carouselExitTrigger.progress;
       },
       onUpdate: (self) => {
@@ -91,6 +112,7 @@
     return () => {
       heroTrigger.kill();
       carouselEnterTrigger.kill();
+      carouselUITrigger.kill();
       carouselExitTrigger.kill();
     };
   });
@@ -130,7 +152,7 @@
 </script>
 
 <div class="simulation-container">
-  <SimulationComponent {activeScene} {canvasOpacity} {heroScrollProgress} />
+  <SimulationComponent {activeScene} {canvasOpacity} {heroScrollProgress} {carouselUIOpacity} />
 </div>
 
 <div class="hero" bind:this={heroEl}>
@@ -197,7 +219,7 @@
     --z-subhero: 11;
     --z-hero: 12;
     --z-items: 12;
-    --z-carousel: 12;
+    --z-carousel-ui: 12;
     --z-divider: 12;
     --z-join-us: 13;
   }
@@ -354,11 +376,14 @@
   }
 
   // Carousel Section - scroll anchor with min-height
+  // pointer-events: none so the empty anchor doesn't block the
+  // carousel overlay rendered inside .simulation-container (z-index 10).
   .carousel-section {
     position: sticky;
     top: 0;
-    min-height: 150lvh;
-    z-index: var(--z-carousel);
+    min-height: 250lvh;
+    z-index: var(--z-carousel-ui);
+    pointer-events: none;
   }
 
   /* JOIN US */
