@@ -1,17 +1,19 @@
 <script lang="ts">
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
-  import SimulationComponent from "../components/SimulationComponent.svelte";
+  import SimulationCanvas from "../components/SimulationCanvas.svelte";
   import { onMount } from "svelte";
 
   gsap.registerPlugin(ScrollTrigger);
 
   let heroEl: HTMLDivElement;
   let subheroEl: HTMLDivElement;
-  let itemsEl: HTMLDivElement;
-  let carouselSectionEl: HTMLDivElement;
+  let sectionsEl: HTMLDivElement;
+  /** Empty scroll-trigger anchor for the carousel. Its 200lvh height
+   *  provides the scroll distance that drives the carousel fade-in. */
+  let carouselAnchorEl: HTMLDivElement;
 
-  // Bindable state passed down to SimulationComponent
+  // Bindable state passed down to SimulationCanvas
   let activeScene = $state<"simulation" | "carousel" | "idle">("simulation");
   let canvasOpacity = $state(1);
   let heroScrollProgress = $state(0);
@@ -31,7 +33,6 @@
       onUpdate: (self) => {
         const p = Math.max(0, Math.min(1, 1.5 * self.progress));
         heroScrollProgress = p;
-        // Only drive opacity when this scene owns it
         if (activeScene === "simulation") {
           canvasOpacity = 1 - p;
         }
@@ -40,13 +41,19 @@
 
     // 2. Carousel fade-in: approaching the carousel section from above
     const carouselEnterTrigger = ScrollTrigger.create({
-      trigger: carouselSectionEl,
+      trigger: carouselAnchorEl,
       start: "top bottom",
       end: "top 50%",
       scrub: true,
       invalidateOnRefresh: true,
       onEnter: () => {
         activeScene = "carousel";
+      },
+      onLeaveBack: () => {
+        activeScene = "simulation";
+        // Restore canvas opacity based on current hero progress
+        canvasOpacity = 1 - heroScrollProgress;
+        carouselUIOpacity = 0;
       },
       onUpdate: (self) => {
         if (activeScene === "carousel") {
@@ -55,11 +62,10 @@
         }
       },
     });
-   
 
-    // 5. Subhero: fade out as the items section scrolls up over it
+    // 3. Subhero: fade out as the content sections scroll up over it
     const subheroFadeTrigger = ScrollTrigger.create({
-      trigger: itemsEl,
+      trigger: sectionsEl,
       start: "top bottom",
       end: "top 60%",
       scrub: true,
@@ -79,7 +85,7 @@
     };
   });
 
-  const itemData = [
+  const contentSections = [
     {
       id: "problem",
       title: "Discovery is Bottlenecked",
@@ -114,7 +120,7 @@
 </script>
 
 <div class="simulation-container">
-  <SimulationComponent {activeScene} {canvasOpacity} {heroScrollProgress} {carouselUIOpacity} />
+  <SimulationCanvas {activeScene} {canvasOpacity} {heroScrollProgress} {carouselUIOpacity} />
 </div>
 
 <div class="hero" bind:this={heroEl}>
@@ -126,35 +132,36 @@
 </div>
 
 <div class="subhero" bind:this={subheroEl}>
-  <p id="subhero__text" style:opacity={subheroOpacity}>
+  <p id="subhero__text" style="opacity: {subheroOpacity};">
     We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard
     platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
   </p>
 </div>
 
-<div class="items" bind:this={itemsEl}>
-  {#each itemData as item, index}
-    <div class="item" id={item.id} data-index={index} style="--index: {index}">
-      <div class="item__inner">
-        <h2 id={`${item.id}-heading`}>
-          <span class="item__heading__number">{index + 1}.</span>
-          {item.title}
+<div class="content-sections" bind:this={sectionsEl}>
+  {#each contentSections as section, index}
+    <div class="content-section" id={section.id} data-index={index} style="--index: {index}">
+      <div class="content-section__inner">
+        <h2 id={`${section.id}-heading`}>
+          <span class="content-section__heading__number">{index + 1}.</span>
+          {section.title}
         </h2>
-        <div class="item__text">
-          {#each item.text as paragraph}
+        <div class="content-section__text">
+          {#each section.text as paragraph}
             <p>{paragraph}</p>
           {/each}
         </div>
-        <img src={item.image} alt={`Illustration for ${item.title} section`} />
+        <img src={section.image} alt={`Illustration for ${section.title} section`} />
       </div>
     </div>
   {/each}
 </div>
-<!-- <div class="divider"></div> -->
 
-<div class="carousel-section" bind:this={carouselSectionEl}>
-  <!-- Carousel 3D content is now rendered by SimulationComponent's shared canvas -->
-  <!-- This div serves as the scroll trigger anchor -->
+<div class="carousel-anchor" bind:this={carouselAnchorEl}>
+  <!-- Empty scroll-trigger anchor. The carousel 3D content is rendered
+       by SimulationCanvas's shared WebGL canvas, which is fixed-position.
+       This div's 200lvh height provides the scroll distance that drives
+       the carousel fade-in via ScrollTrigger. -->
 </div>
 
 <div class="join-us">
@@ -198,7 +205,6 @@
     display: flex;
     flex-direction: column;
     pointer-events: none;
-    /* Local z-index within .hero's stacking context */
     z-index: 1;
   }
 
@@ -238,10 +244,10 @@
     }
   }
 
-  /* ITEMS */
-  .items {
-    --items-background-color: var(--color-text);
-    --items-text-color: var(--body-bg);
+  /* CONTENT SECTIONS (stacking cards) */
+  .content-sections {
+    --section-background-color: var(--color-text);
+    --section-text-color: var(--body-bg);
     --card-top: 10vh;
     --card-offset: 1rem;
 
@@ -249,23 +255,22 @@
 
     position: relative;
     z-index: var(--z-items);
-    color: var(--items-text-color);
+    color: var(--section-text-color);
   }
 
-  .item {
+  .content-section {
     position: sticky;
     top: calc(var(--card-top) + var(--index) * var(--card-offset));
     min-height: calc(90vh - var(--index) * var(--card-offset));
-    /* Local to .items stacking context – only needs to order cards among themselves */
     z-index: calc(1 + var(--index));
 
-    background: var(--items-background-color);
+    background: var(--section-background-color);
     border-radius: 16px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
     overflow: hidden;
   }
 
-  .item__inner {
+  .content-section__inner {
     max-width: var(--content-width);
     margin-inline: auto;
     padding: 3rem 1rem 4rem;
@@ -281,7 +286,7 @@
     }
   }
 
-  .item h2 {
+  .content-section h2 {
     grid-column: 1 / 2;
     grid-row: 1 / 2;
     text-transform: uppercase;
@@ -290,12 +295,12 @@
     font-weight: 700;
   }
 
-  .item__heading__number {
+  .content-section__heading__number {
     font-size: var(--size-step-2);
     font-weight: 700;
   }
 
-  .item .item__text {
+  .content-section .content-section__text {
     grid-column: 1 / 2;
     grid-row: 2 / -1;
 
@@ -310,7 +315,7 @@
     }
   }
 
-  .item img {
+  .content-section img {
     width: 100%;
     height: auto;
     object-fit: cover;
@@ -323,10 +328,10 @@
     }
   }
 
-  // Carousel Section - scroll anchor with min-height
+  // Carousel anchor — scroll-trigger target with min-height.
   // pointer-events: none so the empty anchor doesn't block the
   // carousel overlay rendered inside .simulation-container (z-index 10).
-  .carousel-section {
+  .carousel-anchor {
     position: sticky;
     top: 0;
     min-height: 200lvh;
@@ -389,12 +394,5 @@
     aspect-ratio: 1 / 1;
     background: var(--color-text);
     border-radius: 50%;
-  }
-
-  .divider {
-    position: relative;
-    height: 50lvh;
-    background: var(--body-bg);
-    z-index: var(--z-divider);
   }
 </style>

@@ -3,10 +3,13 @@
 Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and Svelte 5. Features interactive 3D space telescope simulations using Three.js.
 
 ---
+
 TODO:
+
 - Fix rolodex for mobile
 - Make sure gsap
 - Make the models load faster and include loader states
+
 ---
 
 ## Quick start

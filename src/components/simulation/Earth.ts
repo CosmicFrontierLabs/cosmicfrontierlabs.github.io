@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { simulationConfig } from "./simulationConfig";
-import { earthCRTVertexShader, earthCRTFragmentShader } from "./shaders/earthCRTShaders";
+import { earthVertexShader, earthFragmentShader } from "./shaders/earthShaders";
 
 /**
  * Earth mesh with texture and rotation animation
@@ -37,8 +37,8 @@ export class Earth {
         // Note: ShaderMaterial doesn't respond to lights by default
         // We'll make it self-illuminated by using the texture colors directly
         this.material = new THREE.ShaderMaterial({
-          vertexShader: earthCRTVertexShader,
-          fragmentShader: earthCRTFragmentShader,
+          vertexShader: earthVertexShader,
+          fragmentShader: earthFragmentShader,
           uniforms: {
             uTexture: { value: texture },
             uGridDensity: { value: 180.0 }, // Grid density (higher = more lines)

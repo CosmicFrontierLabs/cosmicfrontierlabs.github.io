@@ -3,7 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { ReactiveStarfield } from "./ReactiveStarfield";
-import { inverseLerp, lerp } from "three/src/math/MathUtils.js";
+import { lerp } from "three/src/math/MathUtils.js";
 import gsap from "gsap";
 
 export interface CarouselItem {
@@ -99,11 +99,6 @@ export const carouselData: CarouselItem[] = [
   },
 ];
 
-function remap(val: number, inMin: number, inMax: number, outMin: number, outMax: number) {
-  const t = inverseLerp(inMin, inMax, val);
-  return lerp(outMin, outMax, t);
-}
-
 /**
  * CarouselScene manages the 3D carousel scene (models, lights, camera, rings).
  * It does NOT own a renderer—it renders into a shared renderer passed to it.
@@ -114,9 +109,6 @@ export class CarouselScene {
   private telescope: THREE.Group | null = null;
   private fullAssy: THREE.Group | null = null;
   private totTime: number = 0.0;
-  private particles: THREE.Points;
-  private spotlight: THREE.SpotLight;
-  private spotlightTarget: THREE.Object3D;
   private ambientLight: THREE.AmbientLight;
   private keyLight: THREE.RectAreaLight;
   private rimLight: THREE.PointLight;
@@ -156,15 +148,6 @@ export class CarouselScene {
     this.rimLight = new THREE.PointLight(0xff6b35, 15.0, 20, 2);
     this.rimLight.position.set(-3, 2, -2);
     this.scene.add(this.rimLight);
-
-    // Spotlight (initially off)
-    this.spotlight = new THREE.SpotLight(0x88ccff, 0, 15, Math.PI / 8, 0.5, 1);
-    this.spotlight.position.set(0, 5, 10);
-    this.spotlightTarget = new THREE.Object3D();
-    this.spotlightTarget.position.set(0, 0.5, 0);
-    this.scene.add(this.spotlightTarget);
-    this.spotlight.target = this.spotlightTarget;
-    this.scene.add(this.spotlight);
 
     // Fog
     this.scene.fog = new THREE.Fog(0x0a1428, 5.0, 30.0);
@@ -213,37 +196,6 @@ export class CarouselScene {
       this.fullAssy.scale.set(3.0, 3.0, 3.0);
       this.fullAssy.visible = false;
     });
-
-    // Particles (empty for now, numParticles = 0)
-    const particleGeometry = new THREE.BufferGeometry();
-    particleGeometry.setAttribute("position", new THREE.Float32BufferAttribute([], 3));
-    particleGeometry.setAttribute("startPosition", new THREE.Float32BufferAttribute([], 3));
-    particleGeometry.setAttribute("endPosition", new THREE.Float32BufferAttribute([], 3));
-    particleGeometry.setAttribute("t", new THREE.Float32BufferAttribute([], 1));
-    const particleMaterial = new THREE.ShaderMaterial({
-      transparent: true,
-      depthTest: false,
-      vertexShader: `
-        attribute float t;
-        varying float vT;
-        void main() {
-          vT = t;
-          float size = 0.2;
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = size * (300.0 / -mvPosition.z);
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        varying float vT;
-        void main() {
-          float alpha = 1.0 - 2.0 * abs(0.5 - vT);
-          gl_FragColor = vec4(vec3(0.3), alpha);
-        }
-      `,
-    });
-    this.particles = new THREE.Points(particleGeometry, particleMaterial);
-    this.scene.add(this.particles);
   }
 
   /**
@@ -388,13 +340,6 @@ export class CarouselScene {
     }
   }
 
-  updateMousePosition(event: MouseEvent): void {
-    this.mousePosition = {
-      x: remap(event.x, 0, window.innerWidth, 0, 1),
-      y: remap(event.y, 0, window.innerHeight, 0, 1),
-    };
-  }
-
   dispose(): void {
     this.reactiveStarfield.dispose();
 
@@ -413,11 +358,5 @@ export class CarouselScene {
     };
     disposeGroup(this.telescope);
     disposeGroup(this.fullAssy);
-
-    // Dispose particles
-    this.particles.geometry.dispose();
-    if (this.particles.material instanceof THREE.Material) {
-      this.particles.material.dispose();
-    }
   }
 }

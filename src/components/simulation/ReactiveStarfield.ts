@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { simulationConfig } from "./simulationConfig";
 import { vertexShader, fragmentShader } from "./shaders/reactiveStarfieldShaders";
-import { convertWorldRadiusToNDC, lineSphereIntersection, projectWorldPositionsToNDC } from "./simulationUtils";
+import { convertWorldRadiusToNDC, projectWorldPositionsToNDC } from "./projectionUtils";
+import { lineSphereIntersection } from "./mathUtils";
 
 /**
  * Optional overrides for ReactiveStarfield configuration.

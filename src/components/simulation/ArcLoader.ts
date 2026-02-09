@@ -80,7 +80,7 @@ export class ArcLoader {
 
     for (let i = 0; i < this.group.children.length; i++) {
       const tubeMesh = this.group.children[i] as THREE.Mesh;
-      const material = tubeMesh.material as THREE.MeshBasicMaterial;
+      const material = tubeMesh.material as THREE.MeshToonMaterial;
 
       if (!isAnimating) {
         material.opacity = 0;

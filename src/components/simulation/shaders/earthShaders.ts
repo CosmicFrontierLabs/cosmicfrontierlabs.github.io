@@ -1,8 +1,8 @@
 /**
- * Vertex shader for Earth CRT effect
+ * Vertex shader for Earth styled-globe effect
  * Standard pass-through for sphere geometry with UV coordinates
  */
-export const earthCRTVertexShader = `
+export const earthVertexShader = `
   varying vec2 vUv;
 
   void main() {
@@ -12,10 +12,10 @@ export const earthCRTVertexShader = `
 `;
 
 /**
- * Fragment shader for Earth CRT effect
- * Converts greenish pixels to black and overlays green grid on white areas
+ * Fragment shader for Earth styled-globe effect
+ * Converts greenish pixels to black and overlays grid on white areas
  */
-export const earthCRTFragmentShader = `
+export const earthFragmentShader = `
   const vec3 BG_COLOR = vec3(0.16, 0.15, 0.15);
   const vec3 GRID_COLOR = vec3(0.99, 0.92, 0.92);
   const vec3 CYAN = vec3(0.55, 0.95, 0.95);
@@ -80,12 +80,6 @@ export const earthCRTFragmentShader = `
     vec2 grid = abs(fract(gridUV) - 0.5);
     float gridDist = min(grid.x, grid.y);
 
-    // For Anti-aliasing.
-    // Disable anti-aliasing for a more CRT-like texture to the earth
-    // float distDeriv = fwidth(gridDist);
-    // float edge0 = uGridThickness - uGridAntialiasWidth * distDeriv;
-    // float edge1 = uGridThickness + uGridAntialiasWidth * distDeriv;
-
     float edge0 = uGridThickness;
     float edge1 = uGridThickness;
 
@@ -96,7 +90,6 @@ export const earthCRTFragmentShader = `
     for (int i = 0; i < NUM_RED_BANDS; i++) {
       vec2 band = vec2(RED_BANDS[i], RED_BANDS[i] + 0.002);
       float t = applyBand(band, BAND_EDGE_WIDTH);
-      // color = mix(color, RED, t * gridLine * (0.6 + vUv.y));
       color = mix(color, RED, t * gridLine);
     }
 

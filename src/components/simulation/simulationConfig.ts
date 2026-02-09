@@ -83,22 +83,13 @@ export const simulationConfig: SimulationConfig = {
   },
   scene: {
     backgroundColor: 0x03060b,
-    // backgroundColor: 0x888888,
   },
-  // baseColor: 0x00ff41, // Bright neon CRT green
-  // baseColor: 0xfcca8b, // Amber
-  // baseColor: 0xfdf3e8, // cream
-  baseColor: 0xfcfcfc, // off-white
+  baseColor: 0xfcfcfc,
   background: {
-    // We use a spherical geometry that wraps around the scene. We only color
-    // the inside of the sphere. The outside of the sphere is transparent.
-    // 4 is good for debugging.
-    // 50 was the original value for full wrap around but I think that might be too big
-    // scale: new THREE.Vector3(20, 20, 20), // world units
     geometry: {
-      radius: 1.3, // Base radius, will be scaled
-      widthSegments: 64, // Sphere segments for detail (reduced for performance)
-      heightSegments: 64, // Sphere segments for detail (reduced for performance)
+      radius: 1.3,
+      widthSegments: 64,
+      heightSegments: 64,
     },
     texture: {
       url: "/textures/sky1.jpg",
@@ -136,7 +127,6 @@ export const simulationConfig: SimulationConfig = {
     disableAll: true,
   },
   earth: {
-    // textureUrl: "/textures/earthmap-stylized2.png",
     textureUrl: "/textures/simplearth.png",
     radius: 0.375, // world units
     segments: 32,

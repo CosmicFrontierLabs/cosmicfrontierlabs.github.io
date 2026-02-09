@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { localCircleOnSphere, calculateOrbitalPosition, rayIntersectsSphere } from "./simulationUtils";
+import { localCircleOnSphere, calculateOrbitalPosition, rayIntersectsSphere } from "./mathUtils";
 import { simulationConfig } from "./simulationConfig";
 import { ArcLoader } from "./ArcLoader";
 

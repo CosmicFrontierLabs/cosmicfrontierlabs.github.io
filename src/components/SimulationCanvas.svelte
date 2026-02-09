@@ -6,12 +6,14 @@
   import { ReactiveStarfield } from "./simulation/ReactiveStarfield";
   import { Earth } from "./simulation/Earth";
   import { simulationConfig } from "./simulation/simulationConfig";
-  import { sampleArray, grid3d, GrainShader, MouseTracker } from "./simulation/simulationUtils";
+  import { sampleArray, grid3d } from "./simulation/mathUtils";
+  import { GrainShader } from "./simulation/GrainShader";
+  import { MouseTracker } from "./simulation/MouseTracker";
   import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
   import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
   import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
-  import { CarouselScene, carouselData } from "./simulation/CarouselScene";
-  import gsap from "gsap";
+  import { CarouselScene } from "./simulation/CarouselScene";
+  import CarouselOverlay from "./CarouselOverlay.svelte";
 
   interface Props {
     activeScene: "simulation" | "carousel" | "idle";
@@ -23,8 +25,6 @@
   }
 
   let { activeScene, canvasOpacity, heroScrollProgress, carouselUIOpacity }: Props = $props();
-
-  // $inspect(heroScrollProgress);
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -44,20 +44,8 @@
   // Mouse position tracking
   let mouseTracker: MouseTracker | null = null;
 
-  // activeScene and canvasOpacity are controlled by the parent via bindable props
-
-  // Carousel scene instance
-  let carouselScene: CarouselScene | null = null;
-
-  // Carousel state
-  let curCarouselItemIndex = $state(0);
-  let progress = $state(0);
-  let autoplayInterval: ReturnType<typeof setTimeout> | null = null;
-  let progressInterval: ReturnType<typeof setInterval> | null = null;
-  const SLIDE_DURATION = 5000;
-  const PROGRESS_UPDATE_INTERVAL = 50;
-  let titleEl: HTMLHeadingElement;
-  let descriptionEl: HTMLParagraphElement;
+  // Carousel scene instance (exposed to CarouselOverlay)
+  let carouselScene = $state<CarouselScene | null>(null);
 
   // Frame tracking for initialization opacity
   const minFramesForReady = 100;
@@ -67,68 +55,6 @@
   // Error boundary state
   let initError = $state<string | null>(null);
   let webglSupported = $state(true);
-
-  // --- Carousel controls ---
-  function startAutoplay() {
-    stopAutoplay();
-    progress = 0;
-    let elapsed = 0;
-
-    progressInterval = setInterval(() => {
-      elapsed += PROGRESS_UPDATE_INTERVAL;
-      progress = Math.min((elapsed / SLIDE_DURATION) * 100, 100);
-    }, PROGRESS_UPDATE_INTERVAL);
-
-    autoplayInterval = setTimeout(() => {
-      goToNext();
-    }, SLIDE_DURATION);
-  }
-
-  function stopAutoplay() {
-    if (autoplayInterval) {
-      clearTimeout(autoplayInterval);
-      autoplayInterval = null;
-    }
-    if (progressInterval) {
-      clearInterval(progressInterval);
-      progressInterval = null;
-    }
-  }
-
-  function goToIndex(index: number) {
-    if (!carouselScene) return;
-    if (index === curCarouselItemIndex) return;
-
-    curCarouselItemIndex = index;
-    startAutoplay();
-
-    const tl = gsap.timeline();
-    const nextItem = carouselData[index];
-
-    tl.to(titleEl, { opacity: 0, duration: 0.3 }, 0);
-    tl.to(descriptionEl, { opacity: 0, duration: 0.3 }, 0);
-
-    tl.call(() => { carouselScene?.setActiveModel(index); }, [], 0.4);
-
-    tl.fromTo(titleEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
-    tl.fromTo(descriptionEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
-
-    const targetPos = new THREE.Vector3(nextItem.camera.position.x, nextItem.camera.position.y, nextItem.camera.position.z);
-    const targetLookAt = new THREE.Vector3(nextItem.camera.lookAt.x, nextItem.camera.lookAt.y, nextItem.camera.lookAt.z);
-
-    tl.add(carouselScene.animateCameraTo(targetPos, targetLookAt, 2.5), 0);
-
-  }
-
-  function goToNext() {
-    const nextIndex = (curCarouselItemIndex + 1) % carouselData.length;
-    goToIndex(nextIndex);
-  }
-
-  function goToPrev() {
-    const prevIndex = (curCarouselItemIndex - 1 + carouselData.length) % carouselData.length;
-    goToIndex(prevIndex);
-  }
 
   // --- WebGL & Simulation Setup ---
   function checkWebGLSupport(): boolean {
@@ -206,28 +132,40 @@
     }
   }
 
+  function handleContextLost(event: Event): void {
+    event.preventDefault();
+    initError = "WebGL context was lost. Please reload the page.";
+  }
+
   function startAnimationLoop(): () => void {
     if (!scene || !camera || !renderer || !telescopes || !earth || !reactiveStarfield) {
       return () => {};
     }
 
+    // Capture refs that don't change for the lifetime of the loop
+    const loopScene = scene;
+    const loopCamera = camera;
+    const loopRenderer = renderer;
+    const loopEarth = earth;
+    const loopReactiveStarfield = reactiveStarfield;
+
     const clock = new THREE.Clock();
     const telescopeOrigins: THREE.Vector3[] = new Array(telescopes.length);
     const telescopeTargets: THREE.Vector3[] = new Array(telescopes.length);
 
+    let rafId: number;
+
     function animate() {
-      if (!scene || !camera || !renderer || !telescopes || !earth || !reactiveStarfield) {
-        return;
-      }
-      requestAnimationFrame(animate);
+      rafId = requestAnimationFrame(animate);
 
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
 
+      // Read activeScene from the reactive prop on each frame
+      // (captured via the outer closure over the $props binding)
       if (activeScene === "simulation") {
-        // Update simulation scene
-        if (mouseTracker && camera) {
-          mouseTracker.update(camera);
+        if (mouseTracker && loopCamera) {
+          mouseTracker.update(loopCamera);
         }
 
         const sphereCenter = new THREE.Vector3(0, 0, 0);
@@ -240,29 +178,26 @@
           telescopeTargets[i] = telescope.target.clone();
         });
 
-        earth.update(delta);
-        camera.updateMatrixWorld();
-        reactiveStarfield?.updateFrustums(telescopeOrigins, telescopeTargets, camera);
+        loopEarth.update(delta);
+        loopCamera.updateMatrixWorld();
+        loopReactiveStarfield.updateFrustums(telescopeOrigins, telescopeTargets, loopCamera);
 
         if (perf) perf.begin();
 
         if (effectComposer && grainPass) {
           effectComposer.render();
         } else {
-          renderer.render(scene, camera);
+          loopRenderer.render(loopScene, loopCamera);
         }
       } else if (activeScene === "carousel" && carouselScene) {
-        // Update and render carousel scene
         carouselScene.update(delta);
 
         if (perf) perf.begin();
 
-        // Use tone mapping for carousel scene
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.0;
-        renderer.render(carouselScene.scene, carouselScene.camera);
-        // Reset tone mapping for simulation scene
-        renderer.toneMapping = THREE.NoToneMapping;
+        loopRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+        loopRenderer.toneMappingExposure = 1.0;
+        loopRenderer.render(carouselScene.scene, carouselScene.camera);
+        loopRenderer.toneMapping = THREE.NoToneMapping;
       }
 
       framesRendered++;
@@ -270,10 +205,11 @@
       if (perf) perf.end();
     }
 
-    animate();
+    rafId = requestAnimationFrame(animate);
 
     return () => {
-      renderer?.dispose();
+      cancelAnimationFrame(rafId);
+      loopRenderer.dispose();
     };
   }
 
@@ -301,6 +237,9 @@
       renderer = createRenderer(container);
       renderer.setClearColor(0x000000, 0);
 
+      // Listen for WebGL context loss (#20)
+      renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+
       if (config.perf.enabled) {
         perf = new ThreePerf({
           anchorX: "left",
@@ -321,7 +260,7 @@
       const originGridPoints: THREE.Vector3[] = grid3d(
         simulationConfig.earth.position,
         simulationConfig.earth.radius * simulationConfig.telescope.orbitalRadiusScalar,
-        1600,
+        1600
       );
       const origins = sampleArray(originGridPoints, simulationConfig.telescope.numTelescopes);
       const numMouseTrackingTelescopes = simulationConfig.telescope.numMouseTrackingTelescopes;
@@ -376,7 +315,9 @@
       resizeObserver?.disconnect();
       if (handleMouseMove) container.removeEventListener("mousemove", handleMouseMove);
       if (handleMouseClick) container.removeEventListener("click", handleMouseClick);
-      stopAutoplay();
+      if (renderer) {
+        renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
+      }
 
       telescopes.forEach((telescope) => telescope.dispose());
       telescopes = [];
@@ -397,21 +338,12 @@
     updateCamera();
   });
 
-  // Drive carousel introMode and autoplay based on UI opacity
+  // Drive carousel introMode based on UI opacity
   $effect(() => {
     if (carouselScene) {
       const uiVisible = carouselUIOpacity > 0.8;
       carouselScene.introMode = !uiVisible;
       carouselScene.enableCameraReaction = uiVisible;
-    }
-  });
-
-  // Watch activeScene + carouselUIOpacity to start/stop carousel autoplay
-  $effect(() => {
-    if (activeScene === "carousel" && carouselUIOpacity > 0.8) {
-      startAutoplay();
-    } else {
-      stopAutoplay();
     }
   });
 </script>
@@ -435,42 +367,7 @@
 
 <!-- Carousel overlay: only visible when carousel is active and UI has faded in -->
 {#if activeScene === "carousel"}
-  <div class="carousel-overlay" role="application" aria-label="3D model carousel" style="opacity: {Math.min(canvasOpacity, carouselUIOpacity)};">
-    <h2>Explore our telescope</h2>
-    <div class="carousel-glass bg-glass2">
-      <div class="description-wrapper">
-        <h3 bind:this={titleEl}>{curCarouselItemIndex + 1}. {carouselData[curCarouselItemIndex].title}</h3>
-        <p bind:this={descriptionEl}>{carouselData[curCarouselItemIndex].description}</p>
-      </div>
-
-      <div class="carousel-controls">
-        <button class="nav-arrow" onclick={() => goToPrev()} aria-label="Previous slide">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-        <div class="indicators">
-          {#each carouselData as _, i}
-            <button
-              class="indicator"
-              class:active={i === curCarouselItemIndex}
-              onclick={() => goToIndex(i)}
-              aria-label="Go to slide {i + 1}"
-            >
-              {#if i === curCarouselItemIndex}
-                <div class="progress-fill" style="width: {progress}%"></div>
-              {/if}
-            </button>
-          {/each}
-        </div>
-        <button class="nav-arrow" onclick={() => goToNext()} aria-label="Next slide">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
+  <CarouselOverlay {canvasOpacity} {carouselUIOpacity} {carouselScene} />
 {/if}
 
 <style>
@@ -485,130 +382,6 @@
   /* When carousel is active, elevate above all page content */
   .simulation-viewer.carousel-active {
     z-index: 13;
-  }
-
-  /* Carousel overlay - fixed over the canvas, only shown when carousel is active */
-  .carousel-overlay {
-    position: fixed;
-    top: 12lvh;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    max-width: var(--content-width);
-    margin-inline: auto;
-    z-index: 14;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: start;
-    padding-block-end: 2%;
-    padding-inline: 2rem;
-    transition: opacity 0.15s ease-out;
-  }
-
-  .carousel-overlay h2 {
-    text-shadow:
-      2px 2px 8px rgba(0, 0, 0, 0.8),
-      0 0 4px rgba(0, 0, 0, 0.9);
-    text-transform: uppercase;
-    font-size: var(--size-step-4);
-    font-weight: 500;
-    line-height: 1;
-    text-wrap: balance;
-    margin-block-start: 0.125em;
-
-    @media (min-width: 56rem) {
-      font-size: var(--size-step-5);
-    }
-  }
-
-  .carousel-glass {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding-block: 1rem;
-  }
-
-  .description-wrapper {
-    padding: 2ch 2ch;
-    font-size: 0.875rem;
-    max-width: 60ch;
-    min-height: 8lh;
-  }
-
-  .description-wrapper h3 {
-    font-size: 1.325rem;
-    text-wrap: balance;
-    margin-block-start: 0lh;
-    margin-block-end: 0.25lh;
-  }
-
-  .carousel-controls {
-    margin-block: 1rem;
-    padding-inline: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-inline-end: auto;
-    gap: 12px;
-  }
-
-  .nav-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    color: currentColor;
-    transition:
-      background 0.2s ease,
-      border-color 0.2s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.4);
-    }
-  }
-
-  .indicators {
-    display: flex;
-    gap: 8px;
-  }
-
-  .indicator {
-    position: relative;
-    width: 24px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border: none;
-    border-radius: 2px;
-    cursor: pointer;
-    overflow: hidden;
-    transition: background 0.2s ease;
-    padding: 0;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.5);
-    }
-
-    &.active {
-      background: rgba(255, 255, 255, 0.3);
-    }
-  }
-
-  .progress-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 2px;
-    transition: width 0.05s linear;
   }
 
   .simulation-fallback {
