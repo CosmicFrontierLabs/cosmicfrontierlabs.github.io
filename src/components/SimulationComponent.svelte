@@ -12,17 +12,19 @@
   import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
   import { CarouselScene, carouselData } from "./simulation/CarouselScene";
   import gsap from "gsap";
-  import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-  /**
-   * The element that the carousel section is anchored to.
-   * SimulationComponent will show the carousel scene when this element is in view.
-   */
   interface Props {
-    carouselTriggerEl?: HTMLElement | null;
+    activeScene?: "simulation" | "carousel" | "idle";
+    canvasOpacity?: number;
+    /** 0–1 scroll progress through the hero section, drives camera zoom */
+    heroScrollProgress?: number;
   }
 
-  let { carouselTriggerEl = null }: Props = $props();
+  let {
+    activeScene = $bindable("simulation"),
+    canvasOpacity = $bindable(1),
+    heroScrollProgress = 0,
+  }: Props = $props();
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -42,8 +44,7 @@
   // Mouse position tracking
   let mouseTracker: MouseTracker | null = null;
 
-  // Active scene: "simulation" (hero), "carousel" (model viewer), or "idle" (past carousel, canvas hidden)
-  let activeScene = $state<"simulation" | "carousel" | "idle">("simulation");
+  // activeScene and canvasOpacity are controlled by the parent via bindable props
 
   // Carousel scene instance
   let carouselScene: CarouselScene | null = null;
@@ -62,9 +63,6 @@
   const minFramesForReady = 100;
   let framesRendered = $state(0);
   let isReady = $derived(framesRendered > minFramesForReady);
-
-  // Canvas opacity controlled by scroll
-  let canvasOpacity = $state(1);
 
   // Error boundary state
   let initError = $state<string | null>(null);
@@ -298,13 +296,10 @@
     }
 
     let cleanupAnimation: (() => void) | null = null;
-    let scrollTriggerInstances: ScrollTrigger[] = [];
     let handleMouseMove: ((event: MouseEvent) => void) | null = null;
     let handleMouseClick: ((event: MouseEvent) => void) | null = null;
 
     try {
-      gsap.registerPlugin(ScrollTrigger);
-
       const config = simulationConfig;
       scene = new THREE.Scene();
       scene.background = null;
@@ -353,22 +348,6 @@
       // Initialize carousel scene (shares the same renderer)
       carouselScene = new CarouselScene(width, height, renderer);
 
-      // --- Scroll triggers ---
-
-      // 1. Simulation camera zoom on hero scroll
-      scrollTriggerInstances.push(
-        ScrollTrigger.create({
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-          onUpdate: (self) => {
-            const zoomScaleFactor = 3.0;
-            cameraFrustumSize = initialCameraFrustumSize - self.progress * zoomScaleFactor;
-            updateCamera();
-          },
-        }),
-      );
-
       resizeObserver = setupResizeObserver();
       cleanupAnimation = startAnimationLoop();
 
@@ -408,7 +387,6 @@
       resizeObserver?.disconnect();
       if (handleMouseMove) container.removeEventListener("mousemove", handleMouseMove);
       if (handleMouseClick) container.removeEventListener("click", handleMouseClick);
-      scrollTriggerInstances.forEach((st) => st.kill());
       stopAutoplay();
 
       telescopes.forEach((telescope) => telescope.dispose());
@@ -423,82 +401,20 @@
     };
   });
 
-  // React to carouselTriggerEl prop changes
-  let carouselEnterTrigger: ScrollTrigger | null = null;
-  let carouselExitTrigger: ScrollTrigger | null = null;
-  let heroFadeOutTrigger: ScrollTrigger | null = null;
-
+  // Drive camera zoom from hero scroll progress
   $effect(() => {
-    // Clean up previous triggers
-    carouselEnterTrigger?.kill();
-    carouselExitTrigger?.kill();
-    heroFadeOutTrigger?.kill();
+    const zoomScaleFactor = 3.0;
+    cameraFrustumSize = initialCameraFrustumSize - heroScrollProgress * zoomScaleFactor;
+    updateCamera();
+  });
 
-    if (!carouselTriggerEl) return;
-
-    // Hero fade-out: as user scrolls past the hero, fade canvas to 0
-    const heroEl = document.querySelector(".hero") as HTMLElement | null;
-    if (heroEl) {
-      heroFadeOutTrigger = ScrollTrigger.create({
-        trigger: heroEl,
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-        onUpdate: (self) => {
-          if (activeScene === "simulation") {
-            canvasOpacity = 1 - self.progress;
-          }
-        },
-      });
+  // Watch activeScene to start/stop carousel autoplay
+  $effect(() => {
+    if (activeScene === "carousel") {
+      startAutoplay();
+    } else {
+      stopAutoplay();
     }
-
-    // Carousel fade-in: approaching the carousel section from above
-    carouselEnterTrigger = ScrollTrigger.create({
-      trigger: carouselTriggerEl,
-      start: "top 80%",
-      end: "top 20%",
-      scrub: true,
-      onEnter: () => {
-        activeScene = "carousel";
-        startAutoplay();
-      },
-      onLeaveBack: () => {
-        activeScene = "simulation";
-        stopAutoplay();
-      },
-      onUpdate: (self) => {
-        if (activeScene === "carousel" || self.direction === 1) {
-          canvasOpacity = self.progress;
-        }
-      },
-    });
-
-    // Carousel fade-out: scrolling past the carousel section downward
-    carouselExitTrigger = ScrollTrigger.create({
-      trigger: carouselTriggerEl,
-      start: "bottom 80%",
-      end: "bottom 20%",
-      scrub: true,
-      onLeave: () => {
-        activeScene = "idle";
-        stopAutoplay();
-      },
-      onEnterBack: () => {
-        activeScene = "carousel";
-        startAutoplay();
-      },
-      onUpdate: (self) => {
-        if (activeScene === "carousel" || activeScene === "idle") {
-          canvasOpacity = 1 - self.progress;
-        }
-      },
-    });
-
-    return () => {
-      carouselEnterTrigger?.kill();
-      carouselExitTrigger?.kill();
-      heroFadeOutTrigger?.kill();
-    };
   });
 </script>
 

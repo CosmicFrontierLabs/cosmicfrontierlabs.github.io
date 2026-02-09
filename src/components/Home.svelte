@@ -9,6 +9,71 @@
   let heroEl: HTMLDivElement;
   let carouselSectionEl: HTMLDivElement;
 
+  // Bindable state passed down to SimulationComponent
+  let activeScene = $state<"simulation" | "carousel" | "idle">("simulation");
+  let canvasOpacity = $state(1);
+  let heroScrollProgress = $state(0);
+
+  onMount(() => {
+    // 1. Hero: fade canvas out and drive camera zoom
+    const heroTrigger = ScrollTrigger.create({
+      trigger: heroEl,
+      start: "top top",
+      end: "bottom top",
+      scrub: true,
+      onUpdate: (self) => {
+        heroScrollProgress = self.progress;
+        if (activeScene === "simulation") {
+          canvasOpacity = 1 - self.progress;
+        }
+      },
+    });
+
+    // 2. Carousel fade-in: approaching the carousel section from above
+    const carouselEnterTrigger = ScrollTrigger.create({
+      trigger: carouselSectionEl,
+      start: "top 80%",
+      end: "top 20%",
+      scrub: true,
+      onEnter: () => {
+        activeScene = "carousel";
+      },
+      onLeaveBack: () => {
+        activeScene = "simulation";
+      },
+      onUpdate: (self) => {
+        if (activeScene === "carousel" || self.direction === 1) {
+          canvasOpacity = self.progress;
+        }
+      },
+    });
+
+    // 3. Carousel fade-out: scrolling past the carousel section downward
+    const carouselExitTrigger = ScrollTrigger.create({
+      trigger: carouselSectionEl,
+      start: "bottom 80%",
+      end: "bottom 20%",
+      scrub: true,
+      onLeave: () => {
+        activeScene = "idle";
+      },
+      onEnterBack: () => {
+        activeScene = "carousel";
+      },
+      onUpdate: (self) => {
+        if (activeScene === "carousel" || activeScene === "idle") {
+          canvasOpacity = 1 - self.progress;
+        }
+      },
+    });
+
+    return () => {
+      heroTrigger.kill();
+      carouselEnterTrigger.kill();
+      carouselExitTrigger.kill();
+    };
+  });
+
   const itemData = [
     {
       id: "problem",
@@ -43,7 +108,7 @@
   ];
 </script>
 
-<SimulationComponent carouselTriggerEl={carouselSectionEl} />
+<SimulationComponent bind:activeScene bind:canvasOpacity {heroScrollProgress} />
 
 <div class="hero" bind:this={heroEl}>
   <div class="hero__content">
@@ -243,7 +308,7 @@
     }
   }
 
-  // Carousel Section - now just a scroll anchor with min-height
+  // Carousel Section - scroll anchor with min-height
   .carousel-section {
     position: relative;
     min-height: 80lvh;
