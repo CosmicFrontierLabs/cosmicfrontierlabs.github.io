@@ -235,6 +235,7 @@
     min-height: 95lvh;
     position: relative;
     z-index: var(--z-hero);
+    pointer-events: none;
   }
 
   .hero__content {
