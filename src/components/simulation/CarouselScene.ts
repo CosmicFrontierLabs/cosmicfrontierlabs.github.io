@@ -252,18 +252,6 @@ export class CarouselScene {
   update(deltaTimeSeconds: number): void {
     this.totTime += deltaTimeSeconds;
 
-    // Intro mode: auto-rotate the visible model, camera stays fixed
-    if (this.introMode) {
-      const rotationSpeed = 0.3;
-      if (this.telescope?.visible) {
-        this.telescope.rotation.y += deltaTimeSeconds * rotationSpeed;
-      }
-      if (this.fullAssy?.visible) {
-        this.fullAssy.rotation.y += deltaTimeSeconds * rotationSpeed;
-      }
-      return;
-    }
-
     // Mouse-reactive camera
     if (this.enableCameraReaction) {
       const mouseX = lerp(-6, 6, this.mousePosition.x);

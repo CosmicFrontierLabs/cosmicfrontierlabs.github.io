@@ -96,8 +96,11 @@
       onEnterBack: () => {
         activeScene = "carousel";
         // Sync opacity to current progress so there's no discontinuous jump
-        // Set the simulation z-index via CSS custom property on :root
         canvasOpacity = 1 - carouselExitTrigger.progress;
+        // The UI trigger range (top top → 15% top) is far above, so it won't
+        // fire when re-entering from below. Force full UI visibility since the
+        // scroll position is well past the UI fade-in zone.
+        carouselUIOpacity = 1;
       },
       onUpdate: (self) => {
         if (activeScene === "carousel") {
