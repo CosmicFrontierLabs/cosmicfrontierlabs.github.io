@@ -4,6 +4,21 @@ import { vertexShader, fragmentShader } from "./shaders/reactiveStarfieldShaders
 import { convertWorldRadiusToNDC, lineSphereIntersection, projectWorldPositionsToNDC } from "./simulationUtils";
 
 /**
+ * Optional overrides for ReactiveStarfield configuration.
+ * Any provided values override the defaults from simulationConfig.
+ */
+export interface ReactiveStarfieldOptions {
+  /** Sphere radius in world units */
+  radius?: number;
+  /** Base opacity when no frustums are nearby (0.0 - 1.0) */
+  opacityBase?: number;
+  /** Opacity when frustums are nearby (0.0 - 1.0) */
+  opacityHover?: number;
+  /** Brightness multiplier for the texture */
+  brightness?: number;
+}
+
+/**
  * Reactive starfield mesh with animated shader effects
  * Creates a cosmic background that responds to frustum positions
  * Uses a sphere geometry that wraps around the scene with texture on the inside
@@ -15,15 +30,22 @@ export class ReactiveStarfield {
   private frustumTargetsArray: THREE.Vector2[];
   private frustumIntersectionsArray: THREE.Vector2[];
 
-  constructor(scene: THREE.Scene, width: number, height: number, renderer?: THREE.WebGLRenderer) {
+  constructor(
+    scene: THREE.Scene,
+    width: number,
+    height: number,
+    renderer?: THREE.WebGLRenderer,
+    options?: ReactiveStarfieldOptions
+  ) {
     this.scene = scene;
     const config = simulationConfig.background;
     this.worldRadius = config.circleRadius;
 
     // Create a sphere geometry that wraps around the scene
     // SphereGeometry: radius, widthSegments, heightSegments
+    const sphereRadius = options?.radius ?? config.geometry.radius;
     const bgGeometry = new THREE.SphereGeometry(
-      config.geometry.radius,
+      sphereRadius,
       config.geometry.widthSegments,
       config.geometry.heightSegments
     );
@@ -50,9 +72,9 @@ export class ReactiveStarfield {
         uRadius: { value: 0.1 }, // Will be updated with converted radius
         uResolution: { value: new THREE.Vector2(width, height) },
         uTexture: { value: placeholderTexture }, // Placeholder, will be replaced when texture loads
-        uOpacityBase: { value: config.opacity.base },
-        uOpacityHover: { value: config.opacity.hover },
-        uBrightness: { value: config.brightness }, // Brightness multiplier
+        uOpacityBase: { value: options?.opacityBase ?? config.opacity.base },
+        uOpacityHover: { value: options?.opacityHover ?? config.opacity.hover },
+        uBrightness: { value: options?.brightness ?? config.brightness }, // Brightness multiplier
       },
       transparent: true, // Enable transparency for opacity effects
       depthTest: true,

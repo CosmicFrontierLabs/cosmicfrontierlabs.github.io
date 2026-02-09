@@ -10,6 +10,7 @@
   import groundFragmentShader from "./ground.frag?raw";
   import bgVertexShader from "./bg.vert?raw";
   import bgFragmentShader from "./bg.frag?raw";
+  import { ReactiveStarfield } from "../simulation/ReactiveStarfield";
   import { inverseLerp, lerp } from "three/src/math/MathUtils.js";
   import { GUI } from "three/addons/libs/lil-gui.module.min.js";
   import Stats from "three/examples/jsm/libs/stats.module.js";
@@ -233,6 +234,8 @@
     keyLight: THREE.RectAreaLight;
     rimLight: THREE.PointLight;
 
+    reactiveStarfield: ReactiveStarfield;
+
     // GUI params
     params = {
       ambientLightEnabled: true,
@@ -286,6 +289,22 @@
       this.renderer.toneMappingExposure = 1.0;
 
       container.appendChild(this.renderer.domElement);
+
+      // Add reactive starfield background (same as SimulationComponent)
+      // Use a larger radius to wrap around the perspective camera scene,
+      // and a visible base opacity since there are no telescopes to illuminate it
+      this.reactiveStarfield = new ReactiveStarfield(
+        this.scene,
+        container.clientWidth,
+        container.clientHeight,
+        this.renderer,
+        {
+          radius: 40,
+          opacityBase: 0.6,
+          opacityHover: 1.0,
+          brightness: 2.5,
+        }
+      );
 
       // Textures if we figure out where to use them
       // const tl = new THREE.TextureLoader();
@@ -613,6 +632,7 @@
       this.renderer.setSize(width, height);
       this.camera.aspect = width / height;
       this.camera.updateProjectionMatrix();
+      this.reactiveStarfield.setResolution(width, height);
     }
 
     /**
@@ -754,7 +774,9 @@
       }
     }
 
-    dispose() {}
+    dispose() {
+      this.reactiveStarfield.dispose();
+    }
   }
   let sketch: Sketch;
 
@@ -836,7 +858,7 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    height: 80%;
+    height: 100%;
     width: 100%;
   }
 

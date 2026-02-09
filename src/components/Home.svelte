@@ -275,24 +275,11 @@
     position: relative;
     min-height: 80lvh;
     z-index: 12;
-
     border-radius: 96px;
-    border: 1px solid var(--color-text);
-    overflow: clip;
-    corner-shape: squircle;
+    background: var(--body-bg);
 
-    // Full bleed
-    // width: 100lvw;
-    // margin-inline: calc(50% - 50lvw);
-
-    background-image: url("/images/join-us.jpg");
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: cover;
-
-    // Note that ios doesn't support background-attachment: fixed
-    // for performance reasons
-    background-attachment: fixed;
+    width: 100lvw;
+    margin-inline: calc(50% - 50lvw);
   }
 
   /* JOIN US */
