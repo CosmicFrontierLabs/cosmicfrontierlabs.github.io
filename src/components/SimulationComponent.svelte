@@ -14,17 +14,15 @@
   import gsap from "gsap";
 
   interface Props {
-    activeScene?: "simulation" | "carousel" | "idle";
-    canvasOpacity?: number;
+    activeScene: "simulation" | "carousel" | "idle";
+    canvasOpacity: number;
     /** 0–1 scroll progress through the hero section, drives camera zoom */
-    heroScrollProgress?: number;
+    heroScrollProgress: number;
   }
 
-  let {
-    activeScene = $bindable("simulation"),
-    canvasOpacity = $bindable(1),
-    heroScrollProgress = 0,
-  }: Props = $props();
+  let { activeScene, canvasOpacity, heroScrollProgress }: Props = $props();
+
+  // $inspect(heroScrollProgress);
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -403,7 +401,7 @@
 
   // Drive camera zoom from hero scroll progress
   $effect(() => {
-    const zoomScaleFactor = 3.0;
+    const zoomScaleFactor = 1.5;
     cameraFrustumSize = initialCameraFrustumSize - heroScrollProgress * zoomScaleFactor;
     updateCamera();
   });
@@ -432,7 +430,7 @@
   class="simulation-viewer"
   class:ready={isReady}
   class:carousel-active={activeScene === "carousel"}
-  style="opacity: {isReady ? canvasOpacity : 0};"
+  style="opacity: {canvasOpacity};"
 ></div>
 
 <!-- Carousel overlay: only visible when carousel is active -->

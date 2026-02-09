@@ -8,6 +8,7 @@
 
   let heroEl: HTMLDivElement;
   let carouselSectionEl: HTMLDivElement;
+  let subheroText: HTMLParagraphElement;
 
   // Bindable state passed down to SimulationComponent
   let activeScene = $state<"simulation" | "carousel" | "idle">("simulation");
@@ -22,9 +23,10 @@
       end: "bottom top",
       scrub: true,
       onUpdate: (self) => {
-        heroScrollProgress = self.progress;
+        const p = Math.max(0, Math.min(1, 1.5 * self.progress));
+        heroScrollProgress = p;
         if (activeScene === "simulation") {
-          canvasOpacity = 1 - self.progress;
+          canvasOpacity = 1 - p;
         }
       },
     });
@@ -32,14 +34,18 @@
     // 2. Carousel fade-in: approaching the carousel section from above
     const carouselEnterTrigger = ScrollTrigger.create({
       trigger: carouselSectionEl,
-      start: "top 80%",
+      start: "top bottom",
       end: "top 20%",
+      markers: true,
       scrub: true,
       onEnter: () => {
+        console.log("carouselEnterTrigger onEnter");
         activeScene = "carousel";
+        subheroText.style.opacity = "0";
       },
       onLeaveBack: () => {
         activeScene = "simulation";
+        subheroText.style.opacity = "1";
       },
       onUpdate: (self) => {
         if (activeScene === "carousel" || self.direction === 1) {
@@ -108,7 +114,9 @@
   ];
 </script>
 
-<SimulationComponent bind:activeScene bind:canvasOpacity {heroScrollProgress} />
+<div class="simulation-container">
+  <SimulationComponent {activeScene} {canvasOpacity} {heroScrollProgress} />
+</div>
 
 <div class="hero" bind:this={heroEl}>
   <div class="hero__content">
@@ -119,7 +127,7 @@
 </div>
 
 <div class="subhero">
-  <p id="subhero__text">
+  <p id="subhero__text" bind:this={subheroText}>
     We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard
     platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
   </p>
@@ -143,7 +151,7 @@
     </div>
   {/each}
 </div>
-<div class="divider"></div>
+<!-- <div class="divider"></div> -->
 
 <div class="carousel-section" bind:this={carouselSectionEl}>
   <!-- Carousel 3D content is now rendered by SimulationComponent's shared canvas -->
@@ -164,6 +172,11 @@
 </div>
 
 <style lang="scss">
+  .simulation-container {
+    position: relative;
+    z-index: 10;
+  }
+
   /* HERO */
   .hero {
     min-height: 95lvh;
@@ -310,14 +323,9 @@
 
   // Carousel Section - scroll anchor with min-height
   .carousel-section {
-    position: relative;
-    min-height: 80lvh;
-    z-index: 12;
-    border-radius: 96px;
-    background: transparent;
-
-    width: 100lvw;
-    margin-inline: calc(50% - 50lvw);
+    position: sticky;
+    top: 0;
+    min-height: 150lvh;
   }
 
   /* JOIN US */
