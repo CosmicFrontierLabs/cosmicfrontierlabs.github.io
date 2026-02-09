@@ -134,20 +134,10 @@
   }
 
   .hero__content__simulation {
-    // --sim-size: 100vmin;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100lvw;
-    height: 100lvh;
-    transform: translate3d(-50%, -50%, 0); /* Use translate3d for better GPU acceleration */
+    position: fixed;
+    inset: 0;
     background: var(--body-bg);
     z-index: 1;
-
-    // TODO: This isn't working robustly and not sure why
-    // &, &:hover, &:active {
-    //   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><rect width='8' height='8' fill='white'/></svg>") 4 4, auto;
-    // }
   }
 
   /* SUBHERO */
