@@ -114,8 +114,6 @@ export class CarouselScene {
   private telescope: THREE.Group | null = null;
   private fullAssy: THREE.Group | null = null;
   private totTime: number = 0.0;
-  private rings: THREE.Group;
-  private ringConfigs: Array<{ rx: number; ry: number; rz: number; radius: number; speed: number }>;
   private particles: THREE.Points;
   private spotlight: THREE.SpotLight;
   private spotlightTarget: THREE.Object3D;
@@ -167,40 +165,11 @@ export class CarouselScene {
 
     // Reactive starfield
     this.reactiveStarfield = new ReactiveStarfield(this.scene, width, height, renderer, {
-      radius: 40,
-      opacityBase: 0.6,
+      radius: 10,
+      opacityBase: 0.4,
       opacityHover: 1.0,
       brightness: 2.5,
     });
-
-    // Armillary sphere rings
-    this.rings = new THREE.Group();
-    const ringColors = [0x8899aa, 0x6699cc, 0x4455aa, 0x7766bb, 0x77aacc, 0x556688];
-    this.ringConfigs = [
-      { rx: 0, ry: 0, rz: 0, radius: 5.0, speed: 0.05 },
-      { rx: Math.PI / 2, ry: 0, rz: 0, radius: 5.0, speed: -0.08 },
-      { rx: Math.PI / 4, ry: 0, rz: 0, radius: 5.0, speed: -0.04 },
-      { rx: -Math.PI / 4, ry: 0, rz: 0, radius: 5.0, speed: 0.07 },
-    ];
-    for (let i = 0; i < this.ringConfigs.length; i++) {
-      const config = this.ringConfigs[i];
-      const ringGeometry = new THREE.TorusGeometry(config.radius, 0.015, 16, 64);
-      const ringMaterial = new THREE.MeshStandardMaterial({
-        color: ringColors[i],
-        metalness: 0.7,
-        roughness: 0.4,
-        emissive: ringColors[i],
-        emissiveIntensity: 0.15,
-      });
-      const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-      ring.rotation.x = config.rx;
-      ring.rotation.y = config.ry;
-      ring.rotation.z = config.rz;
-      this.rings.add(ring);
-    }
-    this.rings.position.set(0, 1.25, -1);
-    this.rings.visible = false;
-    this.scene.add(this.rings);
 
     // Load models
     const dracoLoader = new DRACOLoader();
@@ -276,15 +245,6 @@ export class CarouselScene {
    */
   update(deltaTimeSeconds: number): void {
     this.totTime += deltaTimeSeconds;
-
-    // Rotate rings
-    this.rings.rotation.y += deltaTimeSeconds * 0.1;
-    this.rings.rotation.x = Math.sin(this.totTime * 0.15) * 0.1;
-    for (let i = 0; i < this.ringConfigs.length; i++) {
-      const ring = this.rings.children[i] as THREE.Mesh;
-      const config = this.ringConfigs[i];
-      ring.rotation.z += deltaTimeSeconds * config.speed;
-    }
 
     // Mouse-reactive camera
     if (this.enableCameraReaction) {
