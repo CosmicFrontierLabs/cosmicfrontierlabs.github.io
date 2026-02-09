@@ -1,9 +1,10 @@
 .site-footer {
   min-height: 25vh;
   /* background: var(--footer-bg); */
-  background: rgba(0, 0, 0, 0);
+  background: var(--body-bg);
   color: var(--color-text-on-primary);
   font-size: var(--size-step--1);
+  z-index: var(--z-footer);
 }
 
 .site-footer__inner {

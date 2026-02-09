@@ -36,7 +36,6 @@
       trigger: carouselSectionEl,
       start: "top bottom",
       end: "top 20%",
-      markers: true,
       scrub: true,
       onEnter: () => {
         console.log("carouselEnterTrigger onEnter");
@@ -172,16 +171,29 @@
 </div>
 
 <style lang="scss">
+  /* ── Z-index scale ── */
+  :global(:root) {
+    --z-hero: 11;
+    --z-hero-text: 11;
+    --z-simulation: 10;
+    --z-subhero: 10;
+    --z-items: 11;
+    --z-items-card-base: 10;
+    --z-join-us: 12;
+    --z-divider: 11;
+    --z-footer: 12;
+  }
+
   .simulation-container {
     position: relative;
-    z-index: 10;
+    z-index: var(--z-simulation);
   }
 
   /* HERO */
   .hero {
     min-height: 95lvh;
     position: relative;
-    z-index: 2;
+    z-index: var(--z-hero);
   }
 
   .hero__content {
@@ -198,7 +210,7 @@
     display: flex;
     flex-direction: column;
     pointer-events: none;
-    z-index: 2;
+    z-index: var(--z-hero-text);
   }
 
   .hero__subtitle {
@@ -222,7 +234,7 @@
     min-height: 80lvh;
     display: grid;
     place-content: center;
-    z-index: 10;
+    z-index: var(--z-subhero);
 
     position: sticky;
     top: 0lvh;
@@ -247,7 +259,7 @@
     margin-block-start: 25lvh;
 
     position: relative;
-    z-index: 11;
+    z-index: var(--z-items);
     color: var(--items-text-color);
   }
 
@@ -255,7 +267,7 @@
     position: sticky;
     top: calc(var(--card-top) + var(--index) * var(--card-offset));
     min-height: calc(90vh - var(--index) * var(--card-offset));
-    z-index: calc(10 + var(--index));
+    z-index: calc(var(--z-items-card-base) + var(--index));
 
     background: var(--items-background-color);
     border-radius: 16px;
@@ -334,7 +346,7 @@
     width: 100lvw;
     margin-inline: calc(50% - 50lvw);
     position: relative;
-    z-index: 12;
+    z-index: var(--z-join-us);
 
     background-image: url("/images/join-us.jpg");
     background-position: center center;
@@ -389,6 +401,6 @@
     position: relative;
     height: 50lvh;
     background: var(--body-bg);
-    z-index: 11;
+    z-index: var(--z-divider);
   }
 </style>
