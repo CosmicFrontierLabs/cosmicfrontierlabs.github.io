@@ -1,6 +1,32 @@
 <script lang="ts">
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
   import SimulationComponent from "../components/SimulationComponent.svelte";
   import Carousel from "./carousel/carousel.svelte";
+  import { onMount } from "svelte";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  let heroEl: HTMLDivElement;
+  let simulationEl: HTMLDivElement;
+
+  onMount(() => {
+    const tween = gsap.to(simulationEl, {
+      opacity: 0,
+      ease: "none",
+      scrollTrigger: {
+        trigger: heroEl,
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+      },
+    });
+
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  });
 
   const itemData = [
     {
@@ -36,12 +62,12 @@
   ];
 </script>
 
-<div class="hero">
+<div class="hero" bind:this={heroEl}>
   <div class="hero__content">
     <div class="hero__content__text">
       <span class="hero__subtitle">Open more windows to the Universe </span>
     </div>
-    <div class="hero__content__simulation">
+    <div class="hero__content__simulation" bind:this={simulationEl}>
       <SimulationComponent />
     </div>
   </div>
