@@ -99,22 +99,16 @@
     if (!carouselScene) return;
     if (index === curCarouselItemIndex) return;
 
-    const nextItem = carouselData[index];
-    carouselScene.enableCameraReaction = false;
+    curCarouselItemIndex = index;
+    startAutoplay();
 
     const tl = gsap.timeline();
+    const nextItem = carouselData[index];
 
     tl.to(titleEl, { opacity: 0, duration: 0.3 }, 0);
     tl.to(descriptionEl, { opacity: 0, duration: 0.3 }, 0);
 
-    tl.call(
-      () => {
-        curCarouselItemIndex = index;
-        carouselScene?.setActiveModel(index);
-      },
-      [],
-      0.4,
-    );
+    tl.call(() => { carouselScene?.setActiveModel(index); }, [], 0.4);
 
     tl.fromTo(titleEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
     tl.fromTo(descriptionEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
@@ -124,7 +118,6 @@
 
     tl.add(carouselScene.animateCameraTo(targetPos, targetLookAt, 2.5), 0);
 
-    startAutoplay();
   }
 
   function goToNext() {

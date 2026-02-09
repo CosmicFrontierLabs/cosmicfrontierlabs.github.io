@@ -124,7 +124,7 @@ export class CarouselScene {
 
   /** Mouse position normalized 0-1, (0,0) = top-left */
   mousePosition = { x: 0.5, y: 0.5 };
-  enableCameraReaction = true;
+  enableCameraReaction = false;
 
   /**
    * When true, the visible model auto-rotates and the camera stays fixed.
