@@ -435,7 +435,7 @@
 
 <!-- Carousel overlay: only visible when carousel is active -->
 {#if activeScene === "carousel"}
-  <div class="carousel-overlay" onmousemove={handleCarouselMousemove} role="application" aria-label="3D model carousel">
+  <div class="carousel-overlay" onmousemove={handleCarouselMousemove} role="application" aria-label="3D model carousel" style="opacity: {canvasOpacity}; pointer-events: {canvasOpacity > 0.8 ? 'auto' : 'none'};">
     <div class="carousel-glass">
       <div class="description-wrapper">
         <h2 bind:this={titleEl}>{curCarouselItemIndex + 1}. {carouselData[curCarouselItemIndex].title}</h2>
@@ -497,7 +497,8 @@
     align-items: center;
     padding-block-end: 2%;
     padding-inline: 2rem;
-    pointer-events: auto;
+    /* pointer-events enabled via inline style once fully visible */
+    transition: opacity 0.15s ease-out;
   }
 
   .carousel-glass {

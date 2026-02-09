@@ -8,23 +8,27 @@
 
   let heroEl: HTMLDivElement;
   let carouselSectionEl: HTMLDivElement;
-  let subheroText: HTMLParagraphElement;
 
   // Bindable state passed down to SimulationComponent
   let activeScene = $state<"simulation" | "carousel" | "idle">("simulation");
   let canvasOpacity = $state(1);
   let heroScrollProgress = $state(0);
+  let subheroVisible = $state(true);
 
   onMount(() => {
     // 1. Hero: fade canvas out and drive camera zoom
+    //    The 1.5× multiplier makes the canvas fully transparent by ~67% scroll
+    //    through the hero, leaving a visual pause before the next section.
     const heroTrigger = ScrollTrigger.create({
       trigger: heroEl,
       start: "top top",
       end: "bottom top",
       scrub: true,
+      invalidateOnRefresh: true,
       onUpdate: (self) => {
         const p = Math.max(0, Math.min(1, 1.5 * self.progress));
         heroScrollProgress = p;
+        // Only drive opacity when this scene owns it
         if (activeScene === "simulation") {
           canvasOpacity = 1 - p;
         }
@@ -37,17 +41,22 @@
       start: "top bottom",
       end: "top 20%",
       scrub: true,
+      invalidateOnRefresh: true,
       onEnter: () => {
-        console.log("carouselEnterTrigger onEnter");
         activeScene = "carousel";
-        subheroText.style.opacity = "0";
+        subheroVisible = false;
       },
       onLeaveBack: () => {
         activeScene = "simulation";
-        subheroText.style.opacity = "1";
+        subheroVisible = true;
+        // Restore hero-driven opacity so there's no jump
+        const heroProgress = heroTrigger.progress;
+        const p = Math.max(0, Math.min(1, 1.5 * heroProgress));
+        canvasOpacity = 1 - p;
       },
       onUpdate: (self) => {
-        if (activeScene === "carousel" || self.direction === 1) {
+        // Only drive opacity when carousel scene owns it
+        if (activeScene === "carousel") {
           canvasOpacity = self.progress;
         }
       },
@@ -59,18 +68,25 @@
       start: "bottom 80%",
       end: "bottom 20%",
       scrub: true,
+      invalidateOnRefresh: true,
       onLeave: () => {
         activeScene = "idle";
+        canvasOpacity = 0;
       },
       onEnterBack: () => {
         activeScene = "carousel";
+        // Sync opacity to current progress so there's no discontinuous jump
+        canvasOpacity = 1 - carouselExitTrigger.progress;
       },
       onUpdate: (self) => {
-        if (activeScene === "carousel" || activeScene === "idle") {
+        if (activeScene === "carousel") {
           canvasOpacity = 1 - self.progress;
         }
       },
     });
+
+    // Refresh trigger positions after images / layout settles
+    ScrollTrigger.refresh();
 
     return () => {
       heroTrigger.kill();
@@ -126,7 +142,7 @@
 </div>
 
 <div class="subhero">
-  <p id="subhero__text" bind:this={subheroText}>
+  <p id="subhero__text" style:opacity={subheroVisible ? 1 : 0} style:transition="opacity 0.3s ease">
     We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard
     platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
   </p>
@@ -171,17 +187,19 @@
 </div>
 
 <style lang="scss">
-  /* ── Z-index scale ── */
+  /* ── Z-index scale ──
+   * Layers from back to front:
+   *   simulation (10) → subhero (11) → hero / items / carousel / divider (12)
+   *   → join-us (13)
+   * Card z-indices are local to the .items stacking context. */
   :global(:root) {
-    --z-hero: 11;
-    --z-hero-text: 11;
     --z-simulation: 10;
-    --z-subhero: 10;
-    --z-items: 11;
-    --z-items-card-base: 10;
-    --z-join-us: 12;
-    --z-divider: 11;
-    --z-footer: 12;
+    --z-subhero: 11;
+    --z-hero: 12;
+    --z-items: 12;
+    --z-carousel: 12;
+    --z-divider: 12;
+    --z-join-us: 13;
   }
 
   .simulation-container {
@@ -210,7 +228,8 @@
     display: flex;
     flex-direction: column;
     pointer-events: none;
-    z-index: var(--z-hero-text);
+    /* Local z-index within .hero's stacking context */
+    z-index: 1;
   }
 
   .hero__subtitle {
@@ -267,7 +286,8 @@
     position: sticky;
     top: calc(var(--card-top) + var(--index) * var(--card-offset));
     min-height: calc(90vh - var(--index) * var(--card-offset));
-    z-index: calc(var(--z-items-card-base) + var(--index));
+    /* Local to .items stacking context – only needs to order cards among themselves */
+    z-index: calc(1 + var(--index));
 
     background: var(--items-background-color);
     border-radius: 16px;
@@ -338,6 +358,7 @@
     position: sticky;
     top: 0;
     min-height: 150lvh;
+    z-index: var(--z-carousel);
   }
 
   /* JOIN US */
