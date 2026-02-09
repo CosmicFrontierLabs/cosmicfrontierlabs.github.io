@@ -10,8 +10,19 @@
   import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
   import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
   import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+  import { CarouselScene, carouselData } from "./simulation/CarouselScene";
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  /**
+   * The element that the carousel section is anchored to.
+   * SimulationComponent will show the carousel scene when this element is in view.
+   */
+  interface Props {
+    carouselTriggerEl?: HTMLElement | null;
+  }
+
+  let { carouselTriggerEl = null }: Props = $props();
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -31,19 +42,108 @@
   // Mouse position tracking
   let mouseTracker: MouseTracker | null = null;
 
+  // Active scene: "simulation" or "carousel"
+  let activeScene = $state<"simulation" | "carousel">("simulation");
+
+  // Carousel scene instance
+  let carouselScene: CarouselScene | null = null;
+
+  // Carousel state
+  let curCarouselItemIndex = $state(0);
+  let progress = $state(0);
+  let autoplayInterval: ReturnType<typeof setTimeout> | null = null;
+  let progressInterval: ReturnType<typeof setInterval> | null = null;
+  const SLIDE_DURATION = 15000;
+  const PROGRESS_UPDATE_INTERVAL = 50;
+  let titleEl: HTMLHeadingElement;
+  let descriptionEl: HTMLParagraphElement;
+
   // Frame tracking for initialization opacity
-  // minFrameForReady is really big, but it seemed good to make sure things are ready
   const minFramesForReady = 100;
   let framesRendered = $state(0);
   let isReady = $derived(framesRendered > minFramesForReady);
+
+  // Canvas opacity controlled by scroll
+  let canvasOpacity = $state(1);
 
   // Error boundary state
   let initError = $state<string | null>(null);
   let webglSupported = $state(true);
 
-  /**
-   * Check if WebGL is supported in the current browser
-   */
+  // --- Carousel controls ---
+  function startAutoplay() {
+    stopAutoplay();
+    progress = 0;
+    let elapsed = 0;
+
+    progressInterval = setInterval(() => {
+      elapsed += PROGRESS_UPDATE_INTERVAL;
+      progress = Math.min((elapsed / SLIDE_DURATION) * 100, 100);
+    }, PROGRESS_UPDATE_INTERVAL);
+
+    autoplayInterval = setTimeout(() => {
+      goToNext();
+    }, SLIDE_DURATION);
+  }
+
+  function stopAutoplay() {
+    if (autoplayInterval) {
+      clearTimeout(autoplayInterval);
+      autoplayInterval = null;
+    }
+    if (progressInterval) {
+      clearInterval(progressInterval);
+      progressInterval = null;
+    }
+  }
+
+  function goToIndex(index: number) {
+    if (!carouselScene) return;
+    if (index === curCarouselItemIndex) return;
+
+    const nextItem = carouselData[index];
+    carouselScene.enableCameraReaction = false;
+
+    const tl = gsap.timeline();
+
+    tl.to(titleEl, { opacity: 0, duration: 0.3 }, 0);
+    tl.to(descriptionEl, { opacity: 0, duration: 0.3 }, 0);
+
+    tl.call(
+      () => {
+        curCarouselItemIndex = index;
+        carouselScene?.setActiveModel(index);
+      },
+      [],
+      0.4,
+    );
+
+    tl.fromTo(titleEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
+    tl.fromTo(descriptionEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
+
+    const targetPos = new THREE.Vector3(nextItem.camera.position.x, nextItem.camera.position.y, nextItem.camera.position.z);
+    const targetLookAt = new THREE.Vector3(nextItem.camera.lookAt.x, nextItem.camera.lookAt.y, nextItem.camera.lookAt.z);
+
+    tl.add(carouselScene.animateCameraTo(targetPos, targetLookAt, 2.5), 0);
+
+    startAutoplay();
+  }
+
+  function goToNext() {
+    const nextIndex = (curCarouselItemIndex + 1) % carouselData.length;
+    goToIndex(nextIndex);
+  }
+
+  function goToPrev() {
+    const prevIndex = (curCarouselItemIndex - 1 + carouselData.length) % carouselData.length;
+    goToIndex(prevIndex);
+  }
+
+  function handleCarouselMousemove(event: MouseEvent) {
+    carouselScene?.updateMousePosition(event);
+  }
+
+  // --- WebGL & Simulation Setup ---
   function checkWebGLSupport(): boolean {
     try {
       const canvas = document.createElement("canvas");
@@ -55,37 +155,27 @@
   }
 
   function createRenderer(container: HTMLDivElement): THREE.WebGLRenderer {
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
-    // 2.0 because this improves the quality of the grid lines
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
-    // Use offsetWidth/offsetHeight to get the actual rendered size
+    const newRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    newRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
     const width = container.offsetWidth || container.clientWidth;
     const height = container.offsetHeight || container.clientHeight;
-    renderer.setSize(width, height);
-    container.appendChild(renderer.domElement);
+    newRenderer.setSize(width, height);
+    container.appendChild(newRenderer.domElement);
 
-    if (scene && camera && renderer) {
-      // Add post-processing effects
+    if (scene && camera && newRenderer) {
       renderPass = new RenderPass(scene, camera);
-
       grainPass = new ShaderPass(GrainShader);
       grainPass.uniforms.uResolution.value.set(width, height);
-
-      // Note: no bloom pass because it doesn't respect the transparent background
-      effectComposer = new EffectComposer(renderer);
+      effectComposer = new EffectComposer(newRenderer);
       effectComposer.addPass(renderPass);
       effectComposer.addPass(grainPass);
-    } else {
-      console.error("Post-processing effects not initialized");
     }
 
-    return renderer;
+    return newRenderer;
   }
 
   function setupLighting(): void {
     if (!scene) return;
-
     const config = simulationConfig.lighting;
     const ambientLight = new THREE.AmbientLight(0xffffff, config.ambient.intensity);
     scene.add(ambientLight);
@@ -94,7 +184,6 @@
   function setupResizeObserver(): ResizeObserver {
     const observer = new ResizeObserver((entries) => {
       if (camera && renderer && container) {
-        // Get the actual rendered size from the entry
         const entry = entries[0];
         const width = entry.contentRect.width || entry.borderBoxSize[0]?.inlineSize || container.clientWidth;
         const height = entry.contentRect.height || entry.borderBoxSize[0]?.blockSize || container.clientHeight;
@@ -102,13 +191,11 @@
         updateCamera();
         renderer.setSize(width, height);
         reactiveStarfield?.setResolution(width, height);
+        carouselScene?.resize(width, height);
 
-        // Update grain shader resolution
         if (grainPass) {
           grainPass.uniforms.uResolution.value.set(width, height);
         }
-
-        // Update effect composer size
         if (effectComposer) {
           effectComposer.setSize(width, height);
         }
@@ -134,68 +221,66 @@
 
   function startAnimationLoop(): () => void {
     if (!scene || !camera || !renderer || !telescopes || !earth || !reactiveStarfield) {
-      return () => {
-        console.error("Animation loop not initialized");
-      };
+      return () => {};
     }
 
     const clock = new THREE.Clock();
-
-    // Pre-allocate arrays to reuse each frame (avoid per-frame allocations)
-    // Origins now change each frame as they orbit Earth
-    // Targets change each frame, so we update references
     const telescopeOrigins: THREE.Vector3[] = new Array(telescopes.length);
     const telescopeTargets: THREE.Vector3[] = new Array(telescopes.length);
 
     function animate() {
       if (!scene || !camera || !renderer || !telescopes || !earth || !reactiveStarfield) {
-        return () => {
-          console.error("Animation loop not initialized");
-        };
+        return;
       }
       requestAnimationFrame(animate);
 
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
 
-      // Update mouse tracker with current camera
-      if (mouseTracker && camera) {
-        mouseTracker.update(camera);
+      if (activeScene === "simulation") {
+        // Update simulation scene
+        if (mouseTracker && camera) {
+          mouseTracker.update(camera);
+        }
+
+        const sphereCenter = new THREE.Vector3(0, 0, 0);
+        const sphereRadius = simulationConfig.background.geometry.radius;
+        const mouseWorldPosition = mouseTracker?.getIntersectionWithSphere(sphereCenter, sphereRadius) ?? sphereCenter;
+
+        telescopes.forEach((telescope, i) => {
+          telescope.update(elapsedTime, mouseWorldPosition);
+          telescopeOrigins[i] = telescope.origin.clone();
+          telescopeTargets[i] = telescope.target.clone();
+        });
+
+        earth.update(delta);
+        camera.updateMatrixWorld();
+        reactiveStarfield?.updateFrustums(telescopeOrigins, telescopeTargets, camera);
+
+        if (perf) perf.begin();
+
+        if (effectComposer && grainPass) {
+          effectComposer.render();
+        } else {
+          renderer.render(scene, camera);
+        }
+      } else if (activeScene === "carousel" && carouselScene) {
+        // Update and render carousel scene
+        carouselScene.update(delta);
+
+        if (perf) perf.begin();
+
+        // Use tone mapping for carousel scene
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        renderer.render(carouselScene.scene, carouselScene.camera);
+        // Reset tone mapping for simulation scene
+        renderer.toneMapping = THREE.NoToneMapping;
       }
 
-      // Use mouse tracker to get the world position where the mouse intersects with the background sphere
-      const sphereCenter = new THREE.Vector3(0, 0, 0);
-      const sphereRadius = simulationConfig.background.geometry.radius;
-      const mouseWorldPosition = mouseTracker?.getIntersectionWithSphere(sphereCenter, sphereRadius) ?? sphereCenter;
-
-      telescopes.forEach((telescope, i) => {
-        // Pass mouseWorldPosition to telescopes that track the mouse
-        telescope.update(elapsedTime, mouseWorldPosition);
-        telescopeOrigins[i] = telescope.origin.clone();
-        telescopeTargets[i] = telescope.target.clone();
-      });
-
-      earth.update(delta);
-      camera.updateMatrixWorld();
-
-      reactiveStarfield?.updateFrustums(telescopeOrigins, telescopeTargets, camera);
-
-      if (perf) {
-        perf.begin();
-      }
-
-      if (effectComposer && grainPass) {
-        effectComposer.render();
-      } else {
-        renderer.render(scene, camera);
-      }
-
-      // Increment frame counter after successful render
       framesRendered++;
 
-      if (perf) {
-        perf.end();
-      }
+      if (perf) perf.end();
     }
 
     animate();
@@ -206,17 +291,14 @@
   }
 
   onMount(() => {
-    // Check WebGL support before attempting initialization
     if (!checkWebGLSupport()) {
-      console.warn("WebGL not supported in this browser");
       webglSupported = false;
-      initError =
-        "WebGL is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.";
+      initError = "WebGL is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.";
       return;
     }
 
     let cleanupAnimation: (() => void) | null = null;
-    let scrollTriggerInstance: ScrollTrigger | null = null;
+    let scrollTriggerInstances: ScrollTrigger[] = [];
     let handleMouseMove: ((event: MouseEvent) => void) | null = null;
     let handleMouseClick: ((event: MouseEvent) => void) | null = null;
 
@@ -227,14 +309,13 @@
       scene = new THREE.Scene();
       scene.background = null;
 
-      // Initialize orthographic camera with proper aspect ratio
       camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
       camera.position.set(0, 0, 300);
       camera.lookAt(new THREE.Vector3(0, 0, 0));
-      updateCamera(); // Set initial aspect ratio
+      updateCamera();
 
       renderer = createRenderer(container);
-      renderer.setClearColor(0x000000, 0); // Transparent background
+      renderer.setClearColor(0x000000, 0);
 
       if (config.perf.enabled) {
         perf = new ThreePerf({
@@ -256,62 +337,61 @@
       const originGridPoints: THREE.Vector3[] = grid3d(
         simulationConfig.earth.position,
         simulationConfig.earth.radius * simulationConfig.telescope.orbitalRadiusScalar,
-        1600
+        1600,
       );
       const origins = sampleArray(originGridPoints, simulationConfig.telescope.numTelescopes);
-
-      // Create telescopes with 25% randomly selected to track the mouse
       const numMouseTrackingTelescopes = simulationConfig.telescope.numMouseTrackingTelescopes;
       telescopes = origins.map((origin, index) => {
         const shouldTrackMouse = index < numMouseTrackingTelescopes;
-        if (!scene) {
-          throw new Error("Scene not initialized");
-        }
+        if (!scene) throw new Error("Scene not initialized");
         return new Telescope(scene, origin, shouldTrackMouse);
       });
 
-      // Initialize mouse tracker
       mouseTracker = new MouseTracker();
-
       camera.updateMatrixWorld();
 
-      // Set up scroll-based camera zoom
-      scrollTriggerInstance = ScrollTrigger.create({
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-        onUpdate: (self) => {
-          // Animate cameraFrustumSize from initialCameraFrustumSize to 0.5 as user scrolls
-          const zoomScaleFactor = 3.0;
-          cameraFrustumSize = initialCameraFrustumSize - self.progress * zoomScaleFactor;
-          updateCamera();
-        },
-      });
+      // Initialize carousel scene (shares the same renderer)
+      carouselScene = new CarouselScene(width, height, renderer);
+
+      // --- Scroll triggers ---
+
+      // 1. Simulation camera zoom on hero scroll
+      scrollTriggerInstances.push(
+        ScrollTrigger.create({
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+          onUpdate: (self) => {
+            const zoomScaleFactor = 3.0;
+            cameraFrustumSize = initialCameraFrustumSize - self.progress * zoomScaleFactor;
+            updateCamera();
+          },
+        }),
+      );
 
       resizeObserver = setupResizeObserver();
       cleanupAnimation = startAnimationLoop();
 
-      // Set up mouse position tracking
+      // Mouse tracking
       handleMouseMove = (event: MouseEvent) => {
         if (container && mouseTracker) {
           const rect = container.getBoundingClientRect();
-          const width = container.offsetWidth || container.clientWidth;
-          const height = container.offsetHeight || container.clientHeight;
-          const x = ((event.clientX - rect.left) / width) * 2 - 1;
-          const y = -((event.clientY - rect.top) / height) * 2 + 1;
+          const w = container.offsetWidth || container.clientWidth;
+          const h = container.offsetHeight || container.clientHeight;
+          const x = ((event.clientX - rect.left) / w) * 2 - 1;
+          const y = -((event.clientY - rect.top) / h) * 2 + 1;
           mouseTracker.updateMousePositionNDC(x, y);
         }
       };
       container.addEventListener("mousemove", handleMouseMove);
 
-      // Set up mouse click tracking for debug point
       handleMouseClick = (event: MouseEvent) => {
         if (container && mouseTracker && camera) {
           const rect = container.getBoundingClientRect();
-          const width = container.offsetWidth || container.clientWidth;
-          const height = container.offsetHeight || container.clientHeight;
-          const x = ((event.clientX - rect.left) / width) * 2 - 1;
-          const y = -((event.clientY - rect.top) / height) * 2 + 1;
+          const w = container.offsetWidth || container.clientWidth;
+          const h = container.offsetHeight || container.clientHeight;
+          const x = ((event.clientX - rect.left) / w) * 2 - 1;
+          const y = -((event.clientY - rect.top) / h) * 2 + 1;
           mouseTracker.updateMousePositionNDC(x, y);
           mouseTracker.update(camera);
         }
@@ -326,24 +406,76 @@
 
     return () => {
       resizeObserver?.disconnect();
-      if (handleMouseMove) {
-        container.removeEventListener("mousemove", handleMouseMove);
-      }
-      if (handleMouseClick) {
-        container.removeEventListener("click", handleMouseClick);
-      }
-      scrollTriggerInstance?.kill();
+      if (handleMouseMove) container.removeEventListener("mousemove", handleMouseMove);
+      if (handleMouseClick) container.removeEventListener("click", handleMouseClick);
+      scrollTriggerInstances.forEach((st) => st.kill());
+      stopAutoplay();
 
-      // Dispose individual telescopes
       telescopes.forEach((telescope) => telescope.dispose());
       telescopes = [];
-      // Dispose static shared telescope resources
       Telescope.disposeStaticResources();
 
       earth?.dispose();
       reactiveStarfield?.dispose();
+      carouselScene?.dispose();
       perf?.dispose();
       cleanupAnimation?.();
+    };
+  });
+
+  // React to carouselTriggerEl prop changes
+  let carouselScrollTrigger: ScrollTrigger | null = null;
+  let heroFadeOutTrigger: ScrollTrigger | null = null;
+
+  $effect(() => {
+    // Clean up previous triggers
+    carouselScrollTrigger?.kill();
+    heroFadeOutTrigger?.kill();
+
+    if (!carouselTriggerEl) return;
+
+    // Hero fade-out: as user scrolls past the hero, fade canvas to 0
+    // We find the hero element by looking at carouselTriggerEl's context
+    // The hero section is the first section on the page
+    const heroEl = document.querySelector(".hero") as HTMLElement | null;
+    if (heroEl) {
+      heroFadeOutTrigger = ScrollTrigger.create({
+        trigger: heroEl,
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+        onUpdate: (self) => {
+          // Only apply hero fade when simulation is active
+          if (activeScene === "simulation") {
+            canvasOpacity = 1 - self.progress;
+          }
+        },
+      });
+    }
+
+    // Carousel section: when it enters viewport, switch to carousel scene and fade in
+    carouselScrollTrigger = ScrollTrigger.create({
+      trigger: carouselTriggerEl,
+      start: "top 80%",
+      end: "top 20%",
+      scrub: true,
+      onEnter: () => {
+        activeScene = "carousel";
+        startAutoplay();
+      },
+      onLeaveBack: () => {
+        activeScene = "simulation";
+        stopAutoplay();
+      },
+      onUpdate: (self) => {
+        // Fade canvas back in as we enter carousel section
+        canvasOpacity = self.progress;
+      },
+    });
+
+    return () => {
+      carouselScrollTrigger?.kill();
+      heroFadeOutTrigger?.kill();
     };
   });
 </script>
@@ -357,19 +489,166 @@
   </div>
 {/if}
 
-<div bind:this={container} class="simulation-viewer" class:ready={isReady}></div>
+<div
+  bind:this={container}
+  class="simulation-viewer"
+  class:ready={isReady}
+  class:carousel-active={activeScene === "carousel"}
+  style="opacity: {isReady ? canvasOpacity : 0};"
+></div>
+
+<!-- Carousel overlay: only visible when carousel is active -->
+{#if activeScene === "carousel"}
+  <div class="carousel-overlay" onmousemove={handleCarouselMousemove} role="application" aria-label="3D model carousel">
+    <div class="carousel-glass">
+      <div class="description-wrapper">
+        <h2 bind:this={titleEl}>{curCarouselItemIndex + 1}. {carouselData[curCarouselItemIndex].title}</h2>
+        <p bind:this={descriptionEl}>{carouselData[curCarouselItemIndex].description}</p>
+      </div>
+
+      <div class="carousel-controls">
+        <button class="nav-arrow" onclick={() => goToPrev()} aria-label="Previous slide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <div class="indicators">
+          {#each carouselData as _, i}
+            <button
+              class="indicator"
+              class:active={i === curCarouselItemIndex}
+              onclick={() => goToIndex(i)}
+              aria-label="Go to slide {i + 1}"
+            >
+              {#if i === curCarouselItemIndex}
+                <div class="progress-fill" style="width: {progress}%"></div>
+              {/if}
+            </button>
+          {/each}
+        </div>
+        <button class="nav-arrow" onclick={() => goToNext()} aria-label="Next slide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .simulation-viewer {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background-color: var(--body-bg);
-    opacity: 0;
     transition: opacity 0.3s ease-in;
+    z-index: 1;
   }
 
-  .simulation-viewer.ready {
-    opacity: 1;
+  /* When carousel is active, elevate above all page content */
+  .simulation-viewer.carousel-active {
+    z-index: 13;
+  }
+
+  /* Carousel overlay - fixed over the canvas, only shown when carousel is active */
+  .carousel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 14;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-block-end: 2%;
+    padding-inline: 2rem;
+    pointer-events: auto;
+  }
+
+  .carousel-glass {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-block: 1rem;
+  }
+
+  .description-wrapper {
+    padding: 2ch 2ch;
+    font-size: 0.875rem;
+    max-width: 60ch;
+    min-height: 8lh;
+  }
+
+  .description-wrapper h2 {
+    font-size: 1.325rem;
+    text-wrap: balance;
+    margin-block-start: 0lh;
+    margin-block-end: 0.25lh;
+  }
+
+  .carousel-controls {
+    margin-block: 1rem;
+    padding-inline: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    color: currentColor;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  .indicators {
+    display: flex;
+    gap: 8px;
+  }
+
+  .indicator {
+    position: relative;
+    width: 24px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background 0.2s ease;
+    padding: 0;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    &.active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  .progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 2px;
+    transition: width 0.05s linear;
   }
 
   .simulation-fallback {
@@ -397,7 +676,6 @@
     line-height: 1.5;
   }
 
-  /* Static starfield background for fallback */
   .fallback-stars {
     position: absolute;
     inset: 0;

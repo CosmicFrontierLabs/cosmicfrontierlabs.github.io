@@ -2,31 +2,12 @@
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
   import SimulationComponent from "../components/SimulationComponent.svelte";
-  import Carousel from "./carousel/carousel.svelte";
   import { onMount } from "svelte";
 
   gsap.registerPlugin(ScrollTrigger);
 
   let heroEl: HTMLDivElement;
-  let simulationEl: HTMLDivElement;
-
-  onMount(() => {
-    const tween = gsap.to(simulationEl, {
-      opacity: 0,
-      ease: "none",
-      scrollTrigger: {
-        trigger: heroEl,
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-      },
-    });
-
-    return () => {
-      tween.scrollTrigger?.kill();
-      tween.kill();
-    };
-  });
+  let carouselSectionEl: HTMLDivElement;
 
   const itemData = [
     {
@@ -62,13 +43,12 @@
   ];
 </script>
 
+<SimulationComponent carouselTriggerEl={carouselSectionEl} />
+
 <div class="hero" bind:this={heroEl}>
   <div class="hero__content">
     <div class="hero__content__text">
       <span class="hero__subtitle">Open more windows to the Universe </span>
-    </div>
-    <div class="hero__content__simulation" bind:this={simulationEl}>
-      <SimulationComponent />
     </div>
   </div>
 </div>
@@ -100,8 +80,9 @@
 </div>
 <div class="divider"></div>
 
-<div class="carousel-section">
-  <Carousel />
+<div class="carousel-section" bind:this={carouselSectionEl}>
+  <!-- Carousel 3D content is now rendered by SimulationComponent's shared canvas -->
+  <!-- This div serves as the scroll trigger anchor -->
 </div>
 
 <div class="join-us">
@@ -118,12 +99,11 @@
 </div>
 
 <style lang="scss">
-  /* Use 56rem as the breakpoint because the sticky sections
-  need a big area to switch over to make sure all the text is visible
-  */
   /* HERO */
   .hero {
     min-height: 95lvh;
+    position: relative;
+    z-index: 2;
   }
 
   .hero__content {
@@ -159,13 +139,6 @@
     }
   }
 
-  .hero__content__simulation {
-    position: fixed;
-    inset: 0;
-    background: var(--body-bg);
-    z-index: 1;
-  }
-
   /* SUBHERO */
   .subhero {
     min-height: 80lvh;
@@ -191,7 +164,7 @@
     --items-background-color: var(--color-text);
     --items-text-color: var(--body-bg);
     --card-top: 10vh;
-    --card-offset: 1rem; /* Slight offset for each stacked card */
+    --card-offset: 1rem;
 
     margin-block-start: 25lvh;
 
@@ -270,13 +243,13 @@
     }
   }
 
-  // Carousel Section
+  // Carousel Section - now just a scroll anchor with min-height
   .carousel-section {
     position: relative;
     min-height: 80lvh;
     z-index: 12;
     border-radius: 96px;
-    background: var(--body-bg);
+    background: transparent;
 
     width: 100lvw;
     margin-inline: calc(50% - 50lvw);
@@ -294,9 +267,6 @@
     background-position: center center;
     background-repeat: no-repeat;
     background-size: cover;
-
-    // Note that ios doesn't support background-attachment: fixed
-    // for performance reasons
     background-attachment: fixed;
 
     display: grid;
@@ -315,7 +285,6 @@
       font-size: var(--size-step-5);
       font-weight: 700;
       text-align: center;
-
       text-transform: uppercase;
     }
 
@@ -348,6 +317,5 @@
     height: 50lvh;
     background: var(--body-bg);
     z-index: 11;
-
   }
 </style>
