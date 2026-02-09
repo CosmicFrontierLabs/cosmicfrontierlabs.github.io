@@ -209,21 +209,6 @@
 </div>
 
 <style lang="scss">
-  /* ── Z-index scale ──
-   * Layers from back to front:
-   *   simulation (10) → subhero (11) → hero / items / carousel / divider (12)
-   *   → join-us (13)
-   * Card z-indices are local to the .items stacking context. */
-  :global(:root) {
-    --z-simulation: 10;
-    --z-subhero: 11;
-    --z-hero: 12;
-    --z-items: 12;
-    --z-carousel-ui: 12;
-    --z-divider: 12;
-    --z-join-us: 13;
-  }
-
   .simulation-container {
     position: relative;
     z-index: var(--z-simulation);

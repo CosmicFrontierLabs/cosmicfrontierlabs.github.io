@@ -4,6 +4,17 @@
   project: https://cube.fyi/css.html
 */
 
+:root {
+    --z-simulation: 10;
+    --z-subhero: 11;
+    --z-hero: 12;
+    --z-items: 12;
+    --z-carousel-ui: 12;
+    --z-divider: 12;
+    --z-join-us: 13;
+    --z-footer: 14;
+}
+
 html {
   scroll-behavior: smooth;
   /* scroll-padding-top is not working as I'd expect */
