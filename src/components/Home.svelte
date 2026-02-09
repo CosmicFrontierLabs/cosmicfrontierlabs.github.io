@@ -7,13 +7,15 @@
   gsap.registerPlugin(ScrollTrigger);
 
   let heroEl: HTMLDivElement;
+  let subheroEl: HTMLDivElement;
+  let itemsEl: HTMLDivElement;
   let carouselSectionEl: HTMLDivElement;
 
   // Bindable state passed down to SimulationComponent
   let activeScene = $state<"simulation" | "carousel" | "idle">("simulation");
   let canvasOpacity = $state(1);
   let heroScrollProgress = $state(0);
-  let subheroVisible = $state(true);
+  let subheroOpacity = $state(1);
   let carouselUIOpacity = $state(0);
 
   onMount(() => {
@@ -45,11 +47,9 @@
       invalidateOnRefresh: true,
       onEnter: () => {
         activeScene = "carousel";
-        subheroVisible = false;
       },
       onLeaveBack: () => {
         activeScene = "simulation";
-        subheroVisible = true;
         carouselUIOpacity = 0;
         // Restore hero-driven opacity so there's no jump
         const heroProgress = heroTrigger.progress;
@@ -106,6 +106,18 @@
       },
     });
 
+    // 5. Subhero: fade out as the items section scrolls up over it
+    const subheroFadeTrigger = ScrollTrigger.create({
+      trigger: itemsEl,
+      start: "top bottom",
+      end: "top 60%",
+      scrub: true,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        subheroOpacity = 1 - self.progress;
+      },
+    });
+
     // Refresh trigger positions after images / layout settles
     ScrollTrigger.refresh();
 
@@ -114,6 +126,7 @@
       carouselEnterTrigger.kill();
       carouselUITrigger.kill();
       carouselExitTrigger.kill();
+      subheroFadeTrigger.kill();
     };
   });
 
@@ -163,14 +176,14 @@
   </div>
 </div>
 
-<div class="subhero">
-  <p id="subhero__text" style:opacity={subheroVisible ? 1 : 0} style:transition="opacity 0.3s ease">
+<div class="subhero" bind:this={subheroEl}>
+  <p id="subhero__text" style:opacity={subheroOpacity}>
     We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard
     platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
   </p>
 </div>
 
-<div class="items">
+<div class="items" bind:this={itemsEl}>
   {#each itemData as item, index}
     <div class="item" id={item.id} data-index={index} style="--index: {index}">
       <div class="item__inner">
