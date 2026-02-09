@@ -42,72 +42,20 @@
     const carouselEnterTrigger = ScrollTrigger.create({
       trigger: carouselSectionEl,
       start: "top bottom",
-      end: "top 20%",
+      end: "top 50%",
       scrub: true,
       invalidateOnRefresh: true,
       onEnter: () => {
         activeScene = "carousel";
       },
-      onLeaveBack: () => {
-        activeScene = "simulation";
-        carouselUIOpacity = 0;
-        // Restore hero-driven opacity so there's no jump
-        const heroProgress = heroTrigger.progress;
-        const p = Math.max(0, Math.min(1, 1.5 * heroProgress));
-        canvasOpacity = 1 - p;
-      },
       onUpdate: (self) => {
-        // Only drive opacity when carousel scene owns it
         if (activeScene === "carousel") {
           canvasOpacity = self.progress;
-        }
-      },
-    });
-
-    // 3. Carousel UI fade-in: once the canvas is fully visible, fade in text + controls
-    const carouselUITrigger = ScrollTrigger.create({
-      trigger: carouselSectionEl,
-      start: "top top",
-      end: "15% top",
-      scrub: true,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        if (activeScene === "carousel") {
           carouselUIOpacity = self.progress;
         }
       },
-      onLeaveBack: () => {
-        carouselUIOpacity = 0;
-      },
     });
-
-    // 4. Carousel fade-out: scrolling past the carousel section downward
-    const carouselExitTrigger = ScrollTrigger.create({
-      trigger: carouselSectionEl,
-      start: "bottom 80%",
-      end: "bottom 20%",
-      scrub: true,
-      invalidateOnRefresh: true,
-      onLeave: () => {
-        activeScene = "idle";
-        canvasOpacity = 0;
-        carouselUIOpacity = 0;
-      },
-      onEnterBack: () => {
-        activeScene = "carousel";
-        // Sync opacity to current progress so there's no discontinuous jump
-        canvasOpacity = 1 - carouselExitTrigger.progress;
-        // The UI trigger range (top top → 15% top) is far above, so it won't
-        // fire when re-entering from below. Force full UI visibility since the
-        // scroll position is well past the UI fade-in zone.
-        carouselUIOpacity = 1;
-      },
-      onUpdate: (self) => {
-        if (activeScene === "carousel") {
-          canvasOpacity = 1 - self.progress;
-        }
-      },
-    });
+   
 
     // 5. Subhero: fade out as the items section scrolls up over it
     const subheroFadeTrigger = ScrollTrigger.create({
@@ -127,8 +75,6 @@
     return () => {
       heroTrigger.kill();
       carouselEnterTrigger.kill();
-      carouselUITrigger.kill();
-      carouselExitTrigger.kill();
       subheroFadeTrigger.kill();
     };
   });
@@ -383,7 +329,7 @@
   .carousel-section {
     position: sticky;
     top: 0;
-    min-height: 250lvh;
+    min-height: 200lvh;
     z-index: var(--z-carousel-ui);
     pointer-events: none;
   }

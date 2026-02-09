@@ -17,8 +17,6 @@
 
 html {
   scroll-behavior: smooth;
-  /* scroll-padding-top is not working as I'd expect */
-  /* scroll-padding-top: 10vw; */
 }
 
 body {

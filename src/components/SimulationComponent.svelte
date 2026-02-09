@@ -54,7 +54,7 @@
   let progress = $state(0);
   let autoplayInterval: ReturnType<typeof setTimeout> | null = null;
   let progressInterval: ReturnType<typeof setInterval> | null = null;
-  const SLIDE_DURATION = 15000;
+  const SLIDE_DURATION = 5000;
   const PROGRESS_UPDATE_INTERVAL = 50;
   let titleEl: HTMLHeadingElement;
   let descriptionEl: HTMLParagraphElement;
@@ -135,10 +135,6 @@
   function goToPrev() {
     const prevIndex = (curCarouselItemIndex - 1 + carouselData.length) % carouselData.length;
     goToIndex(prevIndex);
-  }
-
-  function handleCarouselMousemove(event: MouseEvent) {
-    carouselScene?.updateMousePosition(event);
   }
 
   // --- WebGL & Simulation Setup ---
@@ -446,9 +442,9 @@
 
 <!-- Carousel overlay: only visible when carousel is active and UI has faded in -->
 {#if activeScene === "carousel"}
-  <div class="carousel-overlay" onmousemove={handleCarouselMousemove} role="application" aria-label="3D model carousel" style="opacity: {Math.min(canvasOpacity, carouselUIOpacity)};">
+  <div class="carousel-overlay" role="application" aria-label="3D model carousel" style="opacity: {Math.min(canvasOpacity, carouselUIOpacity)};">
     <h2>Explore our telescope</h2>
-    <div class="carousel-glass">
+    <div class="carousel-glass bg-glass2">
       <div class="description-wrapper">
         <h3 bind:this={titleEl}>{curCarouselItemIndex + 1}. {carouselData[curCarouselItemIndex].title}</h3>
         <p bind:this={descriptionEl}>{carouselData[curCarouselItemIndex].description}</p>
