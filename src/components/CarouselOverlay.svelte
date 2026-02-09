@@ -54,6 +54,7 @@
     if (index === activeSlideIndex) return;
 
     // Restart autoplay timer immediately (resets progress bar)
+    activeSlideIndex = index;
     startAutoplay();
 
     const tl = gsap.timeline();
@@ -66,7 +67,6 @@
     // Update data + model at midpoint of the crossfade
     tl.call(
       () => {
-        activeSlideIndex = index;
         carouselScene?.setActiveModel(index);
       },
       [],
