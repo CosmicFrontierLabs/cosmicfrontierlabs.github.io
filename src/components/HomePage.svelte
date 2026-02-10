@@ -158,14 +158,6 @@
 </div>
 
 <div class="join-us">
-  <img
-    class="join-us__bg"
-    src="/images/join-us.jpg"
-    alt=""
-    loading="lazy"
-    decoding="async"
-    aria-hidden="true"
-  />
   <div>
     <h2>Cosmic Frontier Labs</h2>
     <div class="join-us__links">
@@ -349,6 +341,7 @@
     position: relative;
     z-index: var(--z-join-us);
     overflow: hidden;
+    background: var(--body-bg);
 
     display: grid;
     place-content: center;
@@ -377,17 +370,6 @@
       text-decoration: underline;
     }
   }
-
-  .join-us__bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    z-index: -1;
-  }
-
   .join-us__links {
     margin-block-start: var(--space-s);
     display: flex;
