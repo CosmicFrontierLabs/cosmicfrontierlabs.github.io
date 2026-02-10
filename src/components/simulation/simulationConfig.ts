@@ -73,7 +73,7 @@ export interface SimulationConfig {
   };
 }
 
-export const simulationConfig: SimulationConfig = {
+export const simulationConfig: Readonly<SimulationConfig> = Object.freeze({
   camera: {
     fov: 45,
     near: 0.01, // world units
@@ -142,4 +142,4 @@ export const simulationConfig: SimulationConfig = {
   perf: {
     enabled: false,
   },
-};
+});

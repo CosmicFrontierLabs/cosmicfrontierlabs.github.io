@@ -1,25 +1,43 @@
 import * as THREE from "three";
 
+// --- Pre-allocated temporaries to avoid per-call allocations ---
+const _projTemp = new THREE.Vector3();
+const _cameraRight = new THREE.Vector3();
+const _offsetPoint = new THREE.Vector3();
+const _refNDC = new THREE.Vector2();
+const _offsetNDC = new THREE.Vector2();
+
 /**
- * Projects a world position to normalized device coordinates (NDC) using a camera
+ * Projects a world position to normalized device coordinates (NDC) using a camera.
+ * Writes the result into `out` to avoid allocations.
  * @param worldPosition - The world position to project
  * @param camera - The camera to use for projection
- * @returns A Vector2 representing the position in NDC space
+ * @param out - Pre-allocated Vector2 to write the result into
  */
-export function projectWorldToNDC(worldPosition: THREE.Vector3, camera: THREE.Camera): THREE.Vector2 {
-  const projected = worldPosition.clone();
-  projected.project(camera);
-  return new THREE.Vector2(projected.x, projected.y);
+export function projectWorldToNDC(worldPosition: THREE.Vector3, camera: THREE.Camera, out: THREE.Vector2): void {
+  _projTemp.copy(worldPosition).project(camera);
+  out.set(_projTemp.x, _projTemp.y);
 }
 
 /**
- * Projects multiple world positions to NDC space
+ * Projects multiple world positions to NDC space, writing into pre-allocated output array.
  * @param worldPositions - Array of world positions to project
  * @param camera - The camera to use for projection
- * @returns Array of Vector2s representing positions in NDC space
+ * @param out - Pre-allocated array of Vector2s (must have at least worldPositions.length elements)
+ * @param count - Number of positions to project (defaults to worldPositions.length)
+ * @returns The number of positions projected
  */
-export function projectWorldPositionsToNDC(worldPositions: THREE.Vector3[], camera: THREE.Camera): THREE.Vector2[] {
-  return worldPositions.map((pos) => projectWorldToNDC(pos, camera));
+export function projectWorldPositionsToNDC(
+  worldPositions: THREE.Vector3[],
+  camera: THREE.Camera,
+  out: THREE.Vector2[],
+  count?: number
+): number {
+  const n = count ?? worldPositions.length;
+  for (let i = 0; i < n; i++) {
+    projectWorldToNDC(worldPositions[i], camera, out[i]);
+  }
+  return n;
 }
 
 /**
@@ -34,14 +52,14 @@ export function convertWorldRadiusToNDC(
   referencePoint: THREE.Vector3,
   camera: THREE.Camera
 ): number {
-  const refNDC = projectWorldToNDC(referencePoint, camera);
+  projectWorldToNDC(referencePoint, camera, _refNDC);
 
-  const cameraRight = new THREE.Vector3(1, 0, 0);
-  cameraRight.applyQuaternion(camera.quaternion);
-  cameraRight.normalize();
+  _cameraRight.set(1, 0, 0);
+  _cameraRight.applyQuaternion(camera.quaternion);
+  _cameraRight.normalize();
 
-  const offsetPoint = referencePoint.clone().add(cameraRight.multiplyScalar(worldRadius));
-  const offsetNDC = projectWorldToNDC(offsetPoint, camera);
+  _offsetPoint.copy(referencePoint).addScaledVector(_cameraRight, worldRadius);
+  projectWorldToNDC(_offsetPoint, camera, _offsetNDC);
 
-  return refNDC.distanceTo(offsetNDC);
+  return _refNDC.distanceTo(_offsetNDC);
 }

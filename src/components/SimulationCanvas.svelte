@@ -49,10 +49,10 @@
   // Carousel scene instance (exposed to CarouselOverlay)
   let carouselScene = $state<CarouselScene | null>(null);
 
-  // Frame tracking for initialization opacity
+  // Frame tracking for initialization opacity — stops incrementing once ready
   const minFramesForReady = 100;
-  let framesRendered = $state(0);
-  let isReady = $derived(framesRendered > minFramesForReady);
+  let framesRendered = 0;
+  let isReady = $state(false);
 
   // Error boundary state
   let initError = $state<string | null>(null);
@@ -152,12 +152,20 @@
     const loopReactiveStarfield = reactiveStarfield;
 
     const clock = new THREE.Clock();
-    const telescopeOrigins: THREE.Vector3[] = new Array(telescopes.length);
-    const telescopeTargets: THREE.Vector3[] = new Array(telescopes.length);
+    const numTelescopes = telescopes.length;
+
+    // Pre-allocate origin/target arrays with Vector3 instances (reused every frame)
+    const telescopeOrigins: THREE.Vector3[] = new Array(numTelescopes);
+    const telescopeTargets: THREE.Vector3[] = new Array(numTelescopes);
+    for (let i = 0; i < numTelescopes; i++) {
+      telescopeOrigins[i] = new THREE.Vector3();
+      telescopeTargets[i] = new THREE.Vector3();
+    }
 
     // Pre-allocate reusable objects to avoid per-frame GC pressure
     const sphereCenter = new THREE.Vector3(0, 0, 0);
     const sphereRadius = simulationConfig.background.geometry.radius;
+    const mouseWorldPosition = new THREE.Vector3();
 
     let rafId: number;
 
@@ -174,13 +182,17 @@
           mouseTracker.update(loopCamera);
         }
 
-        const mouseWorldPosition = mouseTracker?.getIntersectionWithSphere(sphereCenter, sphereRadius) ?? sphereCenter;
+        if (mouseTracker) {
+          mouseTracker.getIntersectionWithSphere(sphereCenter, sphereRadius, mouseWorldPosition);
+        } else {
+          mouseWorldPosition.copy(sphereCenter);
+        }
 
-        telescopes.forEach((telescope, i) => {
-          telescope.update(elapsedTime, mouseWorldPosition);
-          telescopeOrigins[i] = telescope.origin.clone();
-          telescopeTargets[i] = telescope.target.clone();
-        });
+        for (let i = 0; i < numTelescopes; i++) {
+          telescopes[i].update(elapsedTime, mouseWorldPosition);
+          telescopeOrigins[i].copy(telescopes[i].origin);
+          telescopeTargets[i].copy(telescopes[i].target);
+        }
 
         loopEarth.update(delta);
         loopCamera.updateMatrixWorld();
@@ -204,7 +216,13 @@
         loopRenderer.toneMapping = THREE.NoToneMapping;
       }
 
-      framesRendered++;
+      // Stop incrementing once ready to avoid reactive churn
+      if (!isReady) {
+        framesRendered++;
+        if (framesRendered > minFramesForReady) {
+          isReady = true;
+        }
+      }
 
       if (perf) perf.end();
     }
@@ -278,8 +296,7 @@
       mouseTracker = new MouseTracker();
       camera.updateMatrixWorld();
 
-      // Initialize carousel scene (shares the same renderer)
-      carouselScene = new CarouselScene(width, height, renderer);
+      // Carousel scene is created lazily when first needed (see $effect below)
 
       resizeObserver = setupResizeObserver();
       cleanupAnimation = startAnimationLoop();
@@ -334,6 +351,15 @@
       perf?.dispose();
       cleanupAnimation?.();
     };
+  });
+
+  // Lazily initialize the carousel scene when the user first scrolls to it
+  $effect(() => {
+    if (activeScene === "carousel" && !carouselScene && renderer && container) {
+      const width = container.offsetWidth || container.clientWidth;
+      const height = container.offsetHeight || container.clientHeight;
+      carouselScene = new CarouselScene(width, height, renderer);
+    }
   });
 
   // Drive camera zoom from hero scroll progress

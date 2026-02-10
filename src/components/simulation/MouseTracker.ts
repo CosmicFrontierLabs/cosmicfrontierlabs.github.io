@@ -1,13 +1,24 @@
 import * as THREE from "three";
 
 /**
- * Tracks mouse position and provides methods to calculate intersections with spheres
- * Should be updated each frame with the current mouse position and camera
+ * Tracks mouse position and provides methods to calculate intersections with spheres.
+ * Should be updated each frame with the current mouse position and camera.
+ *
+ * All temporary vectors are pre-allocated to avoid per-frame GC pressure.
  */
 export class MouseTracker {
   private mousePositionNDC: THREE.Vector2;
   private camera: THREE.Camera | null = null;
   private raycaster: THREE.Raycaster;
+
+  // Pre-allocated temporaries for getIntersectionWithSphere
+  private _oc = new THREE.Vector3();
+  private _sphereDir = new THREE.Vector3();
+  private _sphereOrigin = new THREE.Vector3();
+  private _mouseWorldResult = new THREE.Vector3();
+  private _toCenter = new THREE.Vector3();
+  private _projectedPoint = new THREE.Vector3();
+  private _toProjected = new THREE.Vector3();
 
   constructor() {
     this.mousePositionNDC = new THREE.Vector2(0, 0);
@@ -35,31 +46,31 @@ export class MouseTracker {
   }
 
   /**
-   * Calculates the world position where the mouse ray intersects with a sphere
-   * Only tracks intersection with the hemisphere that's farther away from the camera
+   * Calculates the world position where the mouse ray intersects with a sphere.
+   * Only tracks intersection with the hemisphere that's farther away from the camera.
+   * Writes result into the provided `out` Vector3 to avoid allocations.
    * @param sphereCenter - Center of the sphere
    * @param sphereRadius - Radius of the sphere
-   * @returns World position where the ray intersects the sphere surface on the far hemisphere
+   * @param out - Pre-allocated Vector3 to write result into
    */
-  getIntersectionWithSphere(sphereCenter: THREE.Vector3, sphereRadius: number): THREE.Vector3 {
+  getIntersectionWithSphere(sphereCenter: THREE.Vector3, sphereRadius: number, out: THREE.Vector3): void {
     if (!this.camera) {
-      // Fallback if camera hasn't been set yet
-      return sphereCenter.clone();
+      out.copy(sphereCenter);
+      return;
     }
 
-    const sphereDirection = this.raycaster.ray.direction.clone();
-    const sphereOrigin = this.raycaster.ray.origin.clone();
+    this._sphereDir.copy(this.raycaster.ray.direction);
+    this._sphereOrigin.copy(this.raycaster.ray.origin);
 
     // Calculate intersection: ray origin + t * direction = point on sphere
     // |point - center|^2 = radius^2
     // Solve quadratic: at^2 + bt + c = 0
-    const oc = sphereOrigin.clone().sub(sphereCenter);
-    const a = sphereDirection.dot(sphereDirection);
-    const b = 2 * oc.dot(sphereDirection);
-    const c = oc.dot(oc) - sphereRadius * sphereRadius;
+    this._oc.copy(this._sphereOrigin).sub(sphereCenter);
+    const a = this._sphereDir.dot(this._sphereDir);
+    const b = 2 * this._oc.dot(this._sphereDir);
+    const c = this._oc.dot(this._oc) - sphereRadius * sphereRadius;
     const discriminant = b * b - 4 * a * c;
 
-    const mouseWorldPosition = new THREE.Vector3();
     if (discriminant >= 0) {
       // Calculate both intersection points
       const sqrtDiscriminant = Math.sqrt(discriminant);
@@ -68,32 +79,32 @@ export class MouseTracker {
 
       // Use the farther intersection point (larger t) - this is on the back hemisphere
       const t = Math.max(t1, t2);
-      mouseWorldPosition.copy(sphereOrigin).add(sphereDirection.clone().multiplyScalar(t));
+      out.copy(this._sphereOrigin).addScaledVector(this._sphereDir, t);
     } else {
       // Fallback: project to sphere surface along ray direction
       // For the far hemisphere, we need to project to the far side
-      const toCenter = sphereCenter.clone().sub(sphereOrigin);
-      const projectionLength = toCenter.dot(sphereDirection);
-      const projectedPoint = sphereOrigin.clone().add(sphereDirection.clone().multiplyScalar(projectionLength));
-      const toProjected = projectedPoint.clone().sub(sphereCenter);
-      const distance = toProjected.length();
+      this._toCenter.copy(sphereCenter).sub(this._sphereOrigin);
+      const projectionLength = this._toCenter.dot(this._sphereDir);
+      this._projectedPoint.copy(this._sphereOrigin).addScaledVector(this._sphereDir, projectionLength);
+      this._toProjected.copy(this._projectedPoint).sub(sphereCenter);
+      const distance = this._toProjected.length();
       if (distance > 0) {
         // Project to the far side of the sphere
-        const farPoint = sphereCenter.clone().add(toProjected.multiplyScalar(sphereRadius / distance));
+        this._toProjected.multiplyScalar(sphereRadius / distance);
+        this._mouseWorldResult.copy(sphereCenter).add(this._toProjected);
         // Check if this point is on the far hemisphere (farther from camera than sphere center)
-        const cameraToCenter = sphereCenter.clone().sub(sphereOrigin).length();
-        const cameraToFarPoint = farPoint.clone().sub(sphereOrigin).length();
+        const cameraToCenter = sphereCenter.distanceTo(this._sphereOrigin);
+        const cameraToFarPoint = this._mouseWorldResult.distanceTo(this._sphereOrigin);
         if (cameraToFarPoint > cameraToCenter) {
-          mouseWorldPosition.copy(farPoint);
+          out.copy(this._mouseWorldResult);
         } else {
           // Use the opposite point on the sphere
-          mouseWorldPosition.copy(sphereCenter).add(toProjected.multiplyScalar(-sphereRadius / distance));
+          this._toProjected.multiplyScalar(-1);
+          out.copy(sphereCenter).add(this._toProjected);
         }
       } else {
-        mouseWorldPosition.copy(sphereCenter);
+        out.copy(sphereCenter);
       }
     }
-
-    return mouseWorldPosition;
   }
 }

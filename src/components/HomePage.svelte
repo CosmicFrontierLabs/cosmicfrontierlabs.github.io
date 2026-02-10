@@ -27,7 +27,7 @@
       trigger: heroEl,
       start: "top 10%",
       end: "bottom 50%",
-      scrub: true,
+      scrub: 0.5,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
         if (activeScene !== "simulation") activeScene = "simulation";
@@ -41,7 +41,7 @@
       trigger: carouselAnchorEl,
       start: "top bottom",
       end: "top 50%",
-      scrub: true,
+      scrub: 0.5,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
         if (activeScene !== "carousel") activeScene = "carousel";
@@ -54,7 +54,7 @@
       trigger: sectionsEl,
       start: "top bottom",
       end: "top 60%",
-      scrub: true,
+      scrub: 0.5,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
         subheroOpacity = 1 - self.progress;
