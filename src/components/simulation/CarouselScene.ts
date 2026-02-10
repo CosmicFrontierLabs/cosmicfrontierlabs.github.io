@@ -114,6 +114,9 @@ export class CarouselScene {
   private rimLight: THREE.PointLight;
   private reactiveStarfield: ReactiveStarfield;
 
+  /** Tracks the current lookAt target for smooth camera transitions */
+  private currentLookAtTarget = new THREE.Vector3(0, 0, 0);
+
   /** Mouse position normalized 0-1, (0,0) = top-left */
   mousePosition = { x: 0.5, y: 0.5 };
   enableCameraReaction = false;
@@ -330,52 +333,33 @@ export class CarouselScene {
    * Animate the camera to a new position and lookAt target along a smooth curve.
    */
   animateCameraTo(targetPosition: THREE.Vector3, targetLookAt: THREE.Vector3, duration: number = 2.5): gsap.core.Tween {
-    const easeType = "power1.inOut";
+    const easeType = "power2.inOut";
     const startPosition = this.camera.position.clone();
-    const startLookAt = new THREE.Vector3();
-    this.camera.getWorldDirection(startLookAt);
-    startLookAt.multiplyScalar(10).add(startPosition);
-
-    const distance = startPosition.distanceTo(targetPosition);
-    const midpoint = new THREE.Vector3().lerpVectors(startPosition, targetPosition, 0.5);
-    const direction = new THREE.Vector3().subVectors(targetPosition, startPosition).normalize();
-    const up = new THREE.Vector3(0, 1, 0);
-    const perpendicular = new THREE.Vector3().crossVectors(direction, up).normalize();
-
-    const controlPoint1 = new THREE.Vector3(
-      startPosition.x + (midpoint.x - startPosition.x) * 0.3 + perpendicular.x * distance * 0.1,
-      startPosition.y + distance * 0.25,
-      startPosition.z + (midpoint.z - startPosition.z) * 0.3 - distance * 0.1
-    );
-    const controlPoint2 = new THREE.Vector3(
-      targetPosition.x - (targetPosition.x - midpoint.x) * 0.3 - perpendicular.x * distance * 0.1,
-      targetPosition.y + distance * 0.12,
-      targetPosition.z - (targetPosition.z - midpoint.z) * 0.3 + distance * 0.1
-    );
-
-    const cameraCurve = new THREE.CatmullRomCurve3(
-      [startPosition, controlPoint1, controlPoint2, targetPosition],
-      false,
-      "catmullrom",
-      0.4
-    );
+    const startLookAt = this.currentLookAtTarget.clone();
 
     const currentLookAt = startLookAt.clone();
+    const currentPos = startPosition.clone();
     const camera = this.camera;
+    const self = this;
+
+    // Use linear gsap tween and apply easing manually so position and lookAt
+    // use the exact same eased t value — no mismatch, no wobble.
+    const easeFn = gsap.parseEase(easeType);
 
     return gsap.to(
       { t: 0 },
       {
         t: 1,
         duration,
-        ease: easeType,
+        ease: "none",
         onUpdate() {
-          const t = this.targets()[0].t;
-          const easedT = gsap.parseEase(easeType)(t);
-          const point = cameraCurve.getPoint(t);
-          camera.position.copy(point);
-          currentLookAt.lerpVectors(startLookAt, targetLookAt, easedT);
+          const rawT = this.targets()[0].t;
+          const t = easeFn(rawT);
+          currentPos.lerpVectors(startPosition, targetPosition, t);
+          camera.position.copy(currentPos);
+          currentLookAt.lerpVectors(startLookAt, targetLookAt, t);
           camera.lookAt(currentLookAt);
+          self.currentLookAtTarget.copy(currentLookAt);
         },
       }
     );
@@ -383,64 +367,12 @@ export class CarouselScene {
 
   setActiveModel(carouselIndex: number): void {
     const modelType = carouselData[carouselIndex].model;
-    const duration = 0.3;
 
-    const setModelOpacity = (model: THREE.Group, opacity: number) => {
-      model.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material) {
-          const materials = Array.isArray(child.material) ? child.material : [child.material];
-          materials.forEach((mat) => {
-            mat.transparent = true;
-            mat.opacity = opacity;
-          });
-        }
-      });
-    };
-
-    const fadeOut = (model: THREE.Group) => {
-      return gsap.to(
-        {},
-        {
-          duration,
-          onUpdate: function () {
-            setModelOpacity(model, 1 - this.progress());
-          },
-          onComplete: () => {
-            model.visible = false;
-          },
-        }
-      );
-    };
-
-    const fadeIn = (model: THREE.Group) => {
-      model.visible = true;
-      setModelOpacity(model, 0);
-      return gsap.to(
-        {},
-        {
-          duration,
-          onUpdate: function () {
-            setModelOpacity(model, this.progress());
-          },
-        }
-      );
-    };
-
-    if (this.telescope && this.fullAssy) {
-      if (modelType === "payload" && !this.telescope.visible) {
-        fadeOut(this.fullAssy);
-        fadeIn(this.telescope);
-      } else if (modelType === "fullAssy" && !this.fullAssy.visible) {
-        fadeOut(this.telescope);
-        fadeIn(this.fullAssy);
-      }
-    } else {
-      if (this.telescope) {
-        this.telescope.visible = modelType === "payload";
-      }
-      if (this.fullAssy) {
-        this.fullAssy.visible = modelType === "fullAssy";
-      }
+    if (this.telescope) {
+      this.telescope.visible = modelType === "payload";
+    }
+    if (this.fullAssy) {
+      this.fullAssy.visible = modelType === "fullAssy";
     }
   }
 
