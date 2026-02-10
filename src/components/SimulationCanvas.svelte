@@ -155,6 +155,10 @@
     const telescopeOrigins: THREE.Vector3[] = new Array(telescopes.length);
     const telescopeTargets: THREE.Vector3[] = new Array(telescopes.length);
 
+    // Pre-allocate reusable objects to avoid per-frame GC pressure
+    const sphereCenter = new THREE.Vector3(0, 0, 0);
+    const sphereRadius = simulationConfig.background.geometry.radius;
+
     let rafId: number;
 
     function animate() {
@@ -170,8 +174,6 @@
           mouseTracker.update(loopCamera);
         }
 
-        const sphereCenter = new THREE.Vector3(0, 0, 0);
-        const sphereRadius = simulationConfig.background.geometry.radius;
         const mouseWorldPosition = mouseTracker?.getIntersectionWithSphere(sphereCenter, sphereRadius) ?? sphereCenter;
 
         telescopes.forEach((telescope, i) => {

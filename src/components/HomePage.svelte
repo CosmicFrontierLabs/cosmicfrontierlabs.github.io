@@ -30,7 +30,7 @@
       scrub: true,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
-        activeScene = "simulation";
+        if (activeScene !== "simulation") activeScene = "simulation";
         heroScrollProgress = self.progress;
         canvasOpacity = 1 - self.progress;
       },
@@ -44,7 +44,7 @@
       scrub: true,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
-        activeScene = "carousel";
+        if (activeScene !== "carousel") activeScene = "carousel";
         canvasOpacity = self.progress;
       },
     });
@@ -137,7 +137,14 @@
             <p>{paragraph}</p>
           {/each}
         </div>
-        <img src={section.image} alt={`Illustration for ${section.title} section`} />
+        <img
+          src={section.image}
+          alt={`Illustration for ${section.title} section`}
+          loading="lazy"
+          decoding="async"
+          width="512"
+          height="512"
+        />
       </div>
     </div>
   {/each}
@@ -151,6 +158,14 @@
 </div>
 
 <div class="join-us">
+  <img
+    class="join-us__bg"
+    src="/images/join-us.jpg"
+    alt=""
+    loading="lazy"
+    decoding="async"
+    aria-hidden="true"
+  />
   <div>
     <h2>Cosmic Frontier Labs</h2>
     <div class="join-us__links">
@@ -216,6 +231,7 @@
     display: grid;
     place-content: center;
     z-index: var(--z-subhero);
+    will-change: opacity;
 
     position: sticky;
     top: 0lvh;
@@ -332,12 +348,7 @@
     margin-inline: calc(50% - 50lvw);
     position: relative;
     z-index: var(--z-join-us);
-
-    background-image: url("/images/join-us.jpg");
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-attachment: fixed;
+    overflow: hidden;
 
     display: grid;
     place-content: center;
@@ -365,6 +376,16 @@
     & a:hover {
       text-decoration: underline;
     }
+  }
+
+  .join-us__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: -1;
   }
 
   .join-us__links {
