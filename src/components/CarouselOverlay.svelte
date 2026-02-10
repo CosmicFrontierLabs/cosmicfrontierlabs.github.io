@@ -147,7 +147,7 @@
 <style>
   .carousel-overlay {
     position: fixed;
-    top: 12lvh;
+    top: 14lvh;
     left: 0;
     right: 0;
     bottom: 0;
@@ -159,7 +159,12 @@
     justify-content: space-between;
     align-items: start;
     padding-block-end: 2%;
-    padding-inline: 2rem;
+    padding-inline: 1rem;
+
+    @media (min-width: 56rem) {
+      top: 12lvh;
+      padding-inline: 2rem;
+    }
   }
 
   .carousel-overlay h2 {
@@ -167,7 +172,7 @@
       2px 2px 8px rgba(0, 0, 0, 0.8),
       0 0 4px rgba(0, 0, 0, 0.9);
     text-transform: uppercase;
-    font-size: var(--size-step-4);
+    font-size: var(--size-step-3);
     font-weight: 500;
     line-height: 1;
     text-wrap: balance;
@@ -183,31 +188,55 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding-block: 1rem;
+    padding-block: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    container-type: inline-size;
+
+    @media (min-width: 56rem) {
+      padding-block: 1rem;
+      width: auto;
+    }
   }
 
   .description-wrapper {
-    padding: 2ch 2ch;
-    font-size: 0.875rem;
+    padding: 1ch 1.5ch;
+    font-size: 0.8125rem;
     max-width: 60ch;
-    min-height: 8lh;
+    min-height: 6lh;
+
+    @media (min-width: 56rem) {
+      padding: 2ch 2ch;
+      font-size: 0.875rem;
+      min-height: 8lh;
+    }
   }
 
   .description-wrapper h3 {
-    font-size: 1.325rem;
+    font-size: 1.125rem;
     text-wrap: balance;
     margin-block-start: 0lh;
     margin-block-end: 0.25lh;
+
+    @media (min-width: 56rem) {
+      font-size: 1.325rem;
+    }
   }
 
   .carousel-controls {
-    margin-block: 1rem;
-    padding-inline: 1rem;
+    margin-block: 0.5rem;
+    padding-inline: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     margin-inline-end: auto;
-    gap: 12px;
+    gap: 8px;
+
+    @media (min-width: 56rem) {
+      margin-block: 1rem;
+      padding-inline: 1rem;
+      gap: 12px;
+    }
   }
 
   .nav-arrow {
@@ -216,6 +245,7 @@
     justify-content: center;
     width: 32px;
     height: 32px;
+    flex-shrink: 0;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
@@ -232,8 +262,12 @@
   }
 
   .indicators {
-    display: flex;
+    display: none;
     gap: 8px;
+
+    @container (min-width: 350px) {
+      display: flex;
+    }
   }
 
   .indicator {

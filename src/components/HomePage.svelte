@@ -192,6 +192,11 @@
     justify-content: center;
     align-items: center;
     height: 80lvh;
+    padding-inline: 1rem;
+
+    @media (min-width: 56rem) {
+      padding-inline: 0;
+    }
   }
 
   .hero__content__text {
@@ -206,11 +211,17 @@
       2px 2px 8px rgba(0, 0, 0, 0.8),
       0 0 4px rgba(0, 0, 0, 0.9);
     text-transform: uppercase;
-    font-size: var(--size-step-4);
+    font-size: var(--size-step-3);
     font-weight: 500;
     line-height: 1;
     text-wrap: balance;
     margin-block-start: 0.125em;
+    padding-inline: 0.5rem;
+
+    @media (min-width: 40rem) {
+      font-size: var(--size-step-4);
+      padding-inline: 0;
+    }
 
     @media (min-width: 56rem) {
       font-size: var(--size-step-5);
@@ -227,6 +238,7 @@
 
     position: sticky;
     top: 0lvh;
+    padding-inline: 1rem;
 
     & > p {
       max-width: 40ch;
@@ -234,7 +246,15 @@
       margin-inline: auto;
       text-wrap: balance;
       color: var(--color-text);
-      font-size: var(--size-step-3);
+      font-size: var(--size-step-1);
+
+      @media (min-width: 40rem) {
+        font-size: var(--size-step-2);
+      }
+
+      @media (min-width: 56rem) {
+        font-size: var(--size-step-3);
+      }
     }
   }
 
@@ -242,35 +262,59 @@
   .content-sections {
     --section-background-color: var(--color-text);
     --section-text-color: var(--body-bg);
-    --card-top: 10vh;
-    --card-offset: 1rem;
+    --card-top: 6vh;
+    --card-offset: 0.75rem;
 
-    margin-block-start: 25lvh;
+    margin-block-start: 15lvh;
 
     position: relative;
     z-index: var(--z-items);
     color: var(--section-text-color);
+
+    @media (min-width: 40rem) {
+      --card-top: 10vh;
+      --card-offset: 1rem;
+      margin-block-start: 25lvh;
+    }
   }
 
   .content-section {
-    position: sticky;
-    top: calc(var(--card-top) + var(--index) * var(--card-offset));
-    min-height: calc(90vh - var(--index) * var(--card-offset));
+    position: relative;
     z-index: calc(1 + var(--index));
 
     background: var(--section-background-color);
-    border-radius: 16px;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     overflow: hidden;
+
+    & + & {
+      margin-block-start: var(--space-m);
+    }
+
+    @media (min-width: 40rem) {
+      position: sticky;
+      top: calc(var(--card-top) + var(--index) * var(--card-offset));
+      min-height: calc(90vh - var(--index) * var(--card-offset));
+      border-radius: 16px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+
+      & + & {
+        margin-block-start: 0;
+      }
+    }
   }
 
   .content-section__inner {
     max-width: var(--content-width);
     margin-inline: auto;
-    padding: 3rem 1rem 4rem;
+    padding: 2rem 1rem 2.5rem;
 
     row-gap: 1lh;
     column-gap: 1lh;
+
+    @media (min-width: 40rem) {
+      padding: 3rem 1rem 4rem;
+    }
 
     @media (min-width: 56rem) {
       display: grid;
@@ -285,13 +329,21 @@
     grid-row: 1 / 2;
     text-transform: uppercase;
     line-height: 1.1;
-    font-size: var(--size-step-2);
+    font-size: var(--size-step-1);
     font-weight: 700;
+
+    @media (min-width: 40rem) {
+      font-size: var(--size-step-2);
+    }
   }
 
   .content-section__heading__number {
-    font-size: var(--size-step-2);
+    font-size: var(--size-step-1);
     font-weight: 700;
+
+    @media (min-width: 40rem) {
+      font-size: var(--size-step-2);
+    }
   }
 
   .content-section .content-section__text {
@@ -342,6 +394,7 @@
     z-index: var(--z-join-us);
     overflow: hidden;
     background: var(--body-bg);
+    padding-inline: 1rem;
 
     display: grid;
     place-content: center;
@@ -356,10 +409,18 @@
     }
 
     & h2 {
-      font-size: var(--size-step-5);
+      font-size: var(--size-step-3);
       font-weight: 700;
       text-align: center;
       text-transform: uppercase;
+
+      @media (min-width: 40rem) {
+        font-size: var(--size-step-4);
+      }
+
+      @media (min-width: 56rem) {
+        font-size: var(--size-step-5);
+      }
     }
 
     & a {
