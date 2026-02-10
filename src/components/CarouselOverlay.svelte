@@ -192,10 +192,11 @@
     width: 100%;
     box-sizing: border-box;
     container-type: inline-size;
+    width: 300px;
 
     @media (min-width: 56rem) {
+      width: 500px;
       padding-block: 1rem;
-      width: auto;
     }
   }
 
