@@ -16,13 +16,17 @@
   import CarouselOverlay from "./CarouselOverlay.svelte";
 
   interface Props {
-    activeScene: "simulation" | "carousel" | "idle"
+    activeScene: "simulation" | "carousel" | "idle";
     canvasOpacity: number;
     /** 0–1 scroll progress through the hero section, drives camera zoom */
     heroScrollProgress: number;
   }
 
-  let { activeScene = $bindable("simulation"), canvasOpacity = $bindable(1), heroScrollProgress = $bindable(0) }: Props = $props();
+  let {
+    activeScene = $bindable("simulation"),
+    canvasOpacity = $bindable(1),
+    heroScrollProgress = $bindable(0),
+  }: Props = $props();
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -355,10 +359,11 @@
   style="opacity: {canvasOpacity};"
 ></div>
 
-<!-- Carousel overlay: only visible when carousel is active and UI has faded in -->
- {#if activeScene === "carousel"}
+{#if activeScene === "carousel"}
+  <div style="opacity: {canvasOpacity};">
     <CarouselOverlay {carouselScene} />
-    {/if}
+  </div>
+{/if}
 
 <style>
   .simulation-viewer {
