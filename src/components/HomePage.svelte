@@ -31,7 +31,9 @@
       invalidateOnRefresh: true,
       onUpdate: (self) => {
         if (activeScene !== "simulation") activeScene = "simulation";
-        heroScrollProgress = self.progress;
+        // Skip camera zoom on mobile — the resize/scroll interactions cause jarring size changes
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+        heroScrollProgress = isMobile ? 0 : self.progress;
         canvasOpacity = 1 - self.progress;
       },
     });
