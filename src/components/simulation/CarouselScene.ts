@@ -24,7 +24,7 @@ export const carouselData: CarouselItem[] = [
       "Introducing a revolutionary optical instrument designed to peer deeper into the cosmos than ever before. This next-generation payload assembly combines precision engineering with cutting-edge materials.",
     model: "payload",
     camera: {
-      position: { x: 3, y: 0.5, z: 3 },
+      position: { x: 3, y: 1.5, z: 3 },
       lookAt: { x: 0.5, y: 1, z: 0 },
     },
   },
@@ -129,8 +129,10 @@ export class CarouselScene {
     this.scene.background = null;
 
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    this.camera.position.set(0, 1, 10);
-    this.camera.lookAt(0, 0, 0);
+    const initialCamera = carouselData[0].camera;
+    this.camera.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
+    this.camera.lookAt(initialCamera.lookAt.x, initialCamera.lookAt.y, initialCamera.lookAt.z);
+    this.currentLookAtTarget.set(initialCamera.lookAt.x, initialCamera.lookAt.y, initialCamera.lookAt.z);
 
     // Ambient light
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
