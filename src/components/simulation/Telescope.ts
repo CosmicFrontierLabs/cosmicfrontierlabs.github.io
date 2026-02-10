@@ -130,7 +130,7 @@ export class Telescope {
       simulationConfig.telescope.targetRadius,
       simulationConfig.telescope.originRadius,
       simulationConfig.telescope.telescopeLength,
-      32,
+      12,
       1,
       false
     );

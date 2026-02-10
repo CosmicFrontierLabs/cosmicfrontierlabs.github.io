@@ -129,7 +129,7 @@ export const simulationConfig: Readonly<SimulationConfig> = Object.freeze({
   earth: {
     textureUrl: "/textures/simplearth.png",
     radius: 0.375, // world units
-    segments: 32,
+    segments: 24,
     position: new THREE.Vector3(0, 0, 0), // world units
     rotationSpeed: (2 * Math.PI) / 32,
     roughness: 0.7,
