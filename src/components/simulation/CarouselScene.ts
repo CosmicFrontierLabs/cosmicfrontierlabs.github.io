@@ -1,6 +1,7 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";                                                            
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { ReactiveStarfield } from "./ReactiveStarfield";
 import { lerp } from "three/src/math/MathUtils.js";
@@ -23,8 +24,8 @@ export const carouselData: CarouselItem[] = [
       "Introducing a revolutionary optical instrument designed to peer deeper into the cosmos than ever before. This next-generation payload assembly combines precision engineering with cutting-edge materials.",
     model: "payload",
     camera: {
-      position: { x: 0, y: 1, z: 10 },
-      lookAt: { x: 0, y: 0, z: 0 },
+      position: { x: 3, y: 0.5, z: 3 },
+      lookAt: { x: 0.5, y: 1, z: 0 },
     },
   },
   {
@@ -43,8 +44,8 @@ export const carouselData: CarouselItem[] = [
       "A carbon-fiber composite truss structure provides exceptional rigidity while minimizing weight. This lattice design maintains optical alignment even under extreme thermal cycling in the vacuum of space.",
     model: "payload",
     camera: {
-      position: { x: 4, y: 0.5, z: 3 },
-      lookAt: { x: 0, y: 1, z: 0 },
+      position: { x: 0, y: 1, z: 10 },
+      lookAt: { x: 0, y: 0, z: 0 },
     },
   },
   {
@@ -162,6 +163,7 @@ export class CarouselScene {
     dracoLoader.setDecoderPath("/draco/");
     const gltfLoader = new GLTFLoader();
     gltfLoader.setDRACOLoader(dracoLoader);
+    gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
     gltfLoader.load("/models/20260102_Payload_assy_no_baffle.glb", (gltf) => {
       const root = gltf.scene as THREE.Group;

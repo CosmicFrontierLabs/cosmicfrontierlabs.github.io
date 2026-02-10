@@ -5,10 +5,8 @@ Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and 
 ---
 
 TODO:
-
 - Fix rolodex for mobile
-- Make sure gsap
-- Make the models load faster and include loader states
+- Add loading progress feedback for model carousel
 
 ---
 
@@ -28,6 +26,56 @@ Visit `http://localhost:4321` to view the site.
 - `npm run preview` - Preview production build
 - `npm run check` - Run Astro type checking
 - `npm run format` - Format code with Prettier
+
+## 3D Model Optimization
+
+GLB models in `public/models/` are optimized for web delivery using [`gltf-transform`](https://gltf-transform.dev/). The original CAD exports from SolidWorks are extremely large (96–275 MB each) and need to be processed before use on the site.
+
+### Optimization results
+
+| Model | Original | Optimized | Reduction |
+|---|---|---|---|
+| `20260102_Payload_assy_no_baffle.glb` | 96 MB | 1.8 MB | 98% |
+| `20260102_Payload_assy.glb` | 97 MB | 1.9 MB | 98% |
+| `20260102_Full_Assy_no_mli.glb` | 206 MB | 3.5 MB | 98% |
+| `20260102_Full_Assy.glb` | 206 MB | 3.5 MB | 98% |
+| `batmobile.glb` | 275 MB | 1.6 MB | 99% |
+| `tree.glb` | 5.2 MB | 5.2 MB | already optimized (Draco) |
+
+### How to optimize a new model
+
+Install the CLI tool (one-time):
+
+```bash
+npm install -g @gltf-transform/cli
+```
+
+Run the three-step pipeline — **weld** (merge split vertices), **simplify** (decimate mesh), **optimize** (compress with meshopt):
+
+```bash
+# Step 1: Weld nearby vertices (helps the simplifier work better)
+gltf-transform weld input.glb /tmp/welded.glb
+
+# Step 2: Simplify — reduce to ~10% of triangles, constrained to 0.1% geometric error
+gltf-transform simplify /tmp/welded.glb /tmp/simplified.glb --ratio 0.1 --error 0.001
+
+# Step 3: Optimize — dedup, flatten, compress with meshopt
+gltf-transform optimize /tmp/simplified.glb public/models/output.glb --compress meshopt
+```
+
+**Tuning tips:**
+- `--ratio 0.1` = keep 10% of triangles. Increase to 0.2–0.3 if the model looks too degraded.
+- `--error 0.001` = max 0.1% geometric error. The simplifier stops early if this threshold is hit.
+- Preview results at https://gltf-viewer.donmccurdy.com/ before committing.
+- Models already compressed with Draco (like `tree.glb`) may get *larger* through this pipeline — skip them.
+
+### Compression format
+
+The optimized models use **meshopt** compression (via `EXT_meshopt_compression`). The GLTFLoader in `CarouselScene.ts` is configured with both `MeshoptDecoder` and `DRACOLoader` to handle both formats.
+
+### Original files
+
+Unoptimized originals are backed up in `public/models/original/` (git-ignored). Keep these around in case you need to re-optimize with different settings.
 
 ## Project structure
 

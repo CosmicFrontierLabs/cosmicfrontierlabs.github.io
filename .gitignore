@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 *.blend
 .netlify
+
+# Original unoptimized models (kept as backup)
+public/models/original/
