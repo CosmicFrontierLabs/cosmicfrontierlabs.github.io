@@ -179,6 +179,7 @@ export class CarouselScene {
       this.scene.add(this.telescope);
       this.telescope.position.set(0, 1.25, -1);
       this.telescope.scale.set(5.0, 5.0, 5.0);
+      this.brightenDarkMaterials(root);
     });
 
     gltfLoader.load("/models/20260102_Full_Assy.glb", (gltf) => {
@@ -195,6 +196,68 @@ export class CarouselScene {
       this.fullAssy.position.set(0, 1.25, -1);
       this.fullAssy.scale.set(3.0, 3.0, 3.0);
       this.fullAssy.visible = false;
+      this.brightenDarkMaterials(root);
+    });
+  }
+
+  /**
+   * Traverse a model and lighten any very dark materials so they're visible
+   * against the dark space background. Handles dark base colors, high metalness
+   * on dark surfaces, and non-Standard material types.
+   */
+  private brightenDarkMaterials(root: THREE.Object3D): void {
+    const minLuminance = 0.18;
+    root.traverse((child) => {
+      if (!(child instanceof THREE.Mesh) || !child.material) return;
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      materials.forEach((mat) => {
+        if (!("color" in mat) || !(mat.color instanceof THREE.Color)) return;
+
+        const c = mat.color as THREE.Color;
+        const lum = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+        const metalness = "metalness" in mat && typeof mat.metalness === "number" ? mat.metalness : 0;
+        const roughness = "roughness" in mat && typeof mat.roughness === "number" ? mat.roughness : 0;
+
+        // 1) Brighten dark base colors
+        if (lum < minLuminance) {
+          const boost = minLuminance / Math.max(lum, 0.001);
+          const factor = Math.min(boost, 4.0);
+          c.multiplyScalar(factor);
+          c.r = Math.max(c.r, minLuminance * 0.6);
+          c.g = Math.max(c.g, minLuminance * 0.6);
+          c.b = Math.max(c.b, minLuminance * 0.6);
+          mat.needsUpdate = true;
+        }
+
+        // 2) High metalness + high roughness renders near-black regardless of
+        //    base color because metallic materials have no diffuse reflection
+        //    and rough specular is extremely dim. Convert to dielectric so
+        //    ambient/diffuse light is reflected.
+        if (metalness > 0.8 && roughness > 0.8) {
+          mat.metalness = 0.0;
+          mat.roughness = 0.6;
+          // Give these a visible grey color if they were white-metallic
+          if (lum > 0.8) {
+            c.setRGB(0.45, 0.45, 0.48);
+          }
+          mat.needsUpdate = true;
+        }
+        // 3) High metalness on dark surfaces absorbs almost all light
+        else if (metalness > 0.5 && lum < 0.25) {
+          mat.metalness = Math.min(mat.metalness as number, 0.3);
+          mat.needsUpdate = true;
+        }
+
+        // 4) Subtle emissive boost on darkest parts
+        if ("emissive" in mat && mat.emissive instanceof THREE.Color && lum < minLuminance) {
+          const e = mat.emissive as THREE.Color;
+          const eLum = 0.299 * e.r + 0.587 * e.g + 0.114 * e.b;
+          if (eLum < 0.03) {
+            mat.emissive = new THREE.Color(0.06, 0.06, 0.08);
+            mat.needsUpdate = true;
+          }
+        }
+      });
     });
   }
 
