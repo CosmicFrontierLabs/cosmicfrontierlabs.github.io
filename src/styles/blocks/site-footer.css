@@ -1,5 +1,5 @@
 .site-footer {
-  min-height: 25vh;
+  min-height: 25lvh;
   /* background: var(--footer-bg); */
   background: var(--body-bg);
   color: var(--color-text-on-primary);

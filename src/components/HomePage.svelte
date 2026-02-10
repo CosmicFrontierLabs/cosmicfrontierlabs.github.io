@@ -262,7 +262,7 @@
   .content-sections {
     --section-background-color: var(--color-text);
     --section-text-color: var(--body-bg);
-    --card-top: 6vh;
+    --card-top: 6lvh;
     --card-offset: 0.75rem;
 
     margin-block-start: 15lvh;
@@ -272,7 +272,7 @@
     color: var(--section-text-color);
 
     @media (min-width: 56rem) {
-      --card-top: 10vh;
+      --card-top: 10lvh;
       --card-offset: 1rem;
       margin-block-start: 25lvh;
     }
@@ -294,7 +294,7 @@
     @media (min-width: 56rem) {
       position: sticky;
       top: calc(var(--card-top) + var(--index) * var(--card-offset));
-      min-height: calc(90vh - var(--index) * var(--card-offset));
+      min-height: calc(90lvh - var(--index) * var(--card-offset));
       border-radius: 16px;
       box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
 
