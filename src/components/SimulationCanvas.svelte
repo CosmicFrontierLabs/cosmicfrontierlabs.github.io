@@ -16,15 +16,13 @@
   import CarouselOverlay from "./CarouselOverlay.svelte";
 
   interface Props {
-    activeScene: "simulation" | "carousel" | "idle";
+    activeScene: "simulation" | "carousel" | "idle"
     canvasOpacity: number;
     /** 0–1 scroll progress through the hero section, drives camera zoom */
     heroScrollProgress: number;
-    /** 0–1 opacity for carousel UI (text + controls), driven by scroll */
-    carouselUIOpacity: number;
   }
 
-  let { activeScene, canvasOpacity, heroScrollProgress, carouselUIOpacity }: Props = $props();
+  let { activeScene = $bindable("simulation"), canvasOpacity = $bindable(1), heroScrollProgress = $bindable(0) }: Props = $props();
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -216,7 +214,8 @@
   onMount(() => {
     if (!checkWebGLSupport()) {
       webglSupported = false;
-      initError = "WebGL is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.";
+      initError =
+        "WebGL is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.";
       return;
     }
 
@@ -337,15 +336,6 @@
     cameraFrustumSize = initialCameraFrustumSize - heroScrollProgress * zoomScaleFactor;
     updateCamera();
   });
-
-  // Drive carousel introMode based on UI opacity
-  $effect(() => {
-    if (carouselScene) {
-      const uiVisible = carouselUIOpacity > 0.8;
-      carouselScene.introMode = !uiVisible;
-      carouselScene.enableCameraReaction = uiVisible;
-    }
-  });
 </script>
 
 {#if initError}
@@ -366,9 +356,9 @@
 ></div>
 
 <!-- Carousel overlay: only visible when carousel is active and UI has faded in -->
-{#if activeScene === "carousel"}
-  <CarouselOverlay {canvasOpacity} {carouselUIOpacity} {carouselScene} />
-{/if}
+ {#if activeScene === "carousel"}
+    <CarouselOverlay {carouselScene} />
+    {/if}
 
 <style>
   .simulation-viewer {

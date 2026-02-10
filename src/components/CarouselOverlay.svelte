@@ -6,12 +6,10 @@
   import { carouselData } from "./simulation/CarouselScene";
 
   interface Props {
-    canvasOpacity: number;
-    carouselUIOpacity: number;
     carouselScene: CarouselScene | null;
   }
 
-  let { canvasOpacity, carouselUIOpacity, carouselScene }: Props = $props();
+  let { carouselScene }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
 
@@ -64,14 +62,8 @@
     tl.to(titleEl, { opacity: 0, duration: 0.3 }, 0);
     tl.to(descriptionEl, { opacity: 0, duration: 0.3 }, 0);
 
-    // Update data + model at midpoint of the crossfade
-    tl.call(
-      () => {
-        carouselScene?.setActiveModel(index);
-      },
-      [],
-      0.4
-    );
+    // Update model
+    carouselScene.setActiveModel(index);
 
     // Fade in new text
     tl.fromTo(titleEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
@@ -101,16 +93,10 @@
     goToIndex(prevIndex);
   }
 
-  // Start/stop autoplay based on visibility
-  $effect(() => {
-    if (carouselUIOpacity > 0.8) {
-      startAutoplay();
-    } else {
-      stopAutoplay();
-    }
-  });
-
   onMount(() => {
+    console.log("CarouselOverlay mounted");
+    startAutoplay();
+
     return () => {
       stopAutoplay();
     };
@@ -121,7 +107,6 @@
   class="carousel-overlay"
   role="application"
   aria-label="3D model carousel"
-  style="opacity: {Math.min(canvasOpacity, carouselUIOpacity)};"
 >
   <h2>Explore our telescope</h2>
   <div class="carousel-glass bg-glass2">
@@ -175,7 +160,6 @@
     align-items: start;
     padding-block-end: 2%;
     padding-inline: 2rem;
-    transition: opacity 0.15s ease-out;
   }
 
   .carousel-overlay h2 {

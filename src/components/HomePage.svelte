@@ -18,7 +18,6 @@
   let canvasOpacity = $state(1);
   let heroScrollProgress = $state(0);
   let subheroOpacity = $state(1);
-  let carouselUIOpacity = $state(0);
 
   onMount(() => {
     // 1. Hero: fade canvas out and drive camera zoom
@@ -53,12 +52,10 @@
         activeScene = "simulation";
         // Restore canvas opacity based on current hero progress
         canvasOpacity = 1 - heroScrollProgress;
-        carouselUIOpacity = 0;
       },
       onUpdate: (self) => {
         if (activeScene === "carousel") {
           canvasOpacity = self.progress;
-          carouselUIOpacity = self.progress;
         }
       },
     });
@@ -120,7 +117,7 @@
 </script>
 
 <div class="simulation-container">
-  <SimulationCanvas {activeScene} {canvasOpacity} {heroScrollProgress} {carouselUIOpacity} />
+  <SimulationCanvas bind:activeScene {canvasOpacity} {heroScrollProgress} />
 </div>
 
 <div class="hero" bind:this={heroEl}>

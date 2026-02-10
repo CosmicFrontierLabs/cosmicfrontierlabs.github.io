@@ -121,12 +121,6 @@ export class CarouselScene {
   mousePosition = { x: 0.5, y: 0.5 };
   enableCameraReaction = false;
 
-  /**
-   * When true, the visible model auto-rotates and the camera stays fixed.
-   * Set to false once the carousel UI is visible and interactive.
-   */
-  introMode = true;
-
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
     RectAreaLightUniformsLib.init();
 
