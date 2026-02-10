@@ -16,7 +16,7 @@
   import CarouselOverlay from "./CarouselOverlay.svelte";
 
   interface Props {
-    activeScene: "simulation" | "carousel" | "idle";
+    activeScene: "simulation" | "carousel";
     canvasOpacity: number;
     /** 0–1 scroll progress through the hero section, drives camera zoom */
     heroScrollProgress: number;
@@ -359,11 +359,9 @@
   style="opacity: {canvasOpacity};"
 ></div>
 
-{#if activeScene === "carousel"}
-  <div style="opacity: {canvasOpacity};">
-    <CarouselOverlay {carouselScene} />
-  </div>
-{/if}
+<div style="opacity: {canvasOpacity * (activeScene === 'carousel' ? 1 : 0)};">
+  <CarouselOverlay {carouselScene} />
+</div>
 
 <style>
   .simulation-viewer {

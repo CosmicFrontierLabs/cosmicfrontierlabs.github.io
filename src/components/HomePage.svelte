@@ -14,7 +14,7 @@
   let carouselAnchorEl: HTMLDivElement;
 
   // Bindable state passed down to SimulationCanvas
-  let activeScene = $state<"simulation" | "carousel" | "idle">("simulation");
+  let activeScene = $state<"simulation" | "carousel">("simulation");
   let canvasOpacity = $state(1);
   let heroScrollProgress = $state(0);
   let subheroOpacity = $state(1);
@@ -30,11 +30,10 @@
       scrub: true,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
+        activeScene = "simulation";
         const p = Math.max(0, Math.min(1, 1.5 * self.progress));
         heroScrollProgress = p;
-        if (activeScene === "simulation") {
-          canvasOpacity = 1 - p;
-        }
+        canvasOpacity = 1 - p;
       },
     });
 
@@ -45,18 +44,9 @@
       end: "top 50%",
       scrub: true,
       invalidateOnRefresh: true,
-      onEnter: () => {
-        activeScene = "carousel";
-      },
-      onLeaveBack: () => {
-        activeScene = "simulation";
-        // Restore canvas opacity based on current hero progress
-        canvasOpacity = 1 - heroScrollProgress;
-      },
       onUpdate: (self) => {
-        if (activeScene === "carousel") {
-          canvasOpacity = self.progress;
-        }
+        activeScene = "carousel";
+        canvasOpacity = self.progress;
       },
     });
 
