@@ -271,7 +271,7 @@
     z-index: var(--z-items);
     color: var(--section-text-color);
 
-    @media (min-width: 40rem) {
+    @media (min-width: 56rem) {
       --card-top: 10vh;
       --card-offset: 1rem;
       margin-block-start: 25lvh;
@@ -291,7 +291,7 @@
       margin-block-start: var(--space-m);
     }
 
-    @media (min-width: 40rem) {
+    @media (min-width: 56rem) {
       position: sticky;
       top: calc(var(--card-top) + var(--index) * var(--card-offset));
       min-height: calc(90vh - var(--index) * var(--card-offset));
@@ -312,10 +312,6 @@
     row-gap: 1lh;
     column-gap: 1lh;
 
-    @media (min-width: 40rem) {
-      padding: 3rem 1rem 4rem;
-    }
-
     @media (min-width: 56rem) {
       display: grid;
       grid-template-columns: 3fr 2fr;
@@ -332,7 +328,7 @@
     font-size: var(--size-step-1);
     font-weight: 700;
 
-    @media (min-width: 40rem) {
+    @media (min-width: 56rem) {
       font-size: var(--size-step-2);
     }
   }
@@ -341,7 +337,7 @@
     font-size: var(--size-step-1);
     font-weight: 700;
 
-    @media (min-width: 40rem) {
+    @media (min-width: 56rem) {
       font-size: var(--size-step-2);
     }
   }
@@ -363,11 +359,13 @@
 
   .content-section img {
     width: 100%;
+    max-width: 350px;
     height: auto;
     object-fit: cover;
     margin-block-start: 1lh;
 
     @media (min-width: 56rem) {
+      max-width: none;
       grid-column: 2 / -1;
       grid-row: 1 / -1;
       margin-block-start: 0;
