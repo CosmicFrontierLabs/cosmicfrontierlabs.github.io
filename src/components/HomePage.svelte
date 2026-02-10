@@ -159,18 +159,7 @@
        the carousel fade-in via ScrollTrigger. -->
 </div>
 
-<div class="join-us">
-  <div>
-    <h2>Cosmic Frontier Labs</h2>
-    <div class="join-us__links">
-      <a href="/blog">blog</a>
-      <span aria-hidden="true" class="dot-separator"></span>
-      <a href="/join-us">join us</a>
-      <span aria-hidden="true" class="dot-separator"></span>
-      <a href="/contact">contact</a>
-    </div>
-  </div>
-</div>
+
 
 <style lang="scss">
   .simulation-container {
@@ -383,60 +372,6 @@
     min-height: 200lvh;
     z-index: var(--z-carousel-ui);
     pointer-events: none;
-  }
-
-  /* JOIN US */
-  .join-us {
-    min-height: 90lvh;
-    width: 100lvw;
-    margin-inline: calc(50% - 50lvw);
-    position: relative;
-    z-index: var(--z-join-us);
-    overflow: hidden;
-    background: var(--body-bg);
-    padding-inline: 1rem;
-
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    align-items: center;
-    text-align: center;
-
-    & * {
-      text-shadow:
-        2px 2px 8px rgba(0, 0, 0, 0.8),
-        0 0 4px rgba(0, 0, 0, 0.9);
-    }
-
-    & h2 {
-      font-size: var(--size-step-3);
-      font-weight: 700;
-      text-align: center;
-      text-transform: uppercase;
-
-      @media (min-width: 40rem) {
-        font-size: var(--size-step-4);
-      }
-
-      @media (min-width: 56rem) {
-        font-size: var(--size-step-5);
-      }
-    }
-
-    & a {
-      text-decoration: none;
-    }
-
-    & a:hover {
-      text-decoration: underline;
-    }
-  }
-  .join-us__links {
-    margin-block-start: var(--space-s);
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    align-items: center;
   }
 
   .dot-separator {
