@@ -373,11 +373,4 @@
     z-index: var(--z-carousel-ui);
     pointer-events: none;
   }
-
-  .dot-separator {
-    height: 0.25em;
-    aspect-ratio: 1 / 1;
-    background: var(--color-text);
-    border-radius: 50%;
-  }
 </style>

@@ -9,19 +9,23 @@ const kitFormOptions = {
   },
   version: "5",
 };
+
+const isRoot = Astro.url.pathname === "/";
 ---
 
 <footer class="footer">
-  <div class="footer-cta">
-    <h2>Cosmic Frontier Labs</h2>
-    <nav class="footer-nav" aria-label="Footer">
-      <a href="/blog">blog</a>
-      <span aria-hidden="true" class="dot-separator"></span>
-      <a href="/join-us">join us</a>
-      <span aria-hidden="true" class="dot-separator"></span>
-      <a href="/contact">contact</a>
-    </nav>
-  </div>
+  {isRoot && (
+    <div class="footer-cta">
+      <h2>Cosmic Frontier Labs</h2>
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="/blog">blog</a>
+        <span aria-hidden="true" class="dot-separator"></span>
+        <a href="/join-us">join us</a>
+        <span aria-hidden="true" class="dot-separator"></span>
+        <a href="/contact">contact</a>
+      </nav>
+    </div>
+  )}
 
   <div class="footer-bottom">
     <div class="footer-brand">
@@ -137,7 +141,6 @@ const kitFormOptions = {
     max-width: var(--content-width);
     margin-inline: auto;
     padding-block: var(--space-xl) var(--space-l);
-    border-block-start: var(--stroke);
   }
 
   .footer-brand {
