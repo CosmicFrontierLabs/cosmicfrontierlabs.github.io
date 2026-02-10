@@ -206,7 +206,22 @@ export class CarouselScene {
    * on dark surfaces, and non-Standard material types.
    */
   private brightenDarkMaterials(root: THREE.Object3D): void {
-    const minLuminance = 0.18;
+    // --- Tunable parameters ---
+    const minLuminance = 0.08; // Threshold below which base colors get brightened
+    const metallicLumTarget = 0.22; // Brightness target for dark metallic materials
+    const maxBoostFactor = 5.0; // Max multiplier when brightening dark colors
+    const minChannelFraction = 0.5; // Floor per-channel as fraction of target luminance
+    const metallicThreshold = 0.4; // Metalness above which material is considered metallic
+    const maxMetalness = 0.2; // Cap for metalness on non-extreme materials
+    const texturedMetalnessThreshold = 0.3; // Metalness threshold for textured material fix
+    const texturedEmissive = 0.05; // Emissive strength for dark textured materials
+    const highMetalnessThreshold = 0.8; // Metalness threshold for extreme case
+    const highRoughnessThreshold = 0.8; // Roughness threshold for extreme case
+    const extremeRoughness = 0.6; // Roughness to assign in extreme metallic+rough case
+    const whiteMetalGreyColor = 0.45; // Grey value for bright extreme-case materials
+    const emissiveMetallic = 0.06; // Emissive strength for dark metallic parts
+    const emissiveDielectric = 0.03; // Emissive strength for dark non-metallic parts
+
     root.traverse((child) => {
       if (!(child instanceof THREE.Mesh) || !child.material) return;
       const materials = Array.isArray(child.material) ? child.material : [child.material];
@@ -218,42 +233,68 @@ export class CarouselScene {
         const metalness = "metalness" in mat && typeof mat.metalness === "number" ? mat.metalness : 0;
         const roughness = "roughness" in mat && typeof mat.roughness === "number" ? mat.roughness : 0;
 
-        // 1) Brighten dark base colors
-        if (lum < minLuminance) {
-          const boost = minLuminance / Math.max(lum, 0.001);
-          const factor = Math.min(boost, 4.0);
-          c.multiplyScalar(factor);
-          c.r = Math.max(c.r, minLuminance * 0.6);
-          c.g = Math.max(c.g, minLuminance * 0.6);
-          c.b = Math.max(c.b, minLuminance * 0.6);
-          mat.needsUpdate = true;
-        }
-
-        // 2) High metalness + high roughness renders near-black regardless of
-        //    base color because metallic materials have no diffuse reflection
-        //    and rough specular is extremely dim. Convert to dielectric so
-        //    ambient/diffuse light is reflected.
-        if (metalness > 0.8 && roughness > 0.8) {
-          mat.metalness = 0.0;
-          mat.roughness = 0.6;
-          // Give these a visible grey color if they were white-metallic
-          if (lum > 0.8) {
-            c.setRGB(0.45, 0.45, 0.48);
+        // 0) Textured materials: the color factor may be bright but the
+        //    texture itself dark, making the rendered result near-black.
+        //    We can't sample the texture cheaply, but metallic + textured
+        //    is the common dark-material pattern. Reduce metalness so
+        //    diffuse light can reflect off the surface.
+        if ("map" in mat && mat.map instanceof THREE.Texture && metalness > texturedMetalnessThreshold) {
+          (mat as THREE.MeshStandardMaterial).metalness = Math.min(metalness, maxMetalness);
+          if ("emissive" in mat && mat.emissive instanceof THREE.Color) {
+            const e = mat.emissive as THREE.Color;
+            const eLum = 0.299 * e.r + 0.587 * e.g + 0.114 * e.b;
+            if (eLum < 0.03) {
+              mat.emissive = new THREE.Color(texturedEmissive, texturedEmissive, texturedEmissive * 1.2);
+            }
           }
           mat.needsUpdate = true;
         }
-        // 3) High metalness on dark surfaces absorbs almost all light
-        else if (metalness > 0.5 && lum < 0.25) {
-          mat.metalness = Math.min(mat.metalness as number, 0.3);
+
+        // 1) Brighten dark base colors.  Dark metallic materials need an
+        //    extra-aggressive boost because even after capping metalness they
+        //    remain very dim (the original color was chosen to look good with
+        //    full specular metallic shading, not diffuse).
+        if (lum < minLuminance) {
+          const targetLum = metalness > metallicThreshold ? metallicLumTarget : minLuminance;
+          const boost = targetLum / Math.max(lum, 0.001);
+          const factor = Math.min(boost, maxBoostFactor);
+          c.multiplyScalar(factor);
+          const minChannel = targetLum * minChannelFraction;
+          c.r = Math.max(c.r, minChannel);
+          c.g = Math.max(c.g, minChannel);
+          c.b = Math.max(c.b, minChannel);
           mat.needsUpdate = true;
         }
 
-        // 4) Subtle emissive boost on darkest parts
+        // 2) Without an environment map, metallic materials rely entirely on
+        //    specular reflections from direct lights, making them appear
+        //    near-black from most viewing angles. Cap metalness so that
+        //    ambient/diffuse light is reflected.
+        if (metalness > metallicThreshold) {
+          // High metalness + high roughness is the worst case (no diffuse,
+          // dim specular) — convert fully to dielectric.
+          if (metalness > highMetalnessThreshold && roughness > highRoughnessThreshold) {
+            mat.metalness = 0.0;
+            mat.roughness = extremeRoughness;
+            if (lum > 0.8) {
+              c.setRGB(whiteMetalGreyColor, whiteMetalGreyColor, whiteMetalGreyColor + 0.03);
+            }
+          } else {
+            // For all other metallic materials, retain a hint of metallic
+            // sheen but ensure enough diffuse reflection to stay visible.
+            mat.metalness = Math.min(mat.metalness as number, maxMetalness);
+          }
+          mat.needsUpdate = true;
+        }
+
+        // 4) Emissive boost on dark parts — stronger for originally-metallic
+        //    materials so they read clearly against the dark background.
         if ("emissive" in mat && mat.emissive instanceof THREE.Color && lum < minLuminance) {
           const e = mat.emissive as THREE.Color;
           const eLum = 0.299 * e.r + 0.587 * e.g + 0.114 * e.b;
           if (eLum < 0.03) {
-            mat.emissive = new THREE.Color(0.06, 0.06, 0.08);
+            const emStr = metalness > metallicThreshold ? emissiveMetallic : emissiveDielectric;
+            mat.emissive = new THREE.Color(emStr, emStr, emStr * 1.1);
             mat.needsUpdate = true;
           }
         }
