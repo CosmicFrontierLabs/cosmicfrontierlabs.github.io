@@ -97,11 +97,28 @@
   }
 
   function setupResizeObserver(): ResizeObserver {
+    // Track previous dimensions to ignore small height-only changes
+    // caused by mobile browser chrome (iOS address bar show/hide)
+    let prevWidth = container.offsetWidth || container.clientWidth;
+    let prevHeight = container.offsetHeight || container.clientHeight;
+    const mobileHeightThreshold = 150; // px — iOS chrome bar is typically ~50-100px
+
     const observer = new ResizeObserver((entries) => {
       if (camera && renderer && container) {
         const entry = entries[0];
         const width = entry.contentRect.width || entry.borderBoxSize[0]?.inlineSize || container.clientWidth;
         const height = entry.contentRect.height || entry.borderBoxSize[0]?.blockSize || container.clientHeight;
+
+        const widthChanged = Math.abs(width - prevWidth) > 1;
+        const heightDelta = Math.abs(height - prevHeight);
+
+        // On mobile, ignore height-only changes from browser chrome show/hide
+        if (!widthChanged && heightDelta > 0 && heightDelta < mobileHeightThreshold) {
+          return;
+        }
+
+        prevWidth = width;
+        prevHeight = height;
 
         updateCamera();
         renderer.setSize(width, height);
