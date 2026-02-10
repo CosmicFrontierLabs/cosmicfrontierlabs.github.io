@@ -25,15 +25,14 @@
     //    through the hero, leaving a visual pause before the next section.
     const heroTrigger = ScrollTrigger.create({
       trigger: heroEl,
-      start: "top top",
-      end: "bottom top",
+      start: "top 10%",
+      end: "bottom 50%",
       scrub: true,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
         activeScene = "simulation";
-        const p = Math.max(0, Math.min(1, 1.5 * self.progress));
-        heroScrollProgress = p;
-        canvasOpacity = 1 - p;
+        heroScrollProgress = self.progress;
+        canvasOpacity = 1 - self.progress;
       },
     });
 
