@@ -31,10 +31,14 @@
   // Orbit controls state — managed internally
   let orbitMode = $state(false);
 
+  // Allow explore interactions only when carousel is visible and not already in orbit mode
+  let allowExplore = $derived(activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
+
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
   let cursorY = $state(0);
-  let cursorVisible = $state(false);
+  let cursorOver = $state(false);
+  let cursorVisible = $derived(allowExplore && cursorOver);
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -340,10 +344,10 @@
         }
 
         // Update explore cursor position when in carousel mode
-        if (activeScene === "carousel" && !orbitMode) {
+        if (allowExplore) {
           cursorX = event.clientX;
           cursorY = event.clientY;
-          cursorVisible = true;
+          cursorOver = true;
         }
       };
       container.addEventListener("mousemove", handleMouseMove);
@@ -363,12 +367,10 @@
 
       // Carousel cursor visibility tracking
       handleCursorEnter = () => {
-        if (activeScene === "carousel" && !orbitMode) {
-          cursorVisible = true;
-        }
+        cursorOver = true;
       };
       handleCursorLeave = () => {
-        cursorVisible = false;
+        cursorOver = false;
       };
       container.addEventListener("mouseenter", handleCursorEnter);
       container.addEventListener("mouseleave", handleCursorLeave);
@@ -421,7 +423,7 @@
   $effect(() => {
     if (activeScene !== "carousel") {
       orbitMode = false;
-      cursorVisible = false;
+      cursorOver = false;
     }
   });
 
@@ -447,26 +449,25 @@
   class="simulation-viewer"
   class:ready={isReady}
   class:carousel-active={activeScene === "carousel"}
+  class:allow-explore={allowExplore}
   class:orbit-mode={orbitMode}
   style="opacity: {canvasOpacity};"
   onclick={() => {
-    if (activeScene === "carousel" && !orbitMode) {
+    if (allowExplore) {
       orbitMode = true;
-      cursorVisible = false;
     }
   }}
   onkeydown={(e) => {
-    if ((e.key === "Enter" || e.key === " ") && activeScene === "carousel" && !orbitMode) {
+    if ((e.key === "Enter" || e.key === " ") && allowExplore) {
       e.preventDefault();
       orbitMode = true;
-      cursorVisible = false;
     }
   }}
   role="button"
   tabindex="-1"
 ></div>
 
-{#if activeScene === "carousel" && cursorVisible && !orbitMode}
+{#if cursorVisible}
   <div
     class="explore-cursor"
     style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));"
@@ -500,7 +501,7 @@
 
   /* Hide default cursor when explore cursor is showing (mouse devices only) */
   @media (pointer: fine) {
-    .simulation-viewer.carousel-active:not(.orbit-mode) {
+    .simulation-viewer.allow-explore {
       cursor: none;
     }
   }
