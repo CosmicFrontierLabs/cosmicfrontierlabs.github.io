@@ -8,6 +8,8 @@ import { ReactiveStarfield } from "./ReactiveStarfield";
 import { lerp } from "three/src/math/MathUtils.js";
 import gsap from "gsap";
 
+const MIRROR_MESH_NAME = "mesh_0_55";
+
 export interface CarouselItem {
   title: string;
   description: string;
@@ -257,6 +259,29 @@ function boostDarkEmissive(
   }
 }
 
+function makeReflective(mat: THREE.Material, envMap: THREE.CubeTexture): void {
+  const std = mat as THREE.MeshStandardMaterial;
+
+  // Clear all texture maps so the surface is pure mirror reflection
+  if (std.map) std.map = null;
+  if (std.normalMap) std.normalMap = null;
+  if (std.roughnessMap) std.roughnessMap = null;
+  if (std.metalnessMap) std.metalnessMap = null;
+  if (std.aoMap) std.aoMap = null;
+
+  // Perfect mirror PBR: full metal, zero roughness
+  std.metalness = 1.0;
+  std.roughness = 0.0;
+  std.color.setRGB(0.95, 0.95, 0.95);
+  std.envMap = envMap;
+  std.envMapIntensity = 1.0;
+
+  // Clear emissive so it doesn't interfere
+  if (std.emissive) std.emissive.setRGB(0, 0, 0);
+
+  std.needsUpdate = true;
+}
+
 /**
  * CarouselScene manages the 3D carousel scene (models, lights, camera, rings).
  * It does NOT own a renderer—it renders into a shared renderer passed to it.
@@ -271,6 +296,10 @@ export class CarouselScene {
   private ambientLight: THREE.AmbientLight;
   private keyLight: THREE.RectAreaLight;
   private rimLight: THREE.PointLight;
+  private renderer: THREE.WebGLRenderer;
+  private cubeRenderTarget: THREE.WebGLCubeRenderTarget;
+  private cubeCamera: THREE.CubeCamera;
+  private mirrorMesh: THREE.Mesh | null = null;
   private reactiveStarfield: ReactiveStarfield;
   private orbitControls: OrbitControls;
 
@@ -283,6 +312,7 @@ export class CarouselScene {
 
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
     RectAreaLightUniformsLib.init();
+    this.renderer = renderer;
 
     this.scene = new THREE.Scene();
     this.scene.background = null;
@@ -310,6 +340,14 @@ export class CarouselScene {
 
     // Fog
     this.scene.fog = new THREE.Fog(0x0a1428, 5.0, 30.0);
+
+    // CubeCamera for real-time mirror reflections
+    this.cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
+      generateMipmaps: true,
+      minFilter: THREE.LinearMipmapLinearFilter,
+    });
+    this.cubeCamera = new THREE.CubeCamera(0.1, 100, this.cubeRenderTarget);
+    this.scene.add(this.cubeCamera);
 
     // Orbit controls
     this.orbitControls = new OrbitControls(this.camera, renderer.domElement);
@@ -454,6 +492,12 @@ export class CarouselScene {
       materials.forEach((mat) => {
         if (!("color" in mat) || !(mat.color instanceof THREE.Color)) return;
 
+        if (child.name === MIRROR_MESH_NAME) {
+          makeReflective(mat, this.cubeRenderTarget.texture);
+          this.mirrorMesh = child;
+          return;
+        }
+
         const c = mat.color as THREE.Color;
         const lum = luminance(c);
         const metalness =
@@ -488,6 +532,16 @@ export class CarouselScene {
 
     this.orbitControls.enabled = this.enableOrbitControls;
     this.orbitControls.update();
+
+    // Update cube camera for mirror reflections
+    if (this.mirrorMesh) {
+      // Position cube camera at the mirror mesh's world position
+      this.mirrorMesh.getWorldPosition(this.cubeCamera.position);
+      // Hide mirror while capturing reflections to avoid self-reflection
+      this.mirrorMesh.visible = false;
+      this.cubeCamera.update(this.renderer, this.scene);
+      this.mirrorMesh.visible = true;
+    }
   }
 
   resize(width: number, height: number): void {
@@ -547,6 +601,7 @@ export class CarouselScene {
   dispose(): void {
     this.orbitControls.dispose();
     this.reactiveStarfield.dispose();
+    this.cubeRenderTarget.dispose();
 
     const disposeGroup = (group: THREE.Group | null) => {
       if (!group) return;
