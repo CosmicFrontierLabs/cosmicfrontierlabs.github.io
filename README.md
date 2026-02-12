@@ -6,8 +6,10 @@ Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and 
 
 TODO:
 
-- Fix rolodex for mobile
-- Add loading progress feedback for model carousel
+- Check A11y
+- Check lighthouse
+- Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
+- DETECT IF graphics acceleration is disabled and handle it. (or whatever is needed to handle miguel's case.)
 
 ---
 

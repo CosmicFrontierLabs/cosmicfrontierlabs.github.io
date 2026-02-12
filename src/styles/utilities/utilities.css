@@ -73,6 +73,6 @@
   /* border: 1px solid transparent; */
   /* border-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.4)) 1; */
 
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border: var(--stroke);
+  border-radius: var(--radius-s);
 }

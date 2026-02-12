@@ -15,10 +15,24 @@
 			href: "/contact",
 		},
 	];
+
 	let isMenuExpanded = $state(false);
+
+	function trackHeaderHeight(node: HTMLElement) {
+		const observer = new ResizeObserver((entries) => {
+			if (entries.length > 0) {
+				const entry = entries[0];
+				// Add 32px to account for margins
+				const height = entry.contentRect.height + 32;
+				document.documentElement.style.setProperty("--header-height", `${height}px`);
+			}
+		});
+		observer.observe(node);
+		return { destroy: () => observer.disconnect() };
+	}
 </script>
 
-<header class="site-header">
+<header class="site-header" use:trackHeaderHeight>
 	<div class="site-header__inner site-header-repel">
 		<a class="skip-link visually-hidden" href="#content">Skip to main content</a>
 		<div class="site-header__logo">

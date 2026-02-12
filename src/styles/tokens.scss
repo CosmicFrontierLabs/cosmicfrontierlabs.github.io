@@ -56,8 +56,12 @@
   /* Flow Space */
   --flow-space: 1em;
 
+  /* Border Colors */
+  --border-color-subtle: rgba(255, 255, 255, 0.2);
+  --border-color-subtle-hover: rgba(255, 255, 255, 0.4);
+
   /* Borders */
-  --stroke: 1px solid rgba(255, 255, 255, 0.15);
+  --stroke: 1px solid var(--border-color-subtle);
   --stroke-solid: 1px solid var(--color-gray-600);
 
   /* Border Radius */
@@ -66,6 +70,10 @@
   --radius-l: 1rem;
   --radius-xl: 2rem;
   --radius-2xl: 4rem;
+
+  /* Shadows */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-card-elevated: 0 -4px 20px rgba(0, 0, 0, 0.3);
 
   /* Forms */
   --form-input-bg: var(--color-gray-100);

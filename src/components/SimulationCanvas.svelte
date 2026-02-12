@@ -28,6 +28,14 @@
     heroScrollProgress = $bindable(0),
   }: Props = $props();
 
+  // Orbit controls state — managed internally
+  let orbitMode = $state(false);
+
+  // Mouse cursor position for the "click to explore" circle
+  let cursorX = $state(0);
+  let cursorY = $state(0);
+  let cursorVisible = $state(false);
+
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
   let telescopes: Telescope[] = [];
@@ -263,6 +271,8 @@
     let cleanupAnimation: (() => void) | null = null;
     let handleMouseMove: ((event: MouseEvent) => void) | null = null;
     let handleMouseClick: ((event: MouseEvent) => void) | null = null;
+    let handleCursorEnter: (() => void) | null = null;
+    let handleCursorLeave: (() => void) | null = null;
 
     try {
       const config = simulationConfig;
@@ -318,7 +328,7 @@
       resizeObserver = setupResizeObserver();
       cleanupAnimation = startAnimationLoop();
 
-      // Mouse tracking
+      // Mouse tracking (also drives explore cursor position)
       handleMouseMove = (event: MouseEvent) => {
         if (container && mouseTracker) {
           const rect = container.getBoundingClientRect();
@@ -327,6 +337,13 @@
           const x = ((event.clientX - rect.left) / w) * 2 - 1;
           const y = -((event.clientY - rect.top) / h) * 2 + 1;
           mouseTracker.updateMousePositionNDC(x, y);
+        }
+
+        // Update explore cursor position when in carousel mode
+        if (activeScene === "carousel" && !orbitMode) {
+          cursorX = event.clientX;
+          cursorY = event.clientY;
+          cursorVisible = true;
         }
       };
       container.addEventListener("mousemove", handleMouseMove);
@@ -343,6 +360,18 @@
         }
       };
       container.addEventListener("click", handleMouseClick);
+
+      // Carousel cursor visibility tracking
+      handleCursorEnter = () => {
+        if (activeScene === "carousel" && !orbitMode) {
+          cursorVisible = true;
+        }
+      };
+      handleCursorLeave = () => {
+        cursorVisible = false;
+      };
+      container.addEventListener("mouseenter", handleCursorEnter);
+      container.addEventListener("mouseleave", handleCursorLeave);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error("Simulation initialization failed:", error);
@@ -354,6 +383,8 @@
       resizeObserver?.disconnect();
       if (handleMouseMove) container.removeEventListener("mousemove", handleMouseMove);
       if (handleMouseClick) container.removeEventListener("click", handleMouseClick);
+      if (handleCursorEnter) container.removeEventListener("mouseenter", handleCursorEnter);
+      if (handleCursorLeave) container.removeEventListener("mouseleave", handleCursorLeave);
       if (renderer) {
         renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
       }
@@ -379,6 +410,21 @@
     }
   });
 
+  // Sync orbit controls toggle to carousel scene
+  $effect(() => {
+    if (carouselScene) {
+      carouselScene.enableOrbitControls = orbitMode;
+    }
+  });
+
+  // Reset orbit mode when leaving carousel
+  $effect(() => {
+    if (activeScene !== "carousel") {
+      orbitMode = false;
+      cursorVisible = false;
+    }
+  });
+
   // Drive camera zoom from hero scroll progress
   $effect(() => {
     const zoomScaleFactor = 1.5;
@@ -401,11 +447,41 @@
   class="simulation-viewer"
   class:ready={isReady}
   class:carousel-active={activeScene === "carousel"}
+  class:orbit-mode={orbitMode}
   style="opacity: {canvasOpacity};"
+  onclick={() => {
+    if (activeScene === "carousel" && !orbitMode) {
+      orbitMode = true;
+      cursorVisible = false;
+    }
+  }}
+  onkeydown={(e) => {
+    if ((e.key === "Enter" || e.key === " ") && activeScene === "carousel" && !orbitMode) {
+      e.preventDefault();
+      orbitMode = true;
+      cursorVisible = false;
+    }
+  }}
+  role="button"
+  tabindex="-1"
 ></div>
 
+{#if activeScene === "carousel" && cursorVisible && !orbitMode}
+  <div
+    class="explore-cursor"
+    style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));"
+  >
+    <svg class="explore-cursor__ring" width="80" height="80" viewBox="0 0 80 80">
+      <circle cx="40" cy="40" r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
+      <circle cx="40" cy="40" r="38" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"
+        stroke-dasharray="60 180" stroke-dashoffset="0" class="explore-cursor__arc" />
+    </svg>
+    <span class="explore-cursor__label">Click to<br/>explore</span>
+  </div>
+{/if}
+
 <div style="opacity: {canvasOpacity * (activeScene === 'carousel' ? 1 : 0)};">
-  <CarouselOverlay {carouselScene} />
+  <CarouselOverlay {carouselScene} paused={orbitMode} onExitOrbit={() => { orbitMode = false; }} />
 </div>
 
 <style>
@@ -420,6 +496,62 @@
   /* When carousel is active, elevate above all page content */
   .simulation-viewer.carousel-active {
     z-index: 13;
+  }
+
+  /* Hide default cursor when explore cursor is showing (mouse devices only) */
+  @media (pointer: fine) {
+    .simulation-viewer.carousel-active:not(.orbit-mode) {
+      cursor: none;
+    }
+  }
+
+  .simulation-viewer.orbit-mode {
+    cursor: grab;
+  }
+
+  .simulation-viewer.orbit-mode:active {
+    cursor: grabbing;
+  }
+
+  /* Explore cursor */
+  .explore-cursor {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 20;
+    pointer-events: none;
+    will-change: transform;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+  }
+
+  .explore-cursor__ring {
+    position: absolute;
+    inset: 0;
+    animation: explore-spin 4s linear infinite;
+  }
+
+  .explore-cursor__arc {
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
+  }
+
+  @keyframes explore-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .explore-cursor__label {
+    font-size: 0.5625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    line-height: 1.3;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
   }
 
   .simulation-fallback {

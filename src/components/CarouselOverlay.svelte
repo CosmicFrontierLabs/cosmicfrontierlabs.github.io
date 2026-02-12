@@ -5,11 +5,17 @@
   import type { CarouselScene } from "./simulation/CarouselScene";
   import { carouselData } from "./simulation/CarouselScene";
 
+  // Pre-allocated vectors reused every slide transition to avoid GC pressure
+  const _tmpPos = new THREE.Vector3();
+  const _tmpLookAt = new THREE.Vector3();
+
   interface Props {
     carouselScene: CarouselScene | null;
+    paused?: boolean;
+    onExitOrbit?: () => void;
   }
 
-  let { carouselScene }: Props = $props();
+  let { carouselScene, paused = false, onExitOrbit }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
 
@@ -17,6 +23,8 @@
   let progress = $state(0);
   let titleEl: HTMLHeadingElement;
   let descriptionEl: HTMLParagraphElement;
+  let panelEl: HTMLDivElement;
+  let panelInnerEl: HTMLDivElement;
 
   // GSAP-based autoplay timeline
   let autoplayTween: gsap.core.Tween | null = null;
@@ -30,6 +38,9 @@
       value: 100,
       duration: SLIDE_DURATION_MS / 1000,
       ease: "none",
+      // `paused` is a Svelte 5 reactive prop (compiled to a getter), so this
+      // reads the *current* value each time startAutoplay() is called.
+      paused: paused,
       onUpdate() {
         progress = proxy.value;
       },
@@ -58,29 +69,21 @@
     const tl = gsap.timeline();
     const nextItem = carouselData[index];
 
-    // Fade out current text
-    tl.to(titleEl, { opacity: 0, duration: 0.3 }, 0);
-    tl.to(descriptionEl, { opacity: 0, duration: 0.3 }, 0);
+    // Fade out current text (elements may not exist during orbit mode)
+    if (titleEl) tl.to(titleEl, { opacity: 0, duration: 0.3 }, 0);
+    if (descriptionEl) tl.to(descriptionEl, { opacity: 0, duration: 0.3 }, 0);
 
     // Update model
     carouselScene.setActiveModel(index);
 
-    // Fade in new text
-    tl.fromTo(titleEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
-    tl.fromTo(descriptionEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
+    // Fade in new text (elements may not exist during orbit mode)
+    if (titleEl) tl.fromTo(titleEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
+    if (descriptionEl) tl.fromTo(descriptionEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
 
     // Camera animation
-    const targetPos = new THREE.Vector3(
-      nextItem.camera.position.x,
-      nextItem.camera.position.y,
-      nextItem.camera.position.z
-    );
-    const targetLookAt = new THREE.Vector3(
-      nextItem.camera.lookAt.x,
-      nextItem.camera.lookAt.y,
-      nextItem.camera.lookAt.z
-    );
-    tl.add(carouselScene.animateCameraTo(targetPos, targetLookAt, 2.5), 0);
+    _tmpPos.set(nextItem.camera.position.x, nextItem.camera.position.y, nextItem.camera.position.z);
+    _tmpLookAt.set(nextItem.camera.lookAt.x, nextItem.camera.lookAt.y, nextItem.camera.lookAt.z);
+    tl.add(carouselScene.animateCameraTo(_tmpPos, _tmpLookAt, 2.5), 0);
   }
 
   function goToNext() {
@@ -93,8 +96,45 @@
     goToIndex(prevIndex);
   }
 
+  // Pause/resume autoplay when explore mode toggles
+  // `paused` is a reactive prop; `autoplayTween` is a plain variable read at
+  // effect-run time — that's fine because this effect only needs to fire when
+  // `paused` changes, and then it acts on whatever tween currently exists.
+  $effect(() => {
+    const shouldPause = paused; // subscribe to reactive prop
+    if (autoplayTween) {
+      if (shouldPause) {
+        autoplayTween.pause();
+      } else {
+        autoplayTween.resume();
+      }
+    }
+  });
+
+  // Animate panel height when content changes (explore toggle or slide change)
+  $effect(() => {
+    // Subscribe to reactive triggers
+    void paused;
+    void activeSlideIndex;
+
+    // Wait a tick for DOM to update with new content
+    requestAnimationFrame(() => {
+      if (!panelEl || !panelInnerEl) return;
+      const targetHeight = panelInnerEl.offsetHeight;
+      gsap.to(panelEl, {
+        height: targetHeight,
+        duration: 0.5,
+        ease: "power2.inOut",
+      });
+    });
+  });
+
   onMount(() => {
-    console.log("CarouselOverlay mounted");
+    // Set initial height without animation
+    if (panelEl && panelInnerEl) {
+      panelEl.style.height = panelInnerEl.offsetHeight + "px";
+    }
+
     startAutoplay();
 
     return () => {
@@ -103,71 +143,85 @@
   });
 </script>
 
-<div
-  class="carousel-overlay"
-  role="application"
-  aria-label="3D model carousel"
->
-  <h2>Explore our telescope</h2>
-  <div class="carousel-glass bg-glass2">
-    <div class="description-wrapper">
-      <h3 bind:this={titleEl}>{activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}</h3>
-      <p bind:this={descriptionEl}>{carouselData[activeSlideIndex].description}</p>
-    </div>
+  <h2 class="carousel__heading">Explore our telescope</h2>
+  <div class="carousel__panel bg-glass2" bind:this={panelEl}>
+    <div class="carousel__panel-inner" bind:this={panelInnerEl}>
+    {#if paused}
+      <div class="carousel__explore-controls">
+        <h3 class="carousel__explore-title">{carouselData[activeSlideIndex].title}</h3>
 
-    <div class="carousel-controls">
-      <button class="nav-arrow" onclick={() => goToPrev()} aria-label="Previous slide">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      </button>
-      <div class="indicators">
-        {#each carouselData as _, i}
+        <div class="carousel__explore-hints">
+          <span class="carousel__explore-hint">
+            <!-- Drag/orbit icon -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" opacity="0.3"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+            </svg>
+            Drag to orbit
+          </span>
+          <span class="carousel__explore-hint">
+            <!-- Scroll/zoom icon -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M12 6v3"/>
+              <path d="M8 18l4 4 4-4"/>
+            </svg>
+            Scroll to zoom
+          </span>
+        </div>
+
+        <div class="carousel__explore-nav">
           <button
-            class="indicator"
-            class:active={i === activeSlideIndex}
-            onclick={() => goToIndex(i)}
-            aria-label="Go to slide {i + 1}"
+            class="carousel__exit-btn"
+            onclick={() => onExitOrbit?.()}
           >
-            {#if i === activeSlideIndex}
-              <div class="progress-fill" style="width: {progress}%"></div>
-            {/if}
+            <!-- Arrow-return icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 14L4 9l5-5"/>
+              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H16"/>
+            </svg>
+            Back to tour
           </button>
-        {/each}
+        </div>
       </div>
-      <button class="nav-arrow" onclick={() => goToNext()} aria-label="Next slide">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
+    {:else}
+      <div class="carousel__body">
+        <h3 class="carousel__title" bind:this={titleEl}>{activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}</h3>
+        <p bind:this={descriptionEl}>{carouselData[activeSlideIndex].description}</p>
+      </div>
+
+      <div class="carousel__controls">
+        <button class="carousel__nav-btn" onclick={() => goToPrev()} aria-label="Previous slide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <div class="carousel__indicators">
+          {#each carouselData as _, i}
+            <button
+              class="carousel__indicator {i === activeSlideIndex ? 'carousel__indicator--active' : ''}"
+              onclick={() => goToIndex(i)}
+              aria-label="Go to slide {i + 1}"
+            >
+              {#if i === activeSlideIndex}
+                <div class="carousel__progress" style="width: {progress}%"></div>
+              {/if}
+            </button>
+          {/each}
+        </div>
+        <button class="carousel__nav-btn" onclick={() => goToNext()} aria-label="Next slide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    {/if}
     </div>
   </div>
-</div>
 
 <style>
-  .carousel-overlay {
-    position: fixed;
-    top: 14lvh;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    max-width: var(--content-width);
-    margin-inline: auto;
-    z-index: 14;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: start;
-    padding-block-end: 2%;
-    padding-inline: 1rem;
-
-    @media (min-width: 56rem) {
-      top: 12lvh;
-      padding-inline: 2rem;
-    }
-  }
-
-  .carousel-overlay h2 {
+  .carousel__heading {
     text-shadow:
       2px 2px 8px rgba(0, 0, 0, 0.8),
       0 0 4px rgba(0, 0, 0, 0.9);
@@ -178,21 +232,105 @@
     text-wrap: balance;
     margin-block-start: 0.125em;
 
+    position: fixed;
+    top: var(--header-height);
+    left: calc((100lvw - var(--content-width)) / 2 + 1rem);                                                                                                                          
+
+    z-index: 14;
+
     @media (min-width: 56rem) {
       font-size: var(--size-step-5);
     }
   }
 
-  .carousel-glass {
+  .carousel__explore-controls {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding-block: 0.75rem;
+    gap: 0.625rem;
     width: 100%;
+    padding: 0.875rem 1.25rem;
+    box-sizing: border-box;
+
+    @media (min-width: 56rem) {
+      padding: 1.125rem 1.5rem;
+      gap: 0.75rem;
+    }
+  }
+
+  .carousel__explore-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.95);
+
+    @media (min-width: 56rem) {
+      font-size: 1.125rem;
+    }
+  }
+
+  .carousel__explore-hints {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .carousel__explore-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.6875rem;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 0.02em;
+  }
+
+  .carousel__explore-hint svg {
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+
+  .carousel__explore-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-block-start: 0.875rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .carousel__exit-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.375rem 0.75rem;
+    border: var(--stroke);
+    border-radius: var(--radius-xl);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .carousel__exit-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: var(--border-color-subtle-hover);
+  }
+
+  .carousel__panel {
+    position: fixed;
+    bottom: 3lvh;
+    left: calc((100lvw - var(--content-width)) / 2 + 1rem);                                                                                                                          
+    z-index: 14;
+
+    overflow: hidden;
+    width: calc(var(--content-width) - 2rem);
     box-sizing: border-box;
     container-type: inline-size;
-    width: 100%;
 
     @media (min-width: 40rem) {
       width: 400px;
@@ -200,11 +338,22 @@
 
     @media (min-width: 56rem) {
       width: 500px;
+    }
+  }
+
+  .carousel__panel-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-block: 0.75rem;
+
+    @media (min-width: 56rem) {
       padding-block: 1rem;
     }
   }
 
-  .description-wrapper {
+  .carousel__body {
     padding: 1ch 1.5ch;
     font-size: 0.8125rem;
     max-width: 60ch;
@@ -217,7 +366,7 @@
     }
   }
 
-  .description-wrapper h3 {
+  .carousel__title {
     font-size: 1.125rem;
     text-wrap: balance;
     margin-block-start: 0lh;
@@ -228,7 +377,7 @@
     }
   }
 
-  .carousel-controls {
+  .carousel__controls {
     margin-block: 0.5rem;
     padding-inline: 0.5rem;
     display: flex;
@@ -244,7 +393,7 @@
     }
   }
 
-  .nav-arrow {
+  .carousel__nav-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -252,21 +401,21 @@
     height: 32px;
     flex-shrink: 0;
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: var(--stroke);
     border-radius: 50%;
     cursor: pointer;
     color: currentColor;
     transition:
       background 0.2s ease,
       border-color 0.2s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.4);
-    }
   }
 
-  .indicators {
+  .carousel__nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--border-color-subtle-hover);
+  }
+
+  .carousel__indicators {
     display: none;
     gap: 8px;
 
@@ -275,34 +424,34 @@
     }
   }
 
-  .indicator {
+  .carousel__indicator {
     position: relative;
     width: 24px;
     height: 4px;
     background: rgba(255, 255, 255, 0.3);
     border: none;
-    border-radius: 2px;
+    border-radius: var(--radius-s);
     cursor: pointer;
     overflow: hidden;
     transition: background 0.2s ease;
     padding: 0;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.5);
-    }
-
-    &.active {
-      background: rgba(255, 255, 255, 0.3);
-    }
   }
 
-  .progress-fill {
+  .carousel__indicator:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .carousel__indicator--active {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .carousel__progress {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
     background: rgba(255, 255, 255, 0.9);
-    border-radius: 2px;
+    border-radius: var(--radius-s);
     transition: width 0.05s linear;
   }
 </style>

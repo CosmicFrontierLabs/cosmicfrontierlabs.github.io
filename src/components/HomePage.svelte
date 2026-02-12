@@ -18,6 +18,7 @@
   let canvasOpacity = $state(1);
   let heroScrollProgress = $state(0);
   let subheroOpacity = $state(1);
+  let subheroPointerEvents = $derived(subheroOpacity > 0 ? "auto" : "none");
 
   onMount(() => {
     // 1. Hero: fade canvas out and drive camera zoom
@@ -119,8 +120,8 @@
   </div>
 </div>
 
-<div class="subhero" bind:this={subheroEl}>
-  <p id="subhero__text" style="opacity: {subheroOpacity};">
+<div class="subhero" bind:this={subheroEl} style="pointer-events: {subheroPointerEvents}; opacity: {subheroOpacity};">
+  <p id="subhero__text">
     We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard
     platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
   </p>
@@ -228,7 +229,7 @@
     will-change: opacity;
 
     position: sticky;
-    top: 0lvh;
+    top: 0;
     padding-inline: 1rem;
 
     & > p {
@@ -253,8 +254,7 @@
   .content-sections {
     --section-background-color: var(--color-text);
     --section-text-color: var(--body-bg);
-    --card-top: 6lvh;
-    --card-offset: 0.75rem;
+    --card-offset: 1.25rem;
 
     margin-block-start: 15lvh;
 
@@ -263,8 +263,6 @@
     color: var(--section-text-color);
 
     @media (min-width: 56rem) {
-      --card-top: 10lvh;
-      --card-offset: 1rem;
       margin-block-start: 25lvh;
     }
   }
@@ -274,8 +272,8 @@
     z-index: calc(1 + var(--index));
 
     background: var(--section-background-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-card);
     overflow: hidden;
 
     & + & {
@@ -284,10 +282,10 @@
 
     @media (min-width: 56rem) {
       position: sticky;
-      top: calc(var(--card-top) + var(--index) * var(--card-offset));
-      min-height: calc(90lvh - var(--index) * var(--card-offset));
-      border-radius: 16px;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      top: calc(var(--index) * var(--card-offset) + var(--header-height));
+      min-height: calc(90lvh - var(--index) * var(--card-offset) - var(--header-height));
+      border-radius: var(--radius-l);
+      box-shadow: var(--shadow-card-elevated);
 
       & + & {
         margin-block-start: 0;

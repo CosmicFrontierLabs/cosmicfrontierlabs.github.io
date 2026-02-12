@@ -32,7 +32,7 @@ body:has(.page-type[data-page-type="project"]) .site-header {
   background: color-mix(in oklab, var(--body-bg) 35%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid color-mix(in oklab, var(--color-text) 35%, transparent);
+  border: var(--stroke);
   border-radius: var(--radius-l);
 }
 

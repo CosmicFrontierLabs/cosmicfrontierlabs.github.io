@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ReactiveStarfield } from "./ReactiveStarfield";
 import { lerp } from "three/src/math/MathUtils.js";
 import gsap from "gsap";
@@ -105,6 +106,7 @@ export const carouselData: CarouselItem[] = [
  * It does NOT own a renderer—it renders into a shared renderer passed to it.
  */
 export class CarouselScene {
+  enableOrbitControls: boolean = false;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   private telescope: THREE.Group | null = null;
@@ -114,6 +116,7 @@ export class CarouselScene {
   private keyLight: THREE.RectAreaLight;
   private rimLight: THREE.PointLight;
   private reactiveStarfield: ReactiveStarfield;
+  private orbitControls: OrbitControls;
 
   /** Tracks the current lookAt target for smooth camera transitions */
   private currentLookAtTarget = new THREE.Vector3(0, 0, 0);
@@ -151,6 +154,14 @@ export class CarouselScene {
 
     // Fog
     this.scene.fog = new THREE.Fog(0x0a1428, 5.0, 30.0);
+
+    // Orbit controls
+    this.orbitControls = new OrbitControls(this.camera, renderer.domElement);
+    this.orbitControls.enabled = this.enableOrbitControls;
+    this.orbitControls.enableDamping = true;
+    this.orbitControls.dampingFactor = 0.1;
+    this.orbitControls.enablePan = false;
+    this.orbitControls.target.copy(this.currentLookAtTarget);
 
     // Reactive starfield
     this.reactiveStarfield = new ReactiveStarfield(this.scene, width, height, renderer, {
@@ -319,6 +330,9 @@ export class CarouselScene {
       this.camera.position.y = newY;
       this.camera.lookAt(0, 0, 0);
     }
+
+    this.orbitControls.enabled = this.enableOrbitControls;
+    this.orbitControls.update();
   }
 
   resize(width: number, height: number): void {
@@ -358,6 +372,7 @@ export class CarouselScene {
           currentLookAt.lerpVectors(startLookAt, targetLookAt, t);
           camera.lookAt(currentLookAt);
           self.currentLookAtTarget.copy(currentLookAt);
+          self.orbitControls.target.copy(currentLookAt);
         },
       }
     );
@@ -375,6 +390,7 @@ export class CarouselScene {
   }
 
   dispose(): void {
+    this.orbitControls.dispose();
     this.reactiveStarfield.dispose();
 
     const disposeGroup = (group: THREE.Group | null) => {

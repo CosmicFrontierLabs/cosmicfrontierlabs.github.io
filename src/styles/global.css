@@ -13,6 +13,9 @@
   --z-divider: 12;
   --z-join-us: 13;
   --z-footer: 14;
+
+  /* Includes a buffer for where content can start. For use with position fixed & stick elements */
+  --header-height: 88px;
 }
 
 html {
