@@ -101,6 +101,22 @@ export const carouselData: CarouselItem[] = [
   },
 ];
 
+/**
+ * Clone materials on every mesh so each mesh gets its own material instance.
+ * This allows per-mesh material tweaks (e.g. brightening) without affecting
+ * other meshes that originally shared the same material in the GLB.
+ */
+function cloneMaterialsPerMesh(root: THREE.Object3D): void {
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh) || !child.material) return;
+    if (Array.isArray(child.material)) {
+      child.material = child.material.map((m: THREE.Material) => m.clone());
+    } else {
+      child.material = child.material.clone();
+    }
+  });
+}
+
 // --- Brighten-dark-materials tunable parameters ---
 interface BrightenParams {
   minLuminance: number;
@@ -151,13 +167,11 @@ function fixDarkTexturedMaterial(
   metalness: number,
   p: BrightenParams,
 ): void {
-  console.log("In fixDarkTexturedMaterial");
   if (!("map" in mat) || !(mat.map instanceof THREE.Texture)) return;
   if (metalness <= p.texturedMetalnessThreshold) return;
 
   (mat as THREE.MeshStandardMaterial).metalness = Math.min(metalness, p.maxMetalness);
   if ("emissive" in mat && mat.emissive instanceof THREE.Color) {
-    console.log({emissive: mat.emissive});
     const eLum = luminance(mat.emissive as THREE.Color);
     if (eLum < 0.03) {
       mat.emissive = new THREE.Color(p.texturedEmissive, p.texturedEmissive, p.texturedEmissive * 1.2);
@@ -322,7 +336,7 @@ export class CarouselScene {
 
     gltfLoader.load("/models/20260102_Payload_assy_no_baffle.glb", (gltf) => {
       const root = gltf.scene as THREE.Group;
-      this.printMeshNames(root, "Payload");
+      // this.printMeshNames(root, "Payload");
       root.position.set(0, 0, 0);
       root.updateWorldMatrix(true, true);
       const bounds = new THREE.Box3().setFromObject(root);
@@ -334,12 +348,13 @@ export class CarouselScene {
       this.scene.add(this.telescope);
       this.telescope.position.set(0, 1.25, -1);
       this.telescope.scale.set(5.0, 5.0, 5.0);
+      cloneMaterialsPerMesh(root);
       this.brightenDarkMaterials(root);
     });
 
     gltfLoader.load("/models/20260102_Full_Assy.glb", (gltf) => {
       const root = gltf.scene as THREE.Group;
-      this.printMeshNames(root, "Full Assembly");
+      // this.printMeshNames(root, "Full Assembly");
       root.position.set(0, 0, 0);
       root.updateWorldMatrix(true, true);
       const bounds = new THREE.Box3().setFromObject(root);
@@ -352,6 +367,7 @@ export class CarouselScene {
       this.fullAssy.position.set(0, 1.25, -1);
       this.fullAssy.scale.set(3.0, 3.0, 3.0);
       this.fullAssy.visible = false;
+      cloneMaterialsPerMesh(root);
       // this.brightenDarkMaterials(root); // TODO: uncomment
     });
   }
@@ -430,14 +446,12 @@ export class CarouselScene {
    */
   private brightenDarkMaterials(root: THREE.Object3D): void {
     const p = defaultBrightenParams;
-    console.log("brightening dark materials");
 
     root.traverse((child) => {
-      console.log(child);
       if (!(child instanceof THREE.Mesh) || !child.material) return;
       const materials = Array.isArray(child.material) ? child.material : [child.material];
+
       materials.forEach((mat) => {
-        console.log({ material: mat });
         if (!("color" in mat) || !(mat.color instanceof THREE.Color)) return;
 
         const c = mat.color as THREE.Color;
@@ -447,10 +461,10 @@ export class CarouselScene {
         const roughness =
           "roughness" in mat && typeof mat.roughness === "number" ? mat.roughness : 0;
 
-        // fixDarkTexturedMaterial(mat, metalness, p);
-        // brightenDarkBaseColor(mat, c, lum, metalness, p);
-        // capMetalness(mat, c, lum, metalness, roughness, p);
-        // boostDarkEmissive(mat, lum, metalness, p);
+        fixDarkTexturedMaterial(mat, metalness, p);
+        brightenDarkBaseColor(mat, c, lum, metalness, p);
+        capMetalness(mat, c, lum, metalness, roughness, p);
+        boostDarkEmissive(mat, lum, metalness, p);
       });
     });
   }
