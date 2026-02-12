@@ -4,6 +4,7 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { ReactiveStarfield } from "./ReactiveStarfield";
 import { lerp } from "three/src/math/MathUtils.js";
 import gsap from "gsap";
@@ -259,27 +260,45 @@ function boostDarkEmissive(
   }
 }
 
-function makeReflective(mat: THREE.Material, envMap: THREE.CubeTexture): void {
-  const std = mat as THREE.MeshStandardMaterial;
+/**
+ * Replace a mesh in the scene graph with a Reflector using the same geometry,
+ * preserving its world transform. Returns the new Reflector.
+ */
+function replaceWithReflector(
+  mesh: THREE.Mesh,
+  renderer: THREE.WebGLRenderer,
+): Reflector {
+  const size = new THREE.Vector2();
+  renderer.getDrawingBufferSize(size);
 
-  // Clear all texture maps so the surface is pure mirror reflection
-  if (std.map) std.map = null;
-  if (std.normalMap) std.normalMap = null;
-  if (std.roughnessMap) std.roughnessMap = null;
-  if (std.metalnessMap) std.metalnessMap = null;
-  if (std.aoMap) std.aoMap = null;
+  const reflector = new Reflector(mesh.geometry, {
+    clipBias: 0.003,
+    textureWidth: size.width,
+    textureHeight: size.height,
+    color: 0xb5b5b5,
+  });
 
-  // Perfect mirror PBR: full metal, zero roughness
-  std.metalness = 1.0;
-  std.roughness = 0.0;
-  std.color.setRGB(0.95, 0.95, 0.95);
-  std.envMap = envMap;
-  std.envMapIntensity = 1.0;
+  // Copy the mesh's local transform
+  reflector.name = mesh.name;
+  reflector.position.copy(mesh.position);
+  reflector.quaternion.copy(mesh.quaternion);
+  reflector.scale.copy(mesh.scale);
 
-  // Clear emissive so it doesn't interfere
-  if (std.emissive) std.emissive.setRGB(0, 0, 0);
+  // Swap in the scene graph
+  const parent = mesh.parent;
+  if (parent) {
+    parent.add(reflector);
+    parent.remove(mesh);
+  }
 
-  std.needsUpdate = true;
+  // Dispose old materials
+  if (Array.isArray(mesh.material)) {
+    mesh.material.forEach((m) => m.dispose());
+  } else if (mesh.material) {
+    mesh.material.dispose();
+  }
+
+  return reflector;
 }
 
 /**
@@ -297,9 +316,7 @@ export class CarouselScene {
   private keyLight: THREE.RectAreaLight;
   private rimLight: THREE.PointLight;
   private renderer: THREE.WebGLRenderer;
-  private cubeRenderTarget: THREE.WebGLCubeRenderTarget;
-  private cubeCamera: THREE.CubeCamera;
-  private mirrorMesh: THREE.Mesh | null = null;
+  private mirrorReflector: Reflector | null = null;
   private reactiveStarfield: ReactiveStarfield;
   private orbitControls: OrbitControls;
 
@@ -340,14 +357,6 @@ export class CarouselScene {
 
     // Fog
     this.scene.fog = new THREE.Fog(0x0a1428, 5.0, 30.0);
-
-    // CubeCamera for real-time mirror reflections
-    this.cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
-      generateMipmaps: true,
-      minFilter: THREE.LinearMipmapLinearFilter,
-    });
-    this.cubeCamera = new THREE.CubeCamera(0.1, 100, this.cubeRenderTarget);
-    this.scene.add(this.cubeCamera);
 
     // Orbit controls
     this.orbitControls = new OrbitControls(this.camera, renderer.domElement);
@@ -484,6 +493,7 @@ export class CarouselScene {
    */
   private brightenDarkMaterials(root: THREE.Object3D): void {
     const p = defaultBrightenParams;
+    const mirrorsToReplace: THREE.Mesh[] = [];
 
     root.traverse((child) => {
       if (!(child instanceof THREE.Mesh) || !child.material) return;
@@ -493,8 +503,8 @@ export class CarouselScene {
         if (!("color" in mat) || !(mat.color instanceof THREE.Color)) return;
 
         if (child.name === MIRROR_MESH_NAME) {
-          makeReflective(mat, this.cubeRenderTarget.texture);
-          this.mirrorMesh = child;
+          // Defer replacement until after traversal to avoid modifying the tree mid-walk
+          mirrorsToReplace.push(child);
           return;
         }
 
@@ -511,6 +521,11 @@ export class CarouselScene {
         boostDarkEmissive(mat, lum, metalness, p);
       });
     });
+
+    // Replace mirror meshes with Reflectors after traversal is complete
+    for (const mesh of mirrorsToReplace) {
+      this.mirrorReflector = replaceWithReflector(mesh, this.renderer);
+    }
   }
 
   /**
@@ -532,22 +547,19 @@ export class CarouselScene {
 
     this.orbitControls.enabled = this.enableOrbitControls;
     this.orbitControls.update();
-
-    // Update cube camera for mirror reflections
-    if (this.mirrorMesh) {
-      // Position cube camera at the mirror mesh's world position
-      this.mirrorMesh.getWorldPosition(this.cubeCamera.position);
-      // Hide mirror while capturing reflections to avoid self-reflection
-      this.mirrorMesh.visible = false;
-      this.cubeCamera.update(this.renderer, this.scene);
-      this.mirrorMesh.visible = true;
-    }
   }
 
   resize(width: number, height: number): void {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.reactiveStarfield.setResolution(width, height);
+
+    // Update reflector render target to match new size
+    if (this.mirrorReflector) {
+      const size = new THREE.Vector2();
+      this.renderer.getDrawingBufferSize(size);
+      this.mirrorReflector.getRenderTarget().setSize(size.width, size.height);
+    }
   }
 
   /**
@@ -601,7 +613,9 @@ export class CarouselScene {
   dispose(): void {
     this.orbitControls.dispose();
     this.reactiveStarfield.dispose();
-    this.cubeRenderTarget.dispose();
+    if (this.mirrorReflector) {
+      this.mirrorReflector.dispose();
+    }
 
     const disposeGroup = (group: THREE.Group | null) => {
       if (!group) return;
