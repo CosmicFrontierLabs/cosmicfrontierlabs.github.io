@@ -101,6 +101,148 @@ export const carouselData: CarouselItem[] = [
   },
 ];
 
+// --- Brighten-dark-materials tunable parameters ---
+interface BrightenParams {
+  minLuminance: number;
+  metallicLumTarget: number;
+  maxBoostFactor: number;
+  minChannelFraction: number;
+  metallicThreshold: number;
+  maxMetalness: number;
+  texturedMetalnessThreshold: number;
+  texturedEmissive: number;
+  highMetalnessThreshold: number;
+  highRoughnessThreshold: number;
+  extremeRoughness: number;
+  whiteMetalGreyColor: number;
+  emissiveMetallic: number;
+  emissiveDielectric: number;
+}
+
+const defaultBrightenParams: BrightenParams = {
+  minLuminance: 0.08,
+  metallicLumTarget: 0.22,
+  maxBoostFactor: 5.0,
+  minChannelFraction: 0.5,
+  metallicThreshold: 0.4,
+  maxMetalness: 0.2,
+  texturedMetalnessThreshold: 0.3,
+  texturedEmissive: 0.05,
+  highMetalnessThreshold: 0.8,
+  highRoughnessThreshold: 0.8,
+  extremeRoughness: 0.6,
+  whiteMetalGreyColor: 0.45,
+  emissiveMetallic: 0.06,
+  emissiveDielectric: 0.03,
+};
+
+/** Compute perceptual luminance of an RGB color. */
+function luminance(c: THREE.Color): number {
+  return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+}
+
+/**
+ * Case 0: Fix dark textured materials.
+ * Metallic + textured is a common dark-material pattern. Reduce metalness so
+ * diffuse light can reflect off the surface, and add a small emissive boost.
+ */
+function fixDarkTexturedMaterial(
+  mat: THREE.Material,
+  metalness: number,
+  p: BrightenParams,
+): void {
+  console.log("In fixDarkTexturedMaterial");
+  if (!("map" in mat) || !(mat.map instanceof THREE.Texture)) return;
+  if (metalness <= p.texturedMetalnessThreshold) return;
+
+  (mat as THREE.MeshStandardMaterial).metalness = Math.min(metalness, p.maxMetalness);
+  if ("emissive" in mat && mat.emissive instanceof THREE.Color) {
+    console.log({emissive: mat.emissive});
+    const eLum = luminance(mat.emissive as THREE.Color);
+    if (eLum < 0.03) {
+      mat.emissive = new THREE.Color(p.texturedEmissive, p.texturedEmissive, p.texturedEmissive * 1.2);
+    }
+  }
+  mat.needsUpdate = true;
+}
+
+/**
+ * Case 1: Brighten dark base colors.
+ * Dark metallic materials get an extra-aggressive boost because even after
+ * capping metalness they remain very dim.
+ */
+function brightenDarkBaseColor(
+  mat: THREE.Material,
+  c: THREE.Color,
+  lum: number,
+  metalness: number,
+  p: BrightenParams,
+): void {
+  if (lum >= p.minLuminance) return;
+
+  const targetLum = metalness > p.metallicThreshold ? p.metallicLumTarget : p.minLuminance;
+  const boost = targetLum / Math.max(lum, 0.001);
+  const factor = Math.min(boost, p.maxBoostFactor);
+  c.multiplyScalar(factor);
+  const minChannel = targetLum * p.minChannelFraction;
+  c.r = Math.max(c.r, minChannel);
+  c.g = Math.max(c.g, minChannel);
+  c.b = Math.max(c.b, minChannel);
+  mat.needsUpdate = true;
+}
+
+/**
+ * Case 2: Cap metalness so ambient/diffuse light is reflected.
+ * Without an environment map, metallic materials rely entirely on specular
+ * reflections from direct lights, making them near-black from most angles.
+ */
+function capMetalness(
+  mat: THREE.Material,
+  c: THREE.Color,
+  lum: number,
+  metalness: number,
+  roughness: number,
+  p: BrightenParams,
+): void {
+  if (metalness <= p.metallicThreshold) return;
+
+  if (metalness > p.highMetalnessThreshold && roughness > p.highRoughnessThreshold) {
+    // High metalness + high roughness: convert fully to dielectric.
+    (mat as THREE.MeshStandardMaterial).metalness = 0.0;
+    (mat as THREE.MeshStandardMaterial).roughness = p.extremeRoughness;
+    if (lum > 0.8) {
+      c.setRGB(p.whiteMetalGreyColor, p.whiteMetalGreyColor, p.whiteMetalGreyColor + 0.03);
+    }
+  } else {
+    (mat as THREE.MeshStandardMaterial).metalness = Math.min(
+      mat.metalness as number,
+      p.maxMetalness,
+    );
+  }
+  mat.needsUpdate = true;
+}
+
+/**
+ * Case 3: Emissive boost on dark parts — stronger for originally-metallic
+ * materials so they read clearly against the dark background.
+ */
+function boostDarkEmissive(
+  mat: THREE.Material,
+  lum: number,
+  metalness: number,
+  p: BrightenParams,
+): void {
+  if (lum >= p.minLuminance) return;
+  if (!("emissive" in mat) || !(mat.emissive instanceof THREE.Color)) return;
+
+  const eLum = luminance(mat.emissive as THREE.Color);
+  if (eLum < 0.03) {
+    const emStr = metalness > p.metallicThreshold ? p.emissiveMetallic : p.emissiveDielectric;
+    mat.emissive = new THREE.Color(emStr, emStr, emStr * 1.1);
+    mat.needsUpdate = true;
+  }
+}
+
 /**
  * CarouselScene manages the 3D carousel scene (models, lights, camera, rings).
  * It does NOT own a renderer—it renders into a shared renderer passed to it.
@@ -180,6 +322,7 @@ export class CarouselScene {
 
     gltfLoader.load("/models/20260102_Payload_assy_no_baffle.glb", (gltf) => {
       const root = gltf.scene as THREE.Group;
+      this.printMeshNames(root, "Payload");
       root.position.set(0, 0, 0);
       root.updateWorldMatrix(true, true);
       const bounds = new THREE.Box3().setFromObject(root);
@@ -196,6 +339,7 @@ export class CarouselScene {
 
     gltfLoader.load("/models/20260102_Full_Assy.glb", (gltf) => {
       const root = gltf.scene as THREE.Group;
+      this.printMeshNames(root, "Full Assembly");
       root.position.set(0, 0, 0);
       root.updateWorldMatrix(true, true);
       const bounds = new THREE.Box3().setFromObject(root);
@@ -208,8 +352,75 @@ export class CarouselScene {
       this.fullAssy.position.set(0, 1.25, -1);
       this.fullAssy.scale.set(3.0, 3.0, 3.0);
       this.fullAssy.visible = false;
-      this.brightenDarkMaterials(root);
+      // this.brightenDarkMaterials(root); // TODO: uncomment
     });
+  }
+
+  /**
+   * Recursively print all mesh names in a model hierarchy
+   * and assign a unique debug color to each distinct material.
+   */
+  private printMeshNames(root: THREE.Object3D, label: string): void {
+    // Generate visually distinct colors using golden-ratio hue spacing
+    const materialColors = new Map<THREE.Material, THREE.Color>();
+    let hueIndex = 0;
+    const goldenRatio = 0.618033988749895;
+
+    const getDebugColor = (mat: THREE.Material): THREE.Color => {
+      if (materialColors.has(mat)) return materialColors.get(mat)!;
+      const hue = (hueIndex * goldenRatio) % 1.0;
+      hueIndex++;
+      const color = new THREE.Color().setHSL(hue, 0.9, 0.55);
+      materialColors.set(mat, color);
+      return color;
+    };
+
+    console.group(`[${label}] Mesh names in GLB model:`);
+    root.traverse((child) => {
+      const type = child.type;
+      const depth: string[] = [];
+      let parent = child.parent;
+      while (parent && parent !== root) {
+        depth.push(parent.name || "(unnamed)");
+        parent = parent.parent;
+      }
+      const path = depth.reverse().join(" > ");
+      const name = child.name || "(unnamed)";
+      if (child instanceof THREE.Mesh) {
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        const matInfo = materials
+          .map((m: THREE.Material) => {
+            const debugColor = getDebugColor(m);
+            const hex = "#" + debugColor.getHexString();
+            // Apply debug color
+            if ("color" in m && m.color instanceof THREE.Color) {
+              m.color.copy(debugColor);
+            }
+            // Clear maps/textures so solid color is visible
+            if ("map" in m && m.map) {
+              (m as THREE.MeshStandardMaterial).map = null;
+            }
+            // Reset metalness/roughness for visibility
+            if ("metalness" in m) {
+              (m as THREE.MeshStandardMaterial).metalness = 0.0;
+            }
+            if ("roughness" in m) {
+              (m as THREE.MeshStandardMaterial).roughness = 0.8;
+            }
+            // Clear emissive so it doesn't wash out the debug color
+            if ("emissive" in m && m.emissive instanceof THREE.Color) {
+              m.emissive.setRGB(0, 0, 0);
+            }
+            m.needsUpdate = true;
+            return `${m.name || m.type} (${hex})`;
+          })
+          .join(", ");
+        console.log(`[Mesh] ${path ? path + " > " : ""}${name}  (material: ${matInfo})`);
+      } else {
+        console.log(`[${type}] ${path ? path + " > " : ""}${name}`);
+      }
+    });
+    console.groupEnd();
   }
 
   /**
@@ -218,98 +429,28 @@ export class CarouselScene {
    * on dark surfaces, and non-Standard material types.
    */
   private brightenDarkMaterials(root: THREE.Object3D): void {
-    // --- Tunable parameters ---
-    const minLuminance = 0.08; // Threshold below which base colors get brightened
-    const metallicLumTarget = 0.22; // Brightness target for dark metallic materials
-    const maxBoostFactor = 5.0; // Max multiplier when brightening dark colors
-    const minChannelFraction = 0.5; // Floor per-channel as fraction of target luminance
-    const metallicThreshold = 0.4; // Metalness above which material is considered metallic
-    const maxMetalness = 0.2; // Cap for metalness on non-extreme materials
-    const texturedMetalnessThreshold = 0.3; // Metalness threshold for textured material fix
-    const texturedEmissive = 0.05; // Emissive strength for dark textured materials
-    const highMetalnessThreshold = 0.8; // Metalness threshold for extreme case
-    const highRoughnessThreshold = 0.8; // Roughness threshold for extreme case
-    const extremeRoughness = 0.6; // Roughness to assign in extreme metallic+rough case
-    const whiteMetalGreyColor = 0.45; // Grey value for bright extreme-case materials
-    const emissiveMetallic = 0.06; // Emissive strength for dark metallic parts
-    const emissiveDielectric = 0.03; // Emissive strength for dark non-metallic parts
+    const p = defaultBrightenParams;
+    console.log("brightening dark materials");
 
     root.traverse((child) => {
+      console.log(child);
       if (!(child instanceof THREE.Mesh) || !child.material) return;
       const materials = Array.isArray(child.material) ? child.material : [child.material];
       materials.forEach((mat) => {
+        console.log({ material: mat });
         if (!("color" in mat) || !(mat.color instanceof THREE.Color)) return;
 
         const c = mat.color as THREE.Color;
-        const lum = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
-        const metalness = "metalness" in mat && typeof mat.metalness === "number" ? mat.metalness : 0;
-        const roughness = "roughness" in mat && typeof mat.roughness === "number" ? mat.roughness : 0;
+        const lum = luminance(c);
+        const metalness =
+          "metalness" in mat && typeof mat.metalness === "number" ? mat.metalness : 0;
+        const roughness =
+          "roughness" in mat && typeof mat.roughness === "number" ? mat.roughness : 0;
 
-        // 0) Textured materials: the color factor may be bright but the
-        //    texture itself dark, making the rendered result near-black.
-        //    We can't sample the texture cheaply, but metallic + textured
-        //    is the common dark-material pattern. Reduce metalness so
-        //    diffuse light can reflect off the surface.
-        if ("map" in mat && mat.map instanceof THREE.Texture && metalness > texturedMetalnessThreshold) {
-          (mat as THREE.MeshStandardMaterial).metalness = Math.min(metalness, maxMetalness);
-          if ("emissive" in mat && mat.emissive instanceof THREE.Color) {
-            const e = mat.emissive as THREE.Color;
-            const eLum = 0.299 * e.r + 0.587 * e.g + 0.114 * e.b;
-            if (eLum < 0.03) {
-              mat.emissive = new THREE.Color(texturedEmissive, texturedEmissive, texturedEmissive * 1.2);
-            }
-          }
-          mat.needsUpdate = true;
-        }
-
-        // 1) Brighten dark base colors.  Dark metallic materials need an
-        //    extra-aggressive boost because even after capping metalness they
-        //    remain very dim (the original color was chosen to look good with
-        //    full specular metallic shading, not diffuse).
-        if (lum < minLuminance) {
-          const targetLum = metalness > metallicThreshold ? metallicLumTarget : minLuminance;
-          const boost = targetLum / Math.max(lum, 0.001);
-          const factor = Math.min(boost, maxBoostFactor);
-          c.multiplyScalar(factor);
-          const minChannel = targetLum * minChannelFraction;
-          c.r = Math.max(c.r, minChannel);
-          c.g = Math.max(c.g, minChannel);
-          c.b = Math.max(c.b, minChannel);
-          mat.needsUpdate = true;
-        }
-
-        // 2) Without an environment map, metallic materials rely entirely on
-        //    specular reflections from direct lights, making them appear
-        //    near-black from most viewing angles. Cap metalness so that
-        //    ambient/diffuse light is reflected.
-        if (metalness > metallicThreshold) {
-          // High metalness + high roughness is the worst case (no diffuse,
-          // dim specular) — convert fully to dielectric.
-          if (metalness > highMetalnessThreshold && roughness > highRoughnessThreshold) {
-            mat.metalness = 0.0;
-            mat.roughness = extremeRoughness;
-            if (lum > 0.8) {
-              c.setRGB(whiteMetalGreyColor, whiteMetalGreyColor, whiteMetalGreyColor + 0.03);
-            }
-          } else {
-            // For all other metallic materials, retain a hint of metallic
-            // sheen but ensure enough diffuse reflection to stay visible.
-            mat.metalness = Math.min(mat.metalness as number, maxMetalness);
-          }
-          mat.needsUpdate = true;
-        }
-
-        // 4) Emissive boost on dark parts — stronger for originally-metallic
-        //    materials so they read clearly against the dark background.
-        if ("emissive" in mat && mat.emissive instanceof THREE.Color && lum < minLuminance) {
-          const e = mat.emissive as THREE.Color;
-          const eLum = 0.299 * e.r + 0.587 * e.g + 0.114 * e.b;
-          if (eLum < 0.03) {
-            const emStr = metalness > metallicThreshold ? emissiveMetallic : emissiveDielectric;
-            mat.emissive = new THREE.Color(emStr, emStr, emStr * 1.1);
-            mat.needsUpdate = true;
-          }
-        }
+        // fixDarkTexturedMaterial(mat, metalness, p);
+        // brightenDarkBaseColor(mat, c, lum, metalness, p);
+        // capMetalness(mat, c, lum, metalness, roughness, p);
+        // boostDarkEmissive(mat, lum, metalness, p);
       });
     });
   }
