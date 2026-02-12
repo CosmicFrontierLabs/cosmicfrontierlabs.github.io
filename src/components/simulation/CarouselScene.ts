@@ -6,299 +6,25 @@ import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLigh
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { ReactiveStarfield } from "./ReactiveStarfield";
-import { lerp } from "three/src/math/MathUtils.js";
+import { cloneMaterialsPerMesh, brightenDarkMaterials } from "./materialUtils";
+import { carouselData } from "./carouselData";
 import gsap from "gsap";
 
+export type { CarouselItem } from "./carouselData";
+export { carouselData } from "./carouselData";
+
+/** Mesh name in the payload GLB that should become a planar reflector. */
 const MIRROR_MESH_NAME = "mesh_0_55";
 
-export interface CarouselItem {
-  title: string;
-  description: string;
-  model: string;
-  camera: {
-    position: { x: number; y: number; z: number };
-    lookAt: { x: number; y: number; z: number };
-  };
-}
+/** Maximum reflector render target dimension to limit GPU cost on high-DPI displays. */
+const MAX_REFLECTOR_SIZE = 2048;
 
-export const carouselData: CarouselItem[] = [
-  {
-    title: "A New Kind of Telescope",
-    description:
-      "Introducing a revolutionary optical instrument designed to peer deeper into the cosmos than ever before. This next-generation payload assembly combines precision engineering with cutting-edge materials.",
-    model: "payload",
-    camera: {
-      position: { x: 3, y: 1.5, z: 3 },
-      lookAt: { x: 0.5, y: 1, z: 0 },
-    },
-  },
-  {
-    title: "Primary Optics Assembly",
-    description:
-      "The heart of the telescope: a precisely ground primary mirror assembly capable of capturing light from the farthest reaches of the observable universe. Every surface is polished to nanometer-level tolerances.",
-    model: "payload",
-    camera: {
-      position: { x: -2, y: 1.5, z: 2.5 },
-      lookAt: { x: 0, y: 0.5, z: 0 },
-    },
-  },
-  {
-    title: "Structural Framework",
-    description:
-      "A carbon-fiber composite truss structure provides exceptional rigidity while minimizing weight. This lattice design maintains optical alignment even under extreme thermal cycling in the vacuum of space.",
-    model: "payload",
-    camera: {
-      position: { x: 0, y: 1, z: 10 },
-      lookAt: { x: 0, y: 0, z: 0 },
-    },
-  },
-  {
-    title: "Thermal Management",
-    description:
-      "Advanced thermal control systems regulate temperature across the entire assembly. Multi-layer insulation and active heaters ensure stable operating conditions from -150°C to +100°C.",
-    model: "payload",
-    camera: {
-      position: { x: 0, y: 4, z: 4 },
-      lookAt: { x: 0, y: 0.5, z: 0 },
-    },
-  },
-  {
-    title: "Complete Optical System",
-    description:
-      "The full assembly reveals the integrated optical path from primary to secondary mirror. The hexapod actuator system provides six degrees of freedom for precise alignment, while real-time wavefront sensing ensures optimal image quality across the entire system.",
-    model: "fullAssy",
-    camera: {
-      position: { x: 2, y: 5, z: 3 },
-      lookAt: { x: 0, y: 1.5, z: -0.5 },
-    },
-  },
-  {
-    title: "Integrated Instrument Suite",
-    description:
-      "The complete assembly showcases how spectrographs, imaging sensors, and data processing units are seamlessly integrated within the instrument bay. This modular architecture enables in-orbit servicing and future capability upgrades while maintaining system integrity.",
-    model: "fullAssy",
-    camera: {
-      position: { x: 9, y: 1, z: 4 },
-      lookAt: { x: 0, y: 0.5, z: 0 },
-    },
-  },
-  {
-    title: "Power & Data Systems",
-    description:
-      "The full assembly integrates high-gain antennas and power distribution systems that connect the telescope to ground stations worldwide. With data transmission rates exceeding 100 Gbps, the complete system enables real-time delivery of high-resolution scientific data.",
-    model: "fullAssy",
-    camera: {
-      position: { x: 0, y: -2, z: 4 },
-      lookAt: { x: 0, y: 1.5, z: 0 },
-    },
-  },
-  {
-    title: "Complete Assembly",
-    description:
-      "The fully integrated telescope assembly represents the culmination of years of engineering refinement. Every subsystem—from optics to power, from instruments to thermal control—works in harmony to create an instrument that will transform our understanding of the cosmos.",
-    model: "fullAssy",
-    camera: {
-      position: { x: 6, y: 4, z: 12 },
-      lookAt: { x: 0, y: 0.5, z: 0 },
-    },
-  },
-];
-
-/**
- * Clone materials on every mesh so each mesh gets its own material instance.
- * This allows per-mesh material tweaks (e.g. brightening) without affecting
- * other meshes that originally shared the same material in the GLB.
- */
-function cloneMaterialsPerMesh(root: THREE.Object3D): void {
-  root.traverse((child) => {
-    if (!(child instanceof THREE.Mesh) || !child.material) return;
-    if (Array.isArray(child.material)) {
-      child.material = child.material.map((m: THREE.Material) => m.clone());
-    } else {
-      child.material = child.material.clone();
-    }
-  });
-}
-
-// --- Brighten-dark-materials tunable parameters ---
-interface BrightenParams {
-  minLuminance: number;
-  metallicLumTarget: number;
-  maxBoostFactor: number;
-  minChannelFraction: number;
-  metallicThreshold: number;
-  maxMetalness: number;
-  texturedMetalnessThreshold: number;
-  texturedEmissive: number;
-  highMetalnessThreshold: number;
-  highRoughnessThreshold: number;
-  extremeRoughness: number;
-  whiteMetalGreyColor: number;
-  emissiveMetallic: number;
-  emissiveDielectric: number;
-}
-
-const defaultBrightenParams: BrightenParams = {
-  minLuminance: 0.08,
-  metallicLumTarget: 0.22,
-  maxBoostFactor: 5.0,
-  minChannelFraction: 0.5,
-  metallicThreshold: 0.4,
-  maxMetalness: 0.2,
-  texturedMetalnessThreshold: 0.3,
-  texturedEmissive: 0.05,
-  highMetalnessThreshold: 0.8,
-  highRoughnessThreshold: 0.8,
-  extremeRoughness: 0.6,
-  whiteMetalGreyColor: 0.45,
-  emissiveMetallic: 0.06,
-  emissiveDielectric: 0.03,
-};
-
-/** Compute perceptual luminance of an RGB color. */
-function luminance(c: THREE.Color): number {
-  return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
-}
-
-/**
- * Case 0: Fix dark textured materials.
- * Metallic + textured is a common dark-material pattern. Reduce metalness so
- * diffuse light can reflect off the surface, and add a small emissive boost.
- */
-function fixDarkTexturedMaterial(
-  mat: THREE.Material,
-  metalness: number,
-  p: BrightenParams,
-): void {
-  if (!("map" in mat) || !(mat.map instanceof THREE.Texture)) return;
-  if (metalness <= p.texturedMetalnessThreshold) return;
-
-  (mat as THREE.MeshStandardMaterial).metalness = Math.min(metalness, p.maxMetalness);
-  if ("emissive" in mat && mat.emissive instanceof THREE.Color) {
-    const eLum = luminance(mat.emissive as THREE.Color);
-    if (eLum < 0.03) {
-      mat.emissive = new THREE.Color(p.texturedEmissive, p.texturedEmissive, p.texturedEmissive * 1.2);
-    }
-  }
-  mat.needsUpdate = true;
-}
-
-/**
- * Case 1: Brighten dark base colors.
- * Dark metallic materials get an extra-aggressive boost because even after
- * capping metalness they remain very dim.
- */
-function brightenDarkBaseColor(
-  mat: THREE.Material,
-  c: THREE.Color,
-  lum: number,
-  metalness: number,
-  p: BrightenParams,
-): void {
-  if (lum >= p.minLuminance) return;
-
-  const targetLum = metalness > p.metallicThreshold ? p.metallicLumTarget : p.minLuminance;
-  const boost = targetLum / Math.max(lum, 0.001);
-  const factor = Math.min(boost, p.maxBoostFactor);
-  c.multiplyScalar(factor);
-  const minChannel = targetLum * p.minChannelFraction;
-  c.r = Math.max(c.r, minChannel);
-  c.g = Math.max(c.g, minChannel);
-  c.b = Math.max(c.b, minChannel);
-  mat.needsUpdate = true;
-}
-
-/**
- * Case 2: Cap metalness so ambient/diffuse light is reflected.
- * Without an environment map, metallic materials rely entirely on specular
- * reflections from direct lights, making them near-black from most angles.
- */
-function capMetalness(
-  mat: THREE.Material,
-  c: THREE.Color,
-  lum: number,
-  metalness: number,
-  roughness: number,
-  p: BrightenParams,
-): void {
-  if (metalness <= p.metallicThreshold) return;
-
-  if (metalness > p.highMetalnessThreshold && roughness > p.highRoughnessThreshold) {
-    // High metalness + high roughness: convert fully to dielectric.
-    (mat as THREE.MeshStandardMaterial).metalness = 0.0;
-    (mat as THREE.MeshStandardMaterial).roughness = p.extremeRoughness;
-    if (lum > 0.8) {
-      c.setRGB(p.whiteMetalGreyColor, p.whiteMetalGreyColor, p.whiteMetalGreyColor + 0.03);
-    }
-  } else {
-    (mat as THREE.MeshStandardMaterial).metalness = Math.min(
-      mat.metalness as number,
-      p.maxMetalness,
-    );
-  }
-  mat.needsUpdate = true;
-}
-
-/**
- * Case 3: Emissive boost on dark parts — stronger for originally-metallic
- * materials so they read clearly against the dark background.
- */
-function boostDarkEmissive(
-  mat: THREE.Material,
-  lum: number,
-  metalness: number,
-  p: BrightenParams,
-): void {
-  if (lum >= p.minLuminance) return;
-  if (!("emissive" in mat) || !(mat.emissive instanceof THREE.Color)) return;
-
-  const eLum = luminance(mat.emissive as THREE.Color);
-  if (eLum < 0.03) {
-    const emStr = metalness > p.metallicThreshold ? p.emissiveMetallic : p.emissiveDielectric;
-    mat.emissive = new THREE.Color(emStr, emStr, emStr * 1.1);
-    mat.needsUpdate = true;
-  }
-}
-
-/**
- * Replace a mesh in the scene graph with a Reflector using the same geometry,
- * preserving its world transform. Returns the new Reflector.
- */
-function replaceWithReflector(
-  mesh: THREE.Mesh,
-  renderer: THREE.WebGLRenderer,
-): Reflector {
-  const size = new THREE.Vector2();
-  renderer.getDrawingBufferSize(size);
-
-  const reflector = new Reflector(mesh.geometry, {
-    clipBias: 0.003,
-    textureWidth: size.width,
-    textureHeight: size.height,
-    color: 0xb5b5b5,
-  });
-
-  // Copy the mesh's local transform
-  reflector.name = mesh.name;
-  reflector.position.copy(mesh.position);
-  reflector.quaternion.copy(mesh.quaternion);
-  reflector.scale.copy(mesh.scale);
-
-  // Swap in the scene graph
-  const parent = mesh.parent;
-  if (parent) {
-    parent.add(reflector);
-    parent.remove(mesh);
-  }
-
-  // Dispose old materials
-  if (Array.isArray(mesh.material)) {
-    mesh.material.forEach((m) => m.dispose());
-  } else if (mesh.material) {
-    mesh.material.dispose();
-  }
-
-  return reflector;
+interface LoadModelOptions {
+  url: string;
+  scale: number;
+  brighten: boolean;
+  /** Mesh name to replace with a Reflector (only on this model). */
+  mirrorMeshName?: string;
 }
 
 /**
@@ -311,7 +37,6 @@ export class CarouselScene {
   camera: THREE.PerspectiveCamera;
   private telescope: THREE.Group | null = null;
   private fullAssy: THREE.Group | null = null;
-  private totTime: number = 0.0;
   private ambientLight: THREE.AmbientLight;
   private keyLight: THREE.RectAreaLight;
   private rimLight: THREE.PointLight;
@@ -319,13 +44,11 @@ export class CarouselScene {
   private mirrorReflector: Reflector | null = null;
   private reactiveStarfield: ReactiveStarfield;
   private orbitControls: OrbitControls;
+  private dracoLoader: DRACOLoader;
+  private activeCameraTween: gsap.core.Tween | null = null;
 
   /** Tracks the current lookAt target for smooth camera transitions */
   private currentLookAtTarget = new THREE.Vector3(0, 0, 0);
-
-  /** Mouse position normalized 0-1, (0,0) = top-left */
-  mousePosition = { x: 0.5, y: 0.5 };
-  enableCameraReaction = false;
 
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
     RectAreaLightUniformsLib.init();
@@ -374,177 +97,144 @@ export class CarouselScene {
       brightness: 2.5,
     });
 
-    // Load models
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath("/draco/");
+    // Loaders
+    this.dracoLoader = new DRACOLoader();
+    this.dracoLoader.setDecoderPath("/draco/");
     const gltfLoader = new GLTFLoader();
-    gltfLoader.setDRACOLoader(dracoLoader);
+    gltfLoader.setDRACOLoader(this.dracoLoader);
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
-    gltfLoader.load("/models/20260102_Payload_assy_no_baffle.glb", (gltf) => {
-      const root = gltf.scene as THREE.Group;
-      // this.printMeshNames(root, "Payload");
-      root.position.set(0, 0, 0);
-      root.updateWorldMatrix(true, true);
-      const bounds = new THREE.Box3().setFromObject(root);
-      const center = bounds.getCenter(new THREE.Vector3());
-
-      this.telescope = new THREE.Group();
-      this.telescope.add(root);
-      root.position.sub(center);
-      this.scene.add(this.telescope);
-      this.telescope.position.set(0, 1.25, -1);
-      this.telescope.scale.set(5.0, 5.0, 5.0);
-      cloneMaterialsPerMesh(root);
-      this.brightenDarkMaterials(root);
+    // Load payload model (with mirror reflector)
+    this.loadModel(gltfLoader, {
+      url: "/models/20260102_Payload_assy_no_baffle.glb",
+      scale: 5.0,
+      brighten: true,
+      mirrorMeshName: MIRROR_MESH_NAME,
+    }).then((group) => {
+      this.telescope = group;
     });
 
-    gltfLoader.load("/models/20260102_Full_Assy.glb", (gltf) => {
-      const root = gltf.scene as THREE.Group;
-      // this.printMeshNames(root, "Full Assembly");
-      root.position.set(0, 0, 0);
-      root.updateWorldMatrix(true, true);
-      const bounds = new THREE.Box3().setFromObject(root);
-      const center = bounds.getCenter(new THREE.Vector3());
-
-      this.fullAssy = new THREE.Group();
-      this.fullAssy.add(root);
-      root.position.sub(center);
-      this.scene.add(this.fullAssy);
-      this.fullAssy.position.set(0, 1.25, -1);
-      this.fullAssy.scale.set(3.0, 3.0, 3.0);
-      this.fullAssy.visible = false;
-      cloneMaterialsPerMesh(root);
-      // this.brightenDarkMaterials(root); // TODO: uncomment
+    // Load full assembly model
+    this.loadModel(gltfLoader, {
+      url: "/models/20260102_Full_Assy.glb",
+      scale: 3.0,
+      brighten: true,
+    }).then((group) => {
+      group.visible = false;
+      this.fullAssy = group;
     });
   }
 
   /**
-   * Recursively print all mesh names in a model hierarchy
-   * and assign a unique debug color to each distinct material.
+   * Load a GLB model, center it, wrap in a group, add to scene, and apply
+   * material processing. Returns the wrapper group.
    */
-  private printMeshNames(root: THREE.Object3D, label: string): void {
-    // Generate visually distinct colors using golden-ratio hue spacing
-    const materialColors = new Map<THREE.Material, THREE.Color>();
-    let hueIndex = 0;
-    const goldenRatio = 0.618033988749895;
+  private loadModel(loader: GLTFLoader, opts: LoadModelOptions): Promise<THREE.Group> {
+    return new Promise((resolve, reject) => {
+      loader.load(
+        opts.url,
+        (gltf) => {
+          const root = gltf.scene as THREE.Group;
+          root.position.set(0, 0, 0);
+          root.updateWorldMatrix(true, true);
+          const bounds = new THREE.Box3().setFromObject(root);
+          const center = bounds.getCenter(new THREE.Vector3());
 
-    const getDebugColor = (mat: THREE.Material): THREE.Color => {
-      if (materialColors.has(mat)) return materialColors.get(mat)!;
-      const hue = (hueIndex * goldenRatio) % 1.0;
-      hueIndex++;
-      const color = new THREE.Color().setHSL(hue, 0.9, 0.55);
-      materialColors.set(mat, color);
-      return color;
-    };
+          const wrapper = new THREE.Group();
+          wrapper.add(root);
+          root.position.sub(center);
+          this.scene.add(wrapper);
+          wrapper.position.set(0, 1.25, -1);
+          wrapper.scale.setScalar(opts.scale);
 
-    console.group(`[${label}] Mesh names in GLB model:`);
-    root.traverse((child) => {
-      const type = child.type;
-      const depth: string[] = [];
-      let parent = child.parent;
-      while (parent && parent !== root) {
-        depth.push(parent.name || "(unnamed)");
-        parent = parent.parent;
-      }
-      const path = depth.reverse().join(" > ");
-      const name = child.name || "(unnamed)";
-      if (child instanceof THREE.Mesh) {
-        const materials = Array.isArray(child.material) ? child.material : [child.material];
-        const matInfo = materials
-          .map((m: THREE.Material) => {
-            const debugColor = getDebugColor(m);
-            const hex = "#" + debugColor.getHexString();
-            // Apply debug color
-            if ("color" in m && m.color instanceof THREE.Color) {
-              m.color.copy(debugColor);
+          cloneMaterialsPerMesh(root);
+
+          // Build set of mesh names to skip during brightening (they'll be replaced)
+          const skipNames = new Set<string>();
+          if (opts.mirrorMeshName) {
+            skipNames.add(opts.mirrorMeshName);
+          }
+
+          if (opts.brighten) {
+            brightenDarkMaterials(root, skipNames.size > 0 ? skipNames : undefined);
+          }
+
+          // Replace mirror mesh with a Reflector (only on this specific model)
+          if (opts.mirrorMeshName) {
+            const mirrorMesh = this.findMeshByName(root, opts.mirrorMeshName);
+            if (mirrorMesh) {
+              this.mirrorReflector = this.createReflector(mirrorMesh);
+            } else {
+              console.warn(`[CarouselScene] Mirror mesh "${opts.mirrorMeshName}" not found in ${opts.url}`);
             }
-            // Clear maps/textures so solid color is visible
-            if ("map" in m && m.map) {
-              (m as THREE.MeshStandardMaterial).map = null;
-            }
-            // Reset metalness/roughness for visibility
-            if ("metalness" in m) {
-              (m as THREE.MeshStandardMaterial).metalness = 0.0;
-            }
-            if ("roughness" in m) {
-              (m as THREE.MeshStandardMaterial).roughness = 0.8;
-            }
-            // Clear emissive so it doesn't wash out the debug color
-            if ("emissive" in m && m.emissive instanceof THREE.Color) {
-              m.emissive.setRGB(0, 0, 0);
-            }
-            m.needsUpdate = true;
-            return `${m.name || m.type} (${hex})`;
-          })
-          .join(", ");
-        console.log(`[Mesh] ${path ? path + " > " : ""}${name}  (material: ${matInfo})`);
-      } else {
-        console.log(`[${type}] ${path ? path + " > " : ""}${name}`);
-      }
-    });
-    console.groupEnd();
-  }
+          }
 
-  /**
-   * Traverse a model and lighten any very dark materials so they're visible
-   * against the dark space background. Handles dark base colors, high metalness
-   * on dark surfaces, and non-Standard material types.
-   */
-  private brightenDarkMaterials(root: THREE.Object3D): void {
-    const p = defaultBrightenParams;
-    const mirrorsToReplace: THREE.Mesh[] = [];
-
-    root.traverse((child) => {
-      if (!(child instanceof THREE.Mesh) || !child.material) return;
-      const materials = Array.isArray(child.material) ? child.material : [child.material];
-
-      materials.forEach((mat) => {
-        if (!("color" in mat) || !(mat.color instanceof THREE.Color)) return;
-
-        if (child.name === MIRROR_MESH_NAME) {
-          // Defer replacement until after traversal to avoid modifying the tree mid-walk
-          mirrorsToReplace.push(child);
-          return;
+          resolve(wrapper);
+        },
+        undefined,
+        (error) => {
+          console.error(`[CarouselScene] Failed to load model ${opts.url}:`, error);
+          reject(error);
         }
+      );
+    });
+  }
 
-        const c = mat.color as THREE.Color;
-        const lum = luminance(c);
-        const metalness =
-          "metalness" in mat && typeof mat.metalness === "number" ? mat.metalness : 0;
-        const roughness =
-          "roughness" in mat && typeof mat.roughness === "number" ? mat.roughness : 0;
+  /** Find a mesh by name in the hierarchy, returning the first match or null. */
+  private findMeshByName(root: THREE.Object3D, name: string): THREE.Mesh | null {
+    let found: THREE.Mesh | null = null;
+    root.traverse((child) => {
+      if (!found && child instanceof THREE.Mesh && child.name === name) {
+        found = child;
+      }
+    });
+    return found;
+  }
 
-        fixDarkTexturedMaterial(mat, metalness, p);
-        brightenDarkBaseColor(mat, c, lum, metalness, p);
-        capMetalness(mat, c, lum, metalness, roughness, p);
-        boostDarkEmissive(mat, lum, metalness, p);
-      });
+  /**
+   * Replace a mesh in the scene graph with a Reflector using the same geometry,
+   * preserving its local transform. Returns the new Reflector.
+   */
+  private createReflector(mesh: THREE.Mesh): Reflector {
+    const size = new THREE.Vector2();
+    this.renderer.getDrawingBufferSize(size);
+    const w = Math.min(size.width, MAX_REFLECTOR_SIZE);
+    const h = Math.min(size.height, MAX_REFLECTOR_SIZE);
+
+    const reflector = new Reflector(mesh.geometry, {
+      clipBias: 0.003,
+      textureWidth: w,
+      textureHeight: h,
+      color: 0xb5b5b5,
     });
 
-    // Replace mirror meshes with Reflectors after traversal is complete
-    for (const mesh of mirrorsToReplace) {
-      this.mirrorReflector = replaceWithReflector(mesh, this.renderer);
+    // Copy the mesh's local transform
+    reflector.name = mesh.name;
+    reflector.position.copy(mesh.position);
+    reflector.quaternion.copy(mesh.quaternion);
+    reflector.scale.copy(mesh.scale);
+
+    // Swap in the scene graph
+    const parent = mesh.parent;
+    if (parent) {
+      parent.add(reflector);
+      parent.remove(mesh);
     }
+
+    // Dispose old materials
+    if (Array.isArray(mesh.material)) {
+      mesh.material.forEach((m) => m.dispose());
+    } else if (mesh.material) {
+      mesh.material.dispose();
+    }
+
+    return reflector;
   }
 
   /**
    * Update the carousel scene (call once per frame when active).
    */
   update(deltaTimeSeconds: number): void {
-    this.totTime += deltaTimeSeconds;
-
-    // Mouse-reactive camera
-    if (this.enableCameraReaction) {
-      const mouseX = lerp(-6, 6, this.mousePosition.x);
-      const mouseY = lerp(-6, 8, this.mousePosition.y);
-      const newX = THREE.MathUtils.damp(this.camera.position.x, mouseX, 4, deltaTimeSeconds);
-      const newY = THREE.MathUtils.damp(this.camera.position.y, mouseY, 4, deltaTimeSeconds);
-      this.camera.position.x = newX;
-      this.camera.position.y = newY;
-      this.camera.lookAt(0, 0, 0);
-    }
-
     this.orbitControls.enabled = this.enableOrbitControls;
     this.orbitControls.update();
   }
@@ -554,18 +244,27 @@ export class CarouselScene {
     this.camera.updateProjectionMatrix();
     this.reactiveStarfield.setResolution(width, height);
 
-    // Update reflector render target to match new size
+    // Update reflector render target to match new size (clamped)
     if (this.mirrorReflector) {
       const size = new THREE.Vector2();
       this.renderer.getDrawingBufferSize(size);
-      this.mirrorReflector.getRenderTarget().setSize(size.width, size.height);
+      const w = Math.min(size.width, MAX_REFLECTOR_SIZE);
+      const h = Math.min(size.height, MAX_REFLECTOR_SIZE);
+      this.mirrorReflector.getRenderTarget().setSize(w, h);
     }
   }
 
   /**
    * Animate the camera to a new position and lookAt target along a smooth curve.
+   * Kills any in-flight camera tween before starting a new one.
    */
   animateCameraTo(targetPosition: THREE.Vector3, targetLookAt: THREE.Vector3, duration: number = 2.5): gsap.core.Tween {
+    // Kill any in-flight camera animation to prevent competing tweens
+    if (this.activeCameraTween) {
+      this.activeCameraTween.kill();
+      this.activeCameraTween = null;
+    }
+
     const easeType = "power2.inOut";
     const startPosition = this.camera.position.clone();
     const startLookAt = this.currentLookAtTarget.clone();
@@ -579,7 +278,7 @@ export class CarouselScene {
     // use the exact same eased t value — no mismatch, no wobble.
     const easeFn = gsap.parseEase(easeType);
 
-    return gsap.to(
+    const tween = gsap.to(
       { t: 0 },
       {
         t: 1,
@@ -595,8 +294,14 @@ export class CarouselScene {
           self.currentLookAtTarget.copy(currentLookAt);
           self.orbitControls.target.copy(currentLookAt);
         },
+        onComplete() {
+          self.activeCameraTween = null;
+        },
       }
     );
+
+    this.activeCameraTween = tween;
+    return tween;
   }
 
   setActiveModel(carouselIndex: number): void {
@@ -611,8 +316,16 @@ export class CarouselScene {
   }
 
   dispose(): void {
+    // Kill any in-flight camera tween
+    if (this.activeCameraTween) {
+      this.activeCameraTween.kill();
+      this.activeCameraTween = null;
+    }
+
     this.orbitControls.dispose();
     this.reactiveStarfield.dispose();
+    this.dracoLoader.dispose();
+
     if (this.mirrorReflector) {
       this.mirrorReflector.dispose();
     }
