@@ -2,6 +2,7 @@
 
 Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and Svelte 5. Features interactive 3D space telescope simulations using Three.js.
 
+
 ---
 
 TODO:
@@ -11,6 +12,7 @@ TODO:
 - Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
 - DETECT IF graphics acceleration is disabled and handle it. (or whatever is needed to handle miguel's case.)
 
+It's mesh_0_55
 ---
 
 ## Quick start
