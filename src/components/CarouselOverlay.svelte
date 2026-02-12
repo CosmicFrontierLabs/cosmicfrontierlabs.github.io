@@ -143,43 +143,67 @@
   });
 </script>
 
-  <h2 class="carousel__heading">Explore our telescope</h2>
-  <div class="carousel__panel bg-glass2" bind:this={panelEl}>
-    <div class="carousel__panel-inner" bind:this={panelInnerEl}>
+<h2 class="carousel__heading">Explore our telescope</h2>
+<div class="carousel__panel bg-glass2" bind:this={panelEl}>
+  <div class="carousel__panel-inner" bind:this={panelInnerEl}>
     {#if paused}
       <div class="carousel__explore-controls">
-        <h3 class="carousel__explore-title">{carouselData[activeSlideIndex].title}</h3>
+        <h3 class="carousel__explore-title">Explore our Telescope</h3>
 
         <div class="carousel__explore-hints">
           <span class="carousel__explore-hint">
             <!-- Drag/orbit icon -->
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" opacity="0.3"/>
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" opacity="0.3" />
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
             </svg>
             Drag to orbit
           </span>
           <span class="carousel__explore-hint">
             <!-- Scroll/zoom icon -->
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="2" width="6" height="12" rx="3"/>
-              <path d="M12 6v3"/>
-              <path d="M8 18l4 4 4-4"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="2" width="6" height="12" rx="3" />
+              <path d="M12 6v3" />
+              <path d="M8 18l4 4 4-4" />
             </svg>
             Scroll to zoom
           </span>
         </div>
 
         <div class="carousel__explore-nav">
-          <button
-            class="carousel__exit-btn"
-            onclick={() => onExitOrbit?.()}
-          >
+          <button class="carousel__exit-btn" onclick={() => onExitOrbit?.()}>
             <!-- Arrow-return icon -->
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 14L4 9l5-5"/>
-              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H16"/>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9 14L4 9l5-5" />
+              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H16" />
             </svg>
             Back to tour
           </button>
@@ -187,7 +211,9 @@
       </div>
     {:else}
       <div class="carousel__body">
-        <h3 class="carousel__title" bind:this={titleEl}>{activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}</h3>
+        <h3 class="carousel__title" bind:this={titleEl}>
+          {activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}
+        </h3>
         <p bind:this={descriptionEl}>{carouselData[activeSlideIndex].description}</p>
       </div>
 
@@ -217,8 +243,8 @@
         </button>
       </div>
     {/if}
-    </div>
   </div>
+</div>
 
 <style>
   .carousel__heading {
@@ -234,7 +260,7 @@
 
     position: fixed;
     top: var(--header-height);
-    left: calc((100lvw - var(--content-width)) / 2 + 1rem);                                                                                                                          
+    left: calc((100lvw - var(--content-width)) / 2 + 1rem);
 
     z-index: 14;
 
@@ -258,14 +284,19 @@
   }
 
   .carousel__explore-title {
-    font-size: 1rem;
+    /* font-size: var(--size-step-1);
     font-weight: 500;
     margin: 0;
     line-height: 1.2;
-    color: rgba(255, 255, 255, 0.95);
+    color: rgba(255, 255, 255, 0.95); */
+
+   font-size: 1.125rem;
+    text-wrap: balance;
+    margin-block-start: 0lh;
+    margin-block-end: 0.25lh;
 
     @media (min-width: 56rem) {
-      font-size: 1.125rem;
+      font-size: 1.325rem;
     }
   }
 
@@ -278,7 +309,7 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.6875rem;
+    font-size: var(--size-step--1);
     color: rgba(255, 255, 255, 0.65);
     letter-spacing: 0.02em;
   }
@@ -306,7 +337,7 @@
     border-radius: var(--radius-xl);
     background: rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.9);
-    font-size: 0.6875rem;
+    font-size: var(--size-step--1);
     font-weight: 500;
     cursor: pointer;
     transition:
@@ -324,7 +355,7 @@
   .carousel__panel {
     position: fixed;
     bottom: 3lvh;
-    left: calc((100lvw - var(--content-width)) / 2 + 1rem);                                                                                                                          
+    left: calc((100lvw - var(--content-width)) / 2 + 1rem);
     z-index: 14;
 
     overflow: hidden;
