@@ -187,6 +187,27 @@
             </svg>
             Scroll to zoom
           </span>
+          <span class="carousel__explore-hint">
+            <!-- Pan/move icon -->
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 9l-3 3 3 3" />
+              <path d="M9 5l3-3 3 3" />
+              <path d="M15 19l-3 3-3-3" />
+              <path d="M19 9l3 3-3 3" />
+              <path d="M2 12h20" />
+              <path d="M12 2v20" />
+            </svg>
+            Shift + drag to pan
+          </span>
         </div>
 
         <div class="carousel__explore-nav">

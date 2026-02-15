@@ -31,6 +31,9 @@
   // Orbit controls state — managed internally
   let orbitMode = $state(false);
 
+  // Space key held (for pan cursor feedback)
+  let spaceHeldForPan = $state(false);
+
   // Allow explore interactions only when carousel is visible and not already in orbit mode
   let allowExplore = $derived(activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
 
@@ -412,10 +415,13 @@
     }
   });
 
-  // Sync orbit controls toggle to carousel scene
+  // Sync orbit controls toggle to carousel scene and wire up pan callback
   $effect(() => {
     if (carouselScene) {
       carouselScene.enableOrbitControls = orbitMode;
+      carouselScene.onSpaceHeldChange = (held: boolean) => {
+        spaceHeldForPan = held;
+      };
     }
   });
 
@@ -424,6 +430,16 @@
     if (activeScene !== "carousel") {
       orbitMode = false;
       cursorOver = false;
+      spaceHeldForPan = false;
+      carouselScene?.resetPan();
+    }
+  });
+
+  // Reset pan when exiting orbit mode
+  $effect(() => {
+    if (!orbitMode && carouselScene) {
+      carouselScene.resetPan();
+      spaceHeldForPan = false;
     }
   });
 
@@ -451,6 +467,7 @@
   class:carousel-active={activeScene === "carousel"}
   class:allow-explore={allowExplore}
   class:orbit-mode={orbitMode}
+  class:pan-mode={orbitMode && spaceHeldForPan}
   style="opacity: {canvasOpacity};"
   onclick={() => {
     if (allowExplore) {
@@ -512,6 +529,14 @@
 
   .simulation-viewer.orbit-mode:active {
     cursor: grabbing;
+  }
+
+  .simulation-viewer.pan-mode {
+    cursor: grab !important;
+  }
+
+  .simulation-viewer.pan-mode:active {
+    cursor: grabbing !important;
   }
 
   /* Explore cursor */

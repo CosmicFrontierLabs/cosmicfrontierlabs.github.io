@@ -5,7 +5,7 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
-import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
+import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import { cloneMaterialsPerMesh, brightenDarkMaterials } from "./materialUtils";
 import { carouselData } from "./carouselData";
 import gsap from "gsap";
@@ -51,6 +51,33 @@ export class CarouselScene {
   /** Tracks the current lookAt target for smooth camera transitions */
   private currentLookAtTarget = new THREE.Vector3(0, 0, 0);
 
+  // --- Pan state ---
+  /** Whether the space key is currently held down */
+  private spaceHeld = false;
+  /** Whether a pan drag is in progress */
+  private isPanning = false;
+  /** Mouse position at pan drag start (screen pixels) */
+  private panStartMouse = new THREE.Vector2();
+  /** Orbit target at pan drag start */
+  private panStartTarget = new THREE.Vector3();
+  /** Camera position at pan drag start */
+  private panStartCameraPos = new THREE.Vector3();
+  /** Accumulated pan offset from the base orbit target */
+  private panOffset = new THREE.Vector3();
+  /** Callback fired when space-held state changes (for cursor feedback) */
+  onSpaceHeldChange: ((held: boolean) => void) | null = null;
+  /** Whether the mouse is currently over the canvas */
+  private mouseOverCanvas = false;
+
+  // Bound event handlers for cleanup
+  private boundOnKeyDown: (e: KeyboardEvent) => void;
+  private boundOnKeyUp: (e: KeyboardEvent) => void;
+  private boundOnPointerDown: (e: PointerEvent) => void;
+  private boundOnPointerMove: (e: PointerEvent) => void;
+  private boundOnPointerUp: (e: PointerEvent) => void;
+  private boundOnMouseEnter: () => void;
+  private boundOnMouseLeave: () => void;
+
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
     RectAreaLightUniformsLib.init();
     this.renderer = renderer;
@@ -89,6 +116,27 @@ export class CarouselScene {
     this.orbitControls.dampingFactor = 0.1;
     this.orbitControls.enablePan = false;
     this.orbitControls.target.copy(this.currentLookAtTarget);
+
+    // --- Pan event listeners ---
+    this.boundOnKeyDown = this.onKeyDown.bind(this);
+    this.boundOnKeyUp = this.onKeyUp.bind(this);
+    this.boundOnPointerDown = this.onPanPointerDown.bind(this);
+    this.boundOnPointerMove = this.onPanPointerMove.bind(this);
+    this.boundOnPointerUp = this.onPanPointerUp.bind(this);
+    this.boundOnMouseEnter = () => {
+      this.mouseOverCanvas = true;
+    };
+    this.boundOnMouseLeave = () => {
+      this.mouseOverCanvas = false;
+    };
+
+    window.addEventListener("keydown", this.boundOnKeyDown);
+    window.addEventListener("keyup", this.boundOnKeyUp);
+    renderer.domElement.addEventListener("pointerdown", this.boundOnPointerDown);
+    window.addEventListener("pointermove", this.boundOnPointerMove);
+    window.addEventListener("pointerup", this.boundOnPointerUp);
+    renderer.domElement.addEventListener("mouseenter", this.boundOnMouseEnter);
+    renderer.domElement.addEventListener("mouseleave", this.boundOnMouseLeave);
 
     // Load HDR environment background (async, non-blocking)
     new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
@@ -245,11 +293,113 @@ export class CarouselScene {
     return reflector;
   }
 
+  // --- Pan input handlers ---
+
+  private onKeyDown(e: KeyboardEvent): void {
+    if (e.key !== "Shift" || e.repeat) return;
+    if (!this.enableOrbitControls) return;
+    this.spaceHeld = true;
+    // Disable OrbitControls entirely while space is held so it doesn't
+    // capture pointer events or interfere with our pan drag
+    this.orbitControls.enabled = false;
+    this.onSpaceHeldChange?.(true);
+  }
+
+  private onKeyUp(e: KeyboardEvent): void {
+    if (e.key !== "Shift") return;
+    this.spaceHeld = false;
+    this.isPanning = false;
+    // Re-enable OrbitControls (update() will also sync enabled state each frame)
+    if (this.enableOrbitControls) {
+      this.orbitControls.enabled = true;
+    }
+    this.onSpaceHeldChange?.(false);
+  }
+
+  private onPanPointerDown(e: PointerEvent): void {
+    if (!this.spaceHeld || !this.enableOrbitControls) return;
+    if (e.button !== 0) return; // left click only
+    this.isPanning = true;
+    this.panStartMouse.set(e.clientX, e.clientY);
+    this.panStartTarget.copy(this.orbitControls.target);
+    this.panStartCameraPos.copy(this.camera.position);
+    // Capture pointer so we get move/up even if cursor leaves the canvas
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  private onPanPointerMove(e: PointerEvent): void {
+    if (!this.isPanning) return;
+
+    const dx = e.clientX - this.panStartMouse.x;
+    const dy = e.clientY - this.panStartMouse.y;
+
+    // Convert pixel delta to world-space pan delta.
+    // Use camera's view to get right/up vectors for screen-aligned panning.
+    // Scale factor: map pixels to world units based on camera FOV and distance.
+    const distance = this.camera.position.distanceTo(this.orbitControls.target);
+    const fovRad = THREE.MathUtils.degToRad(this.camera.fov);
+    const heightInWorld = 2 * distance * Math.tan(fovRad / 2);
+    const canvasHeight = this.renderer.domElement.clientHeight;
+    const pixelToWorld = heightInWorld / canvasHeight;
+
+    // Camera right and up vectors in world space
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    this.camera.getWorldDirection(new THREE.Vector3()); // ensure matrix is current
+    right.setFromMatrixColumn(this.camera.matrixWorld, 0); // camera X axis
+    up.setFromMatrixColumn(this.camera.matrixWorld, 1); // camera Y axis
+
+    // Pan offset in world space (negate dx so dragging right moves view right)
+    const panDelta = new THREE.Vector3();
+    panDelta.addScaledVector(right, -dx * pixelToWorld);
+    panDelta.addScaledVector(up, dy * pixelToWorld);
+
+    // New target and camera positions
+    const newTarget = this.panStartTarget.clone().add(panDelta);
+    const newCameraPos = this.panStartCameraPos.clone().add(panDelta);
+
+    // Track pan offset for reset
+    const baseTarget = new THREE.Vector3();
+    baseTarget.copy(this.currentLookAtTarget).sub(this.panOffset);
+    this.panOffset.copy(newTarget).sub(baseTarget);
+
+    this.orbitControls.target.copy(newTarget);
+    this.camera.position.copy(newCameraPos);
+  }
+
+  private onPanPointerUp(e: PointerEvent): void {
+    if (!this.isPanning) return;
+    this.isPanning = false;
+    // Release pointer capture
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore if capture was already released
+    }
+  }
+
+  /** Reset pan offset (called when leaving explore mode or switching slides) */
+  resetPan(): void {
+    this.panOffset.set(0, 0, 0);
+    this.spaceHeld = false;
+    this.isPanning = false;
+    // Re-enable OrbitControls in case space was held when reset was called
+    if (this.enableOrbitControls) {
+      this.orbitControls.enabled = true;
+    }
+    this.onSpaceHeldChange?.(false);
+  }
+
   /**
    * Update the carousel scene (call once per frame when active).
    */
   update(deltaTimeSeconds: number): void {
-    this.orbitControls.enabled = this.enableOrbitControls;
+    // Don't re-enable OrbitControls while space is held (pan mode takes over)
+    if (!this.spaceHeld) {
+      this.orbitControls.enabled = this.enableOrbitControls;
+    }
     this.orbitControls.update();
   }
 
@@ -276,6 +426,9 @@ export class CarouselScene {
       this.activeCameraTween.kill();
       this.activeCameraTween = null;
     }
+
+    // Reset pan offset when animating to a new position (slide change)
+    this.resetPan();
 
     const easeType = "power2.inOut";
     const startPosition = this.camera.position.clone();
@@ -335,6 +488,16 @@ export class CarouselScene {
       this.activeCameraTween.kill();
       this.activeCameraTween = null;
     }
+
+    // Remove pan event listeners
+    window.removeEventListener("keydown", this.boundOnKeyDown);
+    window.removeEventListener("keyup", this.boundOnKeyUp);
+    this.renderer.domElement.removeEventListener("pointerdown", this.boundOnPointerDown);
+    window.removeEventListener("pointermove", this.boundOnPointerMove);
+    window.removeEventListener("pointerup", this.boundOnPointerUp);
+    this.renderer.domElement.removeEventListener("mouseenter", this.boundOnMouseEnter);
+    this.renderer.domElement.removeEventListener("mouseleave", this.boundOnMouseLeave);
+    this.onSpaceHeldChange = null;
 
     this.orbitControls.dispose();
     if (this.hdrTexture) {
