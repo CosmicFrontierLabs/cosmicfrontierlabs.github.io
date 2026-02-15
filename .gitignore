@@ -25,3 +25,7 @@ pnpm-debug.log*
 
 *.blend
 .netlify
+
+# Unoptimized original assets (keep locally for re-processing)
+public/textures/original/
+public/models/original/

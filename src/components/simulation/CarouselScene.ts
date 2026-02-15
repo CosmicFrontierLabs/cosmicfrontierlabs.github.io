@@ -5,7 +5,7 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { cloneMaterialsPerMesh, brightenDarkMaterials } from "./materialUtils";
 import { carouselData } from "./carouselData";
 import gsap from "gsap";
@@ -43,6 +43,7 @@ export class CarouselScene {
   private renderer: THREE.WebGLRenderer;
   private mirrorReflector: Reflector | null = null;
   private hdrTexture: THREE.Texture | null = null;
+  private disposed = false;
   private orbitControls: OrbitControls;
   private dracoLoader: DRACOLoader;
   private activeCameraTween: gsap.core.Tween | null = null;
@@ -55,7 +56,7 @@ export class CarouselScene {
     this.renderer = renderer;
 
     this.scene = new THREE.Scene();
-    this.scene.background = null;
+    this.scene.background = new THREE.Color(0x0a1428);
 
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     const initialCamera = carouselData[0].camera;
@@ -89,14 +90,25 @@ export class CarouselScene {
     this.orbitControls.enablePan = false;
     this.orbitControls.target.copy(this.currentLookAtTarget);
 
-    // Load HDR environment background
-    new RGBELoader().load("/textures/HDR_multi_nebulae_1.hdr", (texture) => {
+    // Load HDR environment background (async, non-blocking)
+    new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
+      // Scene was disposed while loading — clean up and bail
+      if (this.disposed) {
+        texture.dispose();
+        return;
+      }
       texture.mapping = THREE.EquirectangularReflectionMapping;
+      this.hdrTexture = texture;
+      // Fade in: start dim and animate backgroundIntensity to target
       this.scene.background = texture;
-      this.scene.backgroundIntensity = 5;
+      this.scene.backgroundIntensity = 0;
       // this.scene.environment = texture;
       // this.scene.environmentIntensity = 0.5;
-      this.hdrTexture = texture;
+      gsap.to(this.scene, {
+        backgroundIntensity: 2,
+        duration: 1.5,
+        ease: "power2.inOut",
+      });
     });
 
     // Loaders
@@ -316,6 +328,8 @@ export class CarouselScene {
   }
 
   dispose(): void {
+    this.disposed = true;
+
     // Kill any in-flight camera tween
     if (this.activeCameraTween) {
       this.activeCameraTween.kill();

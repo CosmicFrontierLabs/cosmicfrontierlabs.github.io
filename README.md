@@ -83,6 +83,29 @@ The optimized models use **meshopt** compression (via `EXT_meshopt_compression`)
 
 Unoptimized originals are backed up in `public/models/original/` (git-ignored). Keep these around in case you need to re-optimize with different settings.
 
+## HDR Environment Texture Optimization
+
+Downloaded from https://www.spacespheremaps.com/hdr-spheremaps/
+
+The HDR environment background (`public/textures/HDR_multi_nebulae_1_4k.hdr`) is downscaled from the original 10000×5000 (89 MB) to 4096×2048 (25 MB) — a **72% reduction**.
+
+### How to re-optimize the HDR texture
+
+The original is backed up in `public/textures/original/` (git-ignored). To regenerate:
+
+```bash
+# Downscale to 4096×2048 using ImageMagick
+magick public/textures/original/HDR_multi_nebulae_1.hdr \
+  -resize 4096x2048 \
+  public/textures/HDR_multi_nebulae_1_4k.hdr
+```
+
+**Tuning tips:**
+
+- Use `2048x1024` for a smaller file (~6.5 MB) if bandwidth is a concern.
+- `4096x2048` is a good balance between quality and file size.
+- The original 10K×5K file is only needed for re-processing; keep it in `public/textures/original/` but don't commit it.
+
 ## Project structure
 
 - `src/components/` - Svelte components and Three.js simulation code
