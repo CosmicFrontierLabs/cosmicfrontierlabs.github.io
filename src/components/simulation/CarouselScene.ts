@@ -93,7 +93,9 @@ export class CarouselScene {
     new RGBELoader().load("/textures/HDR_multi_nebulae_1.hdr", (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       this.scene.background = texture;
-      this.scene.environment = texture;
+      this.scene.backgroundIntensity = 5;
+      // this.scene.environment = texture;
+      // this.scene.environmentIntensity = 0.5;
       this.hdrTexture = texture;
     });
 
