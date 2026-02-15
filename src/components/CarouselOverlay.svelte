@@ -206,7 +206,7 @@
               <path d="M2 12h20" />
               <path d="M12 2v20" />
             </svg>
-            Shift + drag to pan
+            Shift+drag to pan
           </span>
         </div>
 
@@ -325,6 +325,7 @@
 
   .carousel__explore-hints {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
   }
 

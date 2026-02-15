@@ -7,6 +7,10 @@ Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and 
 
 TODO:
 
+- Figure out explore mode on mobile. Probably just dont allow
+- Pi TODO: add loader for hero
+- Pi TODO: Preload the HDR and make sure it's not more optimizable
+- Change the bg color while HDR is loading. It's bad blue right now. Make it body-bg
 - Check A11y
 - Check lighthouse
 - Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
