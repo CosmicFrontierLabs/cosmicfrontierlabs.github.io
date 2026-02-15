@@ -4,3 +4,4 @@ public/models/20260102_Payload_assy_no_baffle.glb filter=lfs diff=lfs merge=lfs 
 public/models/batmobile.glb filter=lfs diff=lfs merge=lfs -text
 public/models/tree.glb filter=lfs diff=lfs merge=lfs -text
 public/models/20260102_Full_Assy.glb filter=lfs diff=lfs merge=lfs -text
+public/textures/HDR_multi_nebulae_1.hdr filter=lfs diff=lfs merge=lfs -text
