@@ -256,7 +256,9 @@
     font-weight: 500;
     line-height: 1;
     text-wrap: balance;
+    padding: 0;
     margin-block-start: 0.125em;
+    margin-inline: 0;
 
     position: fixed;
     top: var(--header-height);
