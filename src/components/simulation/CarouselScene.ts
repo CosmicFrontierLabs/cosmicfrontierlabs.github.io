@@ -5,7 +5,7 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
-import { ReactiveStarfield } from "./ReactiveStarfield";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { cloneMaterialsPerMesh, brightenDarkMaterials } from "./materialUtils";
 import { carouselData } from "./carouselData";
 import gsap from "gsap";
@@ -42,7 +42,7 @@ export class CarouselScene {
   private rimLight: THREE.PointLight;
   private renderer: THREE.WebGLRenderer;
   private mirrorReflector: Reflector | null = null;
-  private reactiveStarfield: ReactiveStarfield;
+  private hdrTexture: THREE.Texture | null = null;
   private orbitControls: OrbitControls;
   private dracoLoader: DRACOLoader;
   private activeCameraTween: gsap.core.Tween | null = null;
@@ -89,12 +89,12 @@ export class CarouselScene {
     this.orbitControls.enablePan = false;
     this.orbitControls.target.copy(this.currentLookAtTarget);
 
-    // Reactive starfield
-    this.reactiveStarfield = new ReactiveStarfield(this.scene, width, height, renderer, {
-      radius: 15,
-      opacityBase: 0.4,
-      opacityHover: 1.0,
-      brightness: 2.5,
+    // Load HDR environment background
+    new RGBELoader().load("/textures/HDR_multi_nebulae_1.hdr", (texture) => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      this.scene.background = texture;
+      this.scene.environment = texture;
+      this.hdrTexture = texture;
     });
 
     // Loaders
@@ -242,8 +242,6 @@ export class CarouselScene {
   resize(width: number, height: number): void {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.reactiveStarfield.setResolution(width, height);
-
     // Update reflector render target to match new size (clamped)
     if (this.mirrorReflector) {
       const size = new THREE.Vector2();
@@ -323,7 +321,9 @@ export class CarouselScene {
     }
 
     this.orbitControls.dispose();
-    this.reactiveStarfield.dispose();
+    if (this.hdrTexture) {
+      this.hdrTexture.dispose();
+    }
     this.dracoLoader.dispose();
 
     if (this.mirrorReflector) {
