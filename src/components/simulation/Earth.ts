@@ -8,6 +8,7 @@ import { earthVertexShader, earthFragmentShader } from "./shaders/earthShaders";
  */
 export class Earth {
   mesh: THREE.Mesh | null = null;
+  loaded: Promise<void>;
   private geometry: THREE.SphereGeometry;
   private material: THREE.ShaderMaterial | null = null;
   private texture: THREE.Texture | null = null;
@@ -22,6 +23,7 @@ export class Earth {
 
     // Load texture asynchronously
     const textureLoader = new THREE.TextureLoader();
+    this.loaded = new Promise<void>((resolve, reject) => {
     textureLoader.load(
       config.textureUrl,
       (texture) => {
@@ -54,12 +56,15 @@ export class Earth {
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.mesh.position.copy(config.position);
         this.scene.add(this.mesh);
+        resolve();
       },
       undefined,
       (error) => {
         console.error("Error loading earth texture:", error);
+        reject(error);
       }
     );
+    });
   }
 
   /**

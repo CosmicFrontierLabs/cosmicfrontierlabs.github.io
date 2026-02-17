@@ -17,6 +17,7 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 export class EarthScene {
   scene: THREE.Scene;
   camera: THREE.OrthographicCamera;
+  loaded: Promise<void>;
 
   private renderer: THREE.WebGLRenderer;
   private earth: Earth;
@@ -63,6 +64,7 @@ export class EarthScene {
 
     // Earth
     this.earth = new Earth(this.scene, renderer);
+    this.loaded = this.earth.loaded;
 
     // Telescopes
     const originGridPoints: THREE.Vector3[] = grid3d(

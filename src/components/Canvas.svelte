@@ -120,9 +120,6 @@
   let earthScene = $state<EarthScene | null>(null);
   let carouselScene = $state<CarouselScene | null>(null);
 
-  // Frame tracking for initialization opacity — stops incrementing once ready
-  const minFramesForReady = 100;
-  let framesRendered = 0;
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
 
@@ -244,14 +241,6 @@
         }
       }
 
-      // Stop incrementing once ready to avoid reactive churn
-      if (!isEarthReady) {
-        framesRendered++;
-        if (framesRendered > minFramesForReady) {
-          isEarthReady = true;
-        }
-      }
-
       if (perf) perf.end();
     }
 
@@ -264,6 +253,8 @@
   }
 
   onMount(() => {
+    let t0 = performance.now();
+    console.log("Canvas onMount start time:", t0);
     // Detect touch-only devices (no fine pointer = no mouse)
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
 
@@ -297,16 +288,27 @@
         });
       }
 
+      console.log("EarthScene init time:", performance.now() - t0);
       earthScene = new EarthScene(width, height, renderer);
+      console.log("CarouselScene init time:", performance.now() - t0);
+
+      earthScene.loaded.then(() => {
+        isEarthReady = true;
+        console.log("EarthScene ready time:", performance.now() - t0);
+      });
 
       // TODO: load this asynchronously so we don't slow down the view?  // Or is it fast enough?
       carouselScene = new CarouselScene(width, height, renderer);
+      console.log("CarouselScene loaded time:", performance.now() - t0);
       carouselScene.onSpaceHeldChange = (held: boolean) => {
         spaceHeldForPan = held;
       };
       carouselScene.loaded.then(() => {
         isCarouselReady = true;
+        console.log("CarouselScene ready time:", performance.now() - t0);
       });
+
+      console.log("After carouselScene.loaded.then:", performance.now() - t0);
 
       resizeObserver = setupResizeObserver();
       cleanupAnimation = startAnimationLoop();

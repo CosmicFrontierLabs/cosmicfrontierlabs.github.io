@@ -6,13 +6,15 @@ Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and 
 
 TODO:
 
-- Pi TODO: add loader for hero
-- Pi TODO: Preload the HDR and make sure it's not more optimizable
-- Change the bg color while HDR is loading. It's bad blue right now. Make it body-bg
+- Improve the loading experience, especially in Canvas and probably onMount in there: What's slow, What can be deferred
+  - Maybe start by adding logging to onMount in canvas
+  - Need to do this BEFORE sending to aaron because it looks slow
+- What happens if graphics acceleration is disabled?
+- What happens if the internet is super slow? What's our fallback?
 - Check A11y
 - Check lighthouse
-- Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
-- DETECT IF graphics acceleration is disabled and handle it. (or whatever is needed to handle miguel's case.)
+- Optional:
+  - Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
 
 ## It's mesh_0_55
 
