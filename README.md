@@ -6,6 +6,8 @@ Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and 
 
 TODO:
 
+- Fix npm run checks
+
 - Figure out explore mode on mobile. Probably just dont allow
 - Pi TODO: add loader for hero
 - Pi TODO: Preload the HDR and make sure it's not more optimizable
