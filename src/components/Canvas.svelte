@@ -123,7 +123,6 @@
       return () => {};
     }
 
-    const loopRenderer = renderer;
     const clock = new THREE.Clock();
 
     let rafId: number;
@@ -144,12 +143,16 @@
       } else if (activeScene === "carousel" && carouselScene) {
         carouselScene.update(delta);
 
-        if (perf) perf.begin();
+        if (perf) {
+          perf.begin();
+        }
 
-        loopRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-        loopRenderer.toneMappingExposure = 1.0;
-        loopRenderer.render(carouselScene.scene, carouselScene.camera);
-        loopRenderer.toneMapping = THREE.NoToneMapping;
+        if (renderer) {
+          renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          renderer.toneMappingExposure = 1.0;
+          renderer.render(carouselScene.scene, carouselScene.camera);
+          renderer.toneMapping = THREE.NoToneMapping;
+        }
       }
 
       // Stop incrementing once ready to avoid reactive churn
@@ -167,7 +170,7 @@
 
     return () => {
       cancelAnimationFrame(rafId);
-      loopRenderer.dispose();
+      renderer?.dispose();
     };
   }
 
@@ -191,12 +194,14 @@
     try {
       const width = container.offsetWidth || container.clientWidth;
       const height = container.offsetHeight || container.clientHeight;
-
       renderer = createRenderer(container);
       renderer.setClearColor(0x000000, 0);
-
-      // Listen for WebGL context loss (#20)
       renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+
+
+      // Initialize cursorX and cursorY to the center of the container
+      cursorX = container.clientWidth / 2;
+      cursorY = container.clientHeight / 2;
 
       if (simulationConfig.perf.enabled) {
         perf = new ThreePerf({
@@ -207,10 +212,13 @@
         });
       }
 
-      // Create the earth scene
       earthScene = new EarthScene(width, height, renderer);
 
-      // Carousel scene is created lazily when first needed (see $effect below)
+      // TODO: load this asynchronously so we don't slow down the view?  // Or is it fast enough?
+      carouselScene = new CarouselScene(width, height, renderer);
+      carouselScene.loaded.then(() => {
+        isCarouselReady = true;
+      });
 
       resizeObserver = setupResizeObserver();
       cleanupAnimation = startAnimationLoop();
@@ -279,20 +287,6 @@
       perf?.dispose();
       cleanupAnimation?.();
     };
-  });
-
-  // Lazily initialize the carousel scene when the user first scrolls to it
-  $effect(() => {
-    if (activeScene === "carousel" && !carouselScene && renderer && container) {
-      const width = container.offsetWidth || container.clientWidth;
-      const height = container.offsetHeight || container.clientHeight;
-      isCarouselReady = false;
-      const newScene = new CarouselScene(width, height, renderer);
-      carouselScene = newScene;
-      newScene.loaded.then(() => {
-        isCarouselReady = true;
-      });
-    }
   });
 
   // Sync orbit controls toggle to carousel scene and wire up pan callback
