@@ -52,7 +52,7 @@
   // Frame tracking for initialization opacity — stops incrementing once ready
   const minFramesForReady = 100;
   let framesRendered = 0;
-  let isReady = $state(false);
+  let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
 
   // Error boundary state
@@ -153,10 +153,10 @@
       }
 
       // Stop incrementing once ready to avoid reactive churn
-      if (!isReady) {
+      if (!isEarthReady) {
         framesRendered++;
         if (framesRendered > minFramesForReady) {
-          isReady = true;
+          isEarthReady = true;
         }
       }
 
@@ -346,7 +346,7 @@
 <div
   bind:this={container}
   class="simulation-viewer"
-  class:ready={isReady}
+  class:ready={isEarthReady}
   class:carousel-active={activeScene === "carousel"}
   class:allow-explore={allowExplore}
   class:orbit-mode={orbitMode}
