@@ -23,15 +23,15 @@ export interface MetallicEnhanceParams {
 }
 
 export const defaultMetallicParams: MetallicEnhanceParams = {
-  minLuminance: 0.06,
-  maxBoostFactor: 4.0,
-  minMetalness: 0.7,
-  dielectricMetalness: 0.15,
-  maxRoughness: 0.35,
-  brushedMetalRoughness: 0.45,
+  minLuminance: 0.08,
+  maxBoostFactor: 3.0,
+  minMetalness: 0.75,
+  dielectricMetalness: 0.2,
+  maxRoughness: 0.45,
+  brushedMetalRoughness: 0.55,
   metallicThreshold: 0.4,
-  emissiveBoost: 0.04,
-  envMapIntensity: 0.6,
+  emissiveBoost: 0.025,
+  envMapIntensity: 0.5,
 };
 
 /** Snapshot of a material's original properties before enhancement. */
@@ -138,9 +138,9 @@ export function enhanceMetallicMaterials(
         mat.color.b = Math.max(mat.color.b, p.minLuminance * 0.5);
       }
 
-      // --- Tint very bright metals to a cool steel tone ---
+      // --- Tint very bright metals to a warm brushed aluminum tone ---
       if (isOriginallyMetallic && lum > 0.8) {
-        mat.color.setRGB(0.7, 0.72, 0.78);
+        mat.color.setRGB(0.78, 0.76, 0.72);
       }
 
       // --- Enhance metalness ---
@@ -148,16 +148,23 @@ export function enhanceMetallicMaterials(
         // Originally metallic: ensure high metalness for strong reflections
         mat.metalness = Math.max(mat.metalness, p.minMetalness);
 
-        // Tighten roughness for polished/brushed metal appearance
-        if (mat.roughness > p.brushedMetalRoughness) {
-          // Very rough metals become brushed-metal; others get polished
-          mat.roughness = mat.roughness > 0.8 ? p.brushedMetalRoughness : p.maxRoughness;
+        // Brushed aluminum look: most surfaces get a satin/brushed finish
+        // Only very smooth surfaces (roughness < 0.2) stay somewhat polished
+        if (mat.roughness < 0.2) {
+          // Polished/machined surfaces — still slightly rough like real machined metal
+          mat.roughness = Math.max(mat.roughness, p.maxRoughness * 0.7);
+        } else if (mat.roughness > 0.8) {
+          // Very rough metals become brushed-metal satin
+          mat.roughness = p.brushedMetalRoughness;
+        } else {
+          // Mid-range: blend toward brushed aluminum
+          mat.roughness = THREE.MathUtils.lerp(p.maxRoughness, p.brushedMetalRoughness, (mat.roughness - 0.2) / 0.6);
         }
       } else {
         // Originally dielectric: give a subtle metallic sheen
         mat.metalness = Math.max(mat.metalness, p.dielectricMetalness);
-        // Slightly reduce roughness for sharper reflections
-        mat.roughness = Math.min(mat.roughness, 0.7);
+        // Keep moderate roughness for non-metallic parts
+        mat.roughness = Math.min(mat.roughness, 0.65);
       }
 
       // --- Textured metallic surfaces: preserve texture, boost metalness ---
@@ -170,7 +177,7 @@ export function enhanceMetallicMaterials(
       if (lum < p.minLuminance && isOriginallyMetallic) {
         const eLum = luminance(mat.emissive);
         if (eLum < 0.02) {
-          mat.emissive.setRGB(p.emissiveBoost, p.emissiveBoost, p.emissiveBoost * 1.1);
+          mat.emissive.setRGB(p.emissiveBoost, p.emissiveBoost * 0.95, p.emissiveBoost * 0.9);
         }
       }
 

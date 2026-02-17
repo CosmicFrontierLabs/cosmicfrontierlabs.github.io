@@ -114,14 +114,14 @@ export class CarouselScene {
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     this.scene.add(this.ambientLight);
 
-    // Key light - soft RectAreaLight for fill
-    this.keyLight = new THREE.RectAreaLight(0xfff5e6, 2.0, 4, 4);
-    this.keyLight.position.set(3, 3, 5);
+    // Key light - warm neutral RectAreaLight for soft fill (simulates workshop overhead)
+    this.keyLight = new THREE.RectAreaLight(0xfff0e0, 2.5, 5, 5);
+    this.keyLight.position.set(3, 4, 5);
     this.keyLight.lookAt(0, 0, 0);
     this.scene.add(this.keyLight);
 
-    // Rim light
-    this.rimLight = new THREE.PointLight(0xff6b35, 15.0, 20, 2);
+    // Rim light - subtle warm edge highlight
+    this.rimLight = new THREE.PointLight(0xffaa70, 10.0, 20, 2);
     this.rimLight.position.set(-3, 2, -2);
     this.scene.add(this.rimLight);
 
@@ -330,7 +330,7 @@ export class CarouselScene {
       clipBias: 0.003,
       textureWidth: w,
       textureHeight: h,
-      color: 0xb5b5b5,
+      color: 0xc0bbb5,
     });
 
     // Position the reflector plane at the geometry center, just above the surface
