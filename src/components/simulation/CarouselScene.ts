@@ -202,26 +202,26 @@ export class CarouselScene {
 
     // Load HDR environment background (async, non-blocking)
     const hdrLoaded = new Promise<void>((resolveHdr) => {
-    new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
-      // Scene was disposed while loading — clean up and bail
-      if (this.disposed) {
-        texture.dispose();
-        return;
-      }
-      texture.mapping = THREE.EquirectangularReflectionMapping;
-      this.hdrTexture = texture;
-      // Fade in: start dim and animate backgroundIntensity to target
-      this.scene.background = texture;
-      this.scene.backgroundIntensity = 0;
-      this.scene.environment = texture;
-      this.scene.environmentIntensity = this.metallicParams.envMapIntensity;
-      gsap.to(this.scene, {
-        backgroundIntensity: 5,
-        duration: 1.5,
-        ease: "power2.inOut",
+      new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
+        // Scene was disposed while loading — clean up and bail
+        if (this.disposed) {
+          texture.dispose();
+          return;
+        }
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        this.hdrTexture = texture;
+        // Fade in: start dim and animate backgroundIntensity to target
+        this.scene.background = texture;
+        this.scene.backgroundIntensity = 0;
+        this.scene.environment = texture;
+        this.scene.environmentIntensity = this.metallicParams.envMapIntensity;
+        gsap.to(this.scene, {
+          backgroundIntensity: 5,
+          duration: 1.5,
+          ease: "power2.inOut",
+        });
+        resolveHdr();
       });
-      resolveHdr();
-    });
     });
 
     // Loaders

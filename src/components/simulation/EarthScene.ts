@@ -68,7 +68,7 @@ export class EarthScene {
     const originGridPoints: THREE.Vector3[] = grid3d(
       simulationConfig.earth.position,
       simulationConfig.earth.radius * simulationConfig.telescope.orbitalRadiusScalar,
-      1600,
+      1600
     );
     const origins = sampleArray(originGridPoints, simulationConfig.telescope.numTelescopes);
     const numMouseTrackingTelescopes = simulationConfig.telescope.numMouseTrackingTelescopes;
@@ -138,11 +138,7 @@ export class EarthScene {
     if (this.disposed) return;
 
     this.mouseTracker.update(this.camera);
-    this.mouseTracker.getIntersectionWithSphere(
-      this.sphereCenter,
-      this.sphereRadius,
-      this.mouseWorldPosition,
-    );
+    this.mouseTracker.getIntersectionWithSphere(this.sphereCenter, this.sphereRadius, this.mouseWorldPosition);
 
     const numTelescopes = this.telescopes.length;
     for (let i = 0; i < numTelescopes; i++) {
@@ -153,11 +149,7 @@ export class EarthScene {
 
     this.earth.update(delta);
     this.camera.updateMatrixWorld();
-    this.reactiveStarfield.updateFrustums(
-      this.telescopeOrigins,
-      this.telescopeTargets,
-      this.camera,
-    );
+    this.reactiveStarfield.updateFrustums(this.telescopeOrigins, this.telescopeTargets, this.camera);
   }
 
   /** Render the scene using the effect composer (with grain post-processing). */

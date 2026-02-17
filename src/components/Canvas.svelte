@@ -20,11 +20,22 @@
     heroScrollProgress = $bindable(0),
   }: Props = $props();
 
-  // Orbit controls state — managed internally
-  let orbitMode = $state(false);
-
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
+
+  // Orbit controls state — managed internally, with side-effect sync
+  let orbitMode = $state(false);
+
+  function setOrbitMode(newOrbitMode: boolean) {
+    orbitMode = newOrbitMode;
+    if (carouselScene) {
+      carouselScene.enableOrbitControls = newOrbitMode;
+    }
+    if (!newOrbitMode && carouselScene) {
+      carouselScene.resetPan();
+      spaceHeldForPan = false;
+    }
+  }
 
   // Detect touch-only devices — explore mode requires a mouse
   let isTouchDevice = $state(false);
@@ -39,6 +50,66 @@
   let cursorY = $state(0);
   let cursorOver = $state(false);
   let cursorVisible = $derived(allowExplore && cursorOver);
+
+  // Svelte use:action for mouse/keyboard interaction on the container
+  function containerInteraction(node: HTMLDivElement) {
+    function handleMouseMove(event: MouseEvent) {
+      if (earthScene) {
+        const rect = node.getBoundingClientRect();
+        const w = node.offsetWidth || node.clientWidth;
+        const h = node.offsetHeight || node.clientHeight;
+        const x = ((event.clientX - rect.left) / w) * 2 - 1;
+        const y = -((event.clientY - rect.top) / h) * 2 + 1;
+        earthScene.updateMouseNDC(x, y);
+      }
+      if (allowExplore) {
+        cursorX = event.clientX;
+        cursorY = event.clientY;
+        cursorOver = true;
+      }
+    }
+
+    function handleClick(event: MouseEvent) {
+      if (earthScene) {
+        const rect = node.getBoundingClientRect();
+        const w = node.offsetWidth || node.clientWidth;
+        const h = node.offsetHeight || node.clientHeight;
+        const x = ((event.clientX - rect.left) / w) * 2 - 1;
+        const y = -((event.clientY - rect.top) / h) * 2 + 1;
+        earthScene.updateMouseNDC(x, y);
+        earthScene.updateMouseTracker();
+      }
+      if (allowExplore) {
+        setOrbitMode(true);
+      }
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.key === "Enter" || e.key === " ") && allowExplore) {
+        e.preventDefault();
+        setOrbitMode(true);
+      }
+    }
+
+    function handleEnter() { cursorOver = true; }
+    function handleLeave() { cursorOver = false; }
+
+    node.addEventListener("mousemove", handleMouseMove);
+    node.addEventListener("click", handleClick);
+    node.addEventListener("keydown", handleKeyDown);
+    node.addEventListener("mouseenter", handleEnter);
+    node.addEventListener("mouseleave", handleLeave);
+
+    return {
+      destroy() {
+        node.removeEventListener("mousemove", handleMouseMove);
+        node.removeEventListener("click", handleClick);
+        node.removeEventListener("keydown", handleKeyDown);
+        node.removeEventListener("mouseenter", handleEnter);
+        node.removeEventListener("mouseleave", handleLeave);
+      },
+    };
+  }
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -126,12 +197,30 @@
     const clock = new THREE.Clock();
 
     let rafId: number;
+    let prevActiveScene: typeof activeScene = activeScene;
+    let prevHeroScrollProgress: number = heroScrollProgress;
 
     function animate() {
       rafId = requestAnimationFrame(animate);
 
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
+
+      // Reset state when leaving carousel
+      if (prevActiveScene === "carousel" && activeScene !== "carousel") {
+        setOrbitMode(false);
+        cursorOver = false;
+      }
+      prevActiveScene = activeScene;
+
+      // Sync hero scroll progress to earth scene when it changes
+      if (prevHeroScrollProgress !== heroScrollProgress && earthScene && container) {
+        earthScene.setHeroScrollProgress(heroScrollProgress);
+        const width = container.offsetWidth || container.clientWidth;
+        const height = container.offsetHeight || container.clientHeight;
+        earthScene.updateCamera(width, height);
+        prevHeroScrollProgress = heroScrollProgress;
+      }
 
       // Read activeScene from the reactive prop on each frame
       // (captured via the outer closure over the $props binding)
@@ -186,10 +275,6 @@
     }
 
     let cleanupAnimation: (() => void) | null = null;
-    let handleMouseMove: ((event: MouseEvent) => void) | null = null;
-    let handleMouseClick: ((event: MouseEvent) => void) | null = null;
-    let handleCursorEnter: (() => void) | null = null;
-    let handleCursorLeave: (() => void) | null = null;
 
     try {
       const width = container.offsetWidth || container.clientWidth;
@@ -216,6 +301,9 @@
 
       // TODO: load this asynchronously so we don't slow down the view?  // Or is it fast enough?
       carouselScene = new CarouselScene(width, height, renderer);
+      carouselScene.onSpaceHeldChange = (held: boolean) => {
+        spaceHeldForPan = held;
+      };
       carouselScene.loaded.then(() => {
         isCarouselReady = true;
       });
@@ -223,48 +311,7 @@
       resizeObserver = setupResizeObserver();
       cleanupAnimation = startAnimationLoop();
 
-      // Mouse tracking (also drives explore cursor position)
-      handleMouseMove = (event: MouseEvent) => {
-        if (container && earthScene) {
-          const rect = container.getBoundingClientRect();
-          const w = container.offsetWidth || container.clientWidth;
-          const h = container.offsetHeight || container.clientHeight;
-          const x = ((event.clientX - rect.left) / w) * 2 - 1;
-          const y = -((event.clientY - rect.top) / h) * 2 + 1;
-          earthScene.updateMouseNDC(x, y);
-        }
-
-        // Update explore cursor position when in carousel mode
-        if (allowExplore) {
-          cursorX = event.clientX;
-          cursorY = event.clientY;
-          cursorOver = true;
-        }
-      };
-      container.addEventListener("mousemove", handleMouseMove);
-
-      handleMouseClick = (event: MouseEvent) => {
-        if (container && earthScene) {
-          const rect = container.getBoundingClientRect();
-          const w = container.offsetWidth || container.clientWidth;
-          const h = container.offsetHeight || container.clientHeight;
-          const x = ((event.clientX - rect.left) / w) * 2 - 1;
-          const y = -((event.clientY - rect.top) / h) * 2 + 1;
-          earthScene.updateMouseNDC(x, y);
-          earthScene.updateMouseTracker();
-        }
-      };
-      container.addEventListener("click", handleMouseClick);
-
-      // Carousel cursor visibility tracking
-      handleCursorEnter = () => {
-        cursorOver = true;
-      };
-      handleCursorLeave = () => {
-        cursorOver = false;
-      };
-      container.addEventListener("mouseenter", handleCursorEnter);
-      container.addEventListener("mouseleave", handleCursorLeave);
+      // Mouse/keyboard interaction is handled by the use:containerInteraction action
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error("Simulation initialization failed:", error);
@@ -274,10 +321,6 @@
 
     return () => {
       resizeObserver?.disconnect();
-      if (handleMouseMove) container.removeEventListener("mousemove", handleMouseMove);
-      if (handleMouseClick) container.removeEventListener("click", handleMouseClick);
-      if (handleCursorEnter) container.removeEventListener("mouseenter", handleCursorEnter);
-      if (handleCursorLeave) container.removeEventListener("mouseleave", handleCursorLeave);
       if (renderer) {
         renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
       }
@@ -289,43 +332,7 @@
     };
   });
 
-  // Sync orbit controls toggle to carousel scene and wire up pan callback
-  $effect(() => {
-    if (carouselScene) {
-      carouselScene.enableOrbitControls = orbitMode;
-      carouselScene.onSpaceHeldChange = (held: boolean) => {
-        spaceHeldForPan = held;
-      };
-    }
-  });
 
-  // Reset orbit mode when leaving carousel
-  $effect(() => {
-    if (activeScene !== "carousel") {
-      orbitMode = false;
-      cursorOver = false;
-      spaceHeldForPan = false;
-      carouselScene?.resetPan();
-    }
-  });
-
-  // Reset pan when exiting orbit mode
-  $effect(() => {
-    if (!orbitMode && carouselScene) {
-      carouselScene.resetPan();
-      spaceHeldForPan = false;
-    }
-  });
-
-  // Drive camera zoom from hero scroll progress
-  $effect(() => {
-    if (earthScene && container) {
-      earthScene.setHeroScrollProgress(heroScrollProgress);
-      const width = container.offsetWidth || container.clientWidth;
-      const height = container.offsetHeight || container.clientHeight;
-      earthScene.updateCamera(width, height);
-    }
-  });
 </script>
 
 {#if initError}
@@ -339,6 +346,7 @@
 
 <div
   bind:this={container}
+  use:containerInteraction
   class="simulation-viewer"
   class:ready={isEarthReady}
   class:carousel-active={activeScene === "carousel"}
@@ -346,17 +354,6 @@
   class:orbit-mode={orbitMode}
   class:pan-mode={orbitMode && spaceHeldForPan}
   style="opacity: {canvasOpacity};"
-  onclick={() => {
-    if (allowExplore) {
-      orbitMode = true;
-    }
-  }}
-  onkeydown={(e) => {
-    if ((e.key === "Enter" || e.key === " ") && allowExplore) {
-      e.preventDefault();
-      orbitMode = true;
-    }
-  }}
   role="button"
   tabindex="-1"
 ></div>
@@ -376,7 +373,7 @@
 {/if}
 
 <div style="opacity: {canvasOpacity * (activeScene === 'carousel' ? 1 : 0)};">
-  <CarouselOverlay {carouselScene} paused={orbitMode} onExitOrbit={() => { orbitMode = false; }} />
+  <CarouselOverlay {carouselScene} paused={orbitMode} onExitOrbit={() => { setOrbitMode(false); }} />
 </div>
 
 <style>
