@@ -254,8 +254,9 @@ export class CarouselScene {
   }
 
   /**
-   * Replace a mesh in the scene graph with a Reflector using the same geometry,
-   * preserving its local transform. Returns the new Reflector.
+   * Add a planar Reflector on top of the given mesh, keeping the original mesh
+   * visible underneath. Both are grouped together and swapped into the scene
+   * graph at the mesh's original position. Returns the Reflector.
    */
   private createReflector(mesh: THREE.Mesh): Reflector {
     const size = new THREE.Vector2();
@@ -263,32 +264,48 @@ export class CarouselScene {
     const w = Math.min(size.width, MAX_REFLECTOR_SIZE);
     const h = Math.min(size.height, MAX_REFLECTOR_SIZE);
 
-    const reflector = new Reflector(mesh.geometry, {
+    // Compute bounding box of the mesh geometry to size and position the disk
+    mesh.geometry.computeBoundingBox();
+    const bbox = mesh.geometry.boundingBox!;
+    const geoWidth = bbox.max.x - bbox.min.x;
+    const geoHeight = bbox.max.y - bbox.min.y;
+    const centerX = (bbox.min.x + bbox.max.x) / 2;
+    const centerY = (bbox.min.y + bbox.max.y) / 2;
+    const radius = Math.max(geoWidth, geoHeight) / 2;
+
+    // Create a circular reflector disk sized to cover the mesh surface
+    const diskGeo = new THREE.CircleGeometry(radius, 64);
+    const reflector = new Reflector(diskGeo, {
       clipBias: 0.003,
       textureWidth: w,
       textureHeight: h,
       color: 0xb5b5b5,
     });
 
-    // Copy the mesh's local transform
-    reflector.name = mesh.name;
-    reflector.position.copy(mesh.position);
-    reflector.quaternion.copy(mesh.quaternion);
-    reflector.scale.copy(mesh.scale);
+    // Position the reflector plane at the geometry center, just above the surface
+    reflector.position.set(centerX, centerY, bbox.max.z + 0.001);
 
-    // Swap in the scene graph
+    // Create a group that inherits the mesh's transform
+    const group = new THREE.Group();
+    group.name = mesh.name;
+    group.position.copy(mesh.position);
+    group.quaternion.copy(mesh.quaternion);
+    group.scale.copy(mesh.scale);
+
+    // Reset the mesh's local transform since the group now carries it
+    mesh.position.set(0, 0, 0);
+    mesh.quaternion.identity();
+    mesh.scale.set(1, 1, 1);
+
+    // Swap into the scene graph: group replaces mesh at the same parent
     const parent = mesh.parent;
     if (parent) {
-      parent.add(reflector);
+      parent.add(group);
       parent.remove(mesh);
     }
 
-    // Dispose old materials
-    if (Array.isArray(mesh.material)) {
-      mesh.material.forEach((m) => m.dispose());
-    } else if (mesh.material) {
-      mesh.material.dispose();
-    }
+    group.add(mesh);
+    group.add(reflector);
 
     return reflector;
   }
