@@ -6,7 +6,7 @@ import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLigh
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
-import { cloneMaterialsPerMesh, brightenDarkMaterials } from "./materialUtils";
+import { cloneMaterialsPerMesh, enhanceMetallicMaterials } from "./materialUtils";
 import { carouselData } from "./carouselData";
 import gsap from "gsap";
 
@@ -159,8 +159,8 @@ export class CarouselScene {
       // Fade in: start dim and animate backgroundIntensity to target
       this.scene.background = texture;
       this.scene.backgroundIntensity = 0;
-      // this.scene.environment = texture;
-      // this.scene.environmentIntensity = 0.5;
+      this.scene.environment = texture;
+      this.scene.environmentIntensity = 0.6;
       gsap.to(this.scene, {
         backgroundIntensity: 2,
         duration: 1.5,
@@ -227,7 +227,7 @@ export class CarouselScene {
           }
 
           if (opts.brighten) {
-            brightenDarkMaterials(root, skipNames.size > 0 ? skipNames : undefined);
+            enhanceMetallicMaterials(root, skipNames.size > 0 ? skipNames : undefined);
           }
 
           // Replace mirror mesh with a Reflector (only on this specific model)

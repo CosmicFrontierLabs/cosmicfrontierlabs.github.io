@@ -1,38 +1,37 @@
 import * as THREE from "three";
 
-// --- Brighten-dark-materials tunable parameters ---
-interface BrightenParams {
+// --- Metallic material enhancement parameters ---
+interface MetallicEnhanceParams {
+  /** Minimum base-color luminance; darker colors get boosted to this. */
   minLuminance: number;
-  metallicLumTarget: number;
+  /** Maximum color boost multiplier to avoid extreme blowout. */
   maxBoostFactor: number;
-  minChannelFraction: number;
+  /** Metalness floor — materials below this get bumped up. */
+  minMetalness: number;
+  /** Metalness applied to originally non-metallic surfaces for a subtle sheen. */
+  dielectricMetalness: number;
+  /** Roughness cap for metallic surfaces to ensure visible reflections. */
+  maxRoughness: number;
+  /** Roughness for originally very rough metallic surfaces (brushed metal look). */
+  brushedMetalRoughness: number;
+  /** Threshold above which a material is considered "originally metallic". */
   metallicThreshold: number;
-  maxMetalness: number;
-  texturedMetalnessThreshold: number;
-  texturedEmissive: number;
-  highMetalnessThreshold: number;
-  highRoughnessThreshold: number;
-  extremeRoughness: number;
-  whiteMetalGreyColor: number;
-  emissiveMetallic: number;
-  emissiveDielectric: number;
+  /** Subtle emissive boost for very dark metallic parts so they read against space. */
+  emissiveBoost: number;
+  /** Base color tint for very bright (white) metals to give them a cooler steel tone. */
+  whiteMetalColor: THREE.Color;
 }
 
-export const defaultBrightenParams: BrightenParams = {
-  minLuminance: 0.08,
-  metallicLumTarget: 0.22,
-  maxBoostFactor: 5.0,
-  minChannelFraction: 0.5,
+const defaultMetallicParams: MetallicEnhanceParams = {
+  minLuminance: 0.06,
+  maxBoostFactor: 4.0,
+  minMetalness: 0.7,
+  dielectricMetalness: 0.15,
+  maxRoughness: 0.35,
+  brushedMetalRoughness: 0.45,
   metallicThreshold: 0.4,
-  maxMetalness: 0.2,
-  texturedMetalnessThreshold: 0.3,
-  texturedEmissive: 0.05,
-  highMetalnessThreshold: 0.8,
-  highRoughnessThreshold: 0.8,
-  extremeRoughness: 0.6,
-  whiteMetalGreyColor: 0.45,
-  emissiveMetallic: 0.06,
-  emissiveDielectric: 0.03,
+  emissiveBoost: 0.04,
+  whiteMetalColor: new THREE.Color(0.7, 0.72, 0.78),
 };
 
 /** Type guard for MeshStandardMaterial (covers MeshPhysicalMaterial too). */
@@ -47,8 +46,8 @@ export function luminance(c: THREE.Color): number {
 
 /**
  * Clone materials on every mesh so each mesh gets its own material instance.
- * This allows per-mesh material tweaks (e.g. brightening) without affecting
- * other meshes that originally shared the same material in the GLB.
+ * This allows per-mesh material tweaks without affecting other meshes that
+ * originally shared the same material in the GLB.
  */
 export function cloneMaterialsPerMesh(root: THREE.Object3D): void {
   root.traverse((child) => {
@@ -62,93 +61,16 @@ export function cloneMaterialsPerMesh(root: THREE.Object3D): void {
 }
 
 /**
- * Case 0: Fix dark textured materials.
- * Metallic + textured is a common dark-material pattern. Reduce metalness so
- * diffuse light can reflect off the surface, and add a small emissive boost.
- */
-function fixDarkTexturedMaterial(mat: THREE.MeshStandardMaterial, p: BrightenParams): void {
-  if (!mat.map) return;
-  if (mat.metalness <= p.texturedMetalnessThreshold) return;
-
-  mat.metalness = p.maxMetalness;
-  const eLum = luminance(mat.emissive);
-  if (eLum < 0.03) {
-    mat.emissive.setRGB(p.texturedEmissive, p.texturedEmissive, p.texturedEmissive * 1.2);
-  }
-  mat.needsUpdate = true;
-}
-
-/**
- * Case 1: Brighten dark base colors.
- * Dark metallic materials get an extra-aggressive boost because even after
- * capping metalness they remain very dim.
- */
-function brightenDarkBaseColor(mat: THREE.MeshStandardMaterial, lum: number, p: BrightenParams): void {
-  if (lum >= p.minLuminance) return;
-
-  const c = mat.color;
-  const targetLum = mat.metalness > p.metallicThreshold ? p.metallicLumTarget : p.minLuminance;
-  const boost = targetLum / Math.max(lum, 0.001);
-  const factor = Math.min(boost, p.maxBoostFactor);
-  c.multiplyScalar(factor);
-  const minChannel = targetLum * p.minChannelFraction;
-  c.r = Math.max(c.r, minChannel);
-  c.g = Math.max(c.g, minChannel);
-  c.b = Math.max(c.b, minChannel);
-  mat.needsUpdate = true;
-}
-
-/**
- * Case 2: Cap metalness so ambient/diffuse light is reflected.
- * Without an environment map, metallic materials rely entirely on specular
- * reflections from direct lights, making them near-black from most angles.
- */
-function capMetalness(mat: THREE.MeshStandardMaterial, lum: number, p: BrightenParams): void {
-  if (mat.metalness <= p.metallicThreshold) return;
-
-  if (mat.metalness > p.highMetalnessThreshold && mat.roughness > p.highRoughnessThreshold) {
-    // High metalness + high roughness: convert fully to dielectric.
-    mat.metalness = 0.0;
-    mat.roughness = p.extremeRoughness;
-    if (lum > 0.8) {
-      mat.color.setRGB(p.whiteMetalGreyColor, p.whiteMetalGreyColor, p.whiteMetalGreyColor + 0.03);
-    }
-  } else {
-    mat.metalness = Math.min(mat.metalness, p.maxMetalness);
-  }
-  mat.needsUpdate = true;
-}
-
-/**
- * Case 3: Emissive boost on dark parts — stronger for originally-metallic
- * materials so they read clearly against the dark background.
- */
-function boostDarkEmissive(
-  mat: THREE.MeshStandardMaterial,
-  lum: number,
-  originalMetalness: number,
-  p: BrightenParams
-): void {
-  if (lum >= p.minLuminance) return;
-
-  const eLum = luminance(mat.emissive);
-  if (eLum < 0.03) {
-    const emStr = originalMetalness > p.metallicThreshold ? p.emissiveMetallic : p.emissiveDielectric;
-    mat.emissive.setRGB(emStr, emStr, emStr * 1.1);
-    mat.needsUpdate = true;
-  }
-}
-
-/**
- * Traverse a model and lighten any very dark materials so they're visible
- * against the dark space background. Handles dark base colors, high metalness
- * on dark surfaces, and textured metallic materials.
+ * Enhance materials for a metallic telescope look. Designed to work with an
+ * HDR environment map providing reflections. Instead of suppressing metalness
+ * (the old approach), this preserves and enhances it so surfaces pick up
+ * environment reflections and look like real machined/anodised metal.
  *
  * @param root - The root object to traverse
  * @param skipMeshNames - Set of mesh names to skip (e.g. mirrors that will be replaced)
  */
-export function brightenDarkMaterials(root: THREE.Object3D, skipMeshNames?: Set<string>): void {
-  const p = defaultBrightenParams;
+export function enhanceMetallicMaterials(root: THREE.Object3D, skipMeshNames?: Set<string>): void {
+  const p = defaultMetallicParams;
 
   root.traverse((child) => {
     if (!(child instanceof THREE.Mesh) || !child.material) return;
@@ -160,12 +82,55 @@ export function brightenDarkMaterials(root: THREE.Object3D, skipMeshNames?: Set<
       if (!isStandardMaterial(mat)) return;
 
       const lum = luminance(mat.color);
-      const originalMetalness = mat.metalness;
+      const origMetalness = mat.metalness;
+      const isOriginallyMetallic = origMetalness > p.metallicThreshold;
 
-      fixDarkTexturedMaterial(mat, p);
-      brightenDarkBaseColor(mat, lum, p);
-      capMetalness(mat, lum, p);
-      boostDarkEmissive(mat, lum, originalMetalness, p);
+      // --- Brighten very dark base colors so they're not invisible ---
+      if (lum < p.minLuminance) {
+        const boost = Math.min(p.minLuminance / Math.max(lum, 0.001), p.maxBoostFactor);
+        mat.color.multiplyScalar(boost);
+        mat.color.r = Math.max(mat.color.r, p.minLuminance * 0.5);
+        mat.color.g = Math.max(mat.color.g, p.minLuminance * 0.5);
+        mat.color.b = Math.max(mat.color.b, p.minLuminance * 0.5);
+      }
+
+      // --- Tint very bright metals to a cool steel tone ---
+      if (isOriginallyMetallic && lum > 0.8) {
+        mat.color.copy(p.whiteMetalColor);
+      }
+
+      // --- Enhance metalness ---
+      if (isOriginallyMetallic) {
+        // Originally metallic: ensure high metalness for strong reflections
+        mat.metalness = Math.max(mat.metalness, p.minMetalness);
+
+        // Tighten roughness for polished/brushed metal appearance
+        if (mat.roughness > p.brushedMetalRoughness) {
+          // Very rough metals become brushed-metal; others get polished
+          mat.roughness = mat.roughness > 0.8 ? p.brushedMetalRoughness : p.maxRoughness;
+        }
+      } else {
+        // Originally dielectric: give a subtle metallic sheen
+        mat.metalness = Math.max(mat.metalness, p.dielectricMetalness);
+        // Slightly reduce roughness for sharper reflections
+        mat.roughness = Math.min(mat.roughness, 0.7);
+      }
+
+      // --- Textured metallic surfaces: preserve texture, boost metalness ---
+      if (mat.map && origMetalness > p.metallicThreshold) {
+        mat.metalness = Math.max(mat.metalness, p.minMetalness);
+        mat.roughness = Math.min(mat.roughness, p.maxRoughness);
+      }
+
+      // --- Subtle emissive for very dark metallic parts ---
+      if (lum < p.minLuminance && isOriginallyMetallic) {
+        const eLum = luminance(mat.emissive);
+        if (eLum < 0.02) {
+          mat.emissive.setRGB(p.emissiveBoost, p.emissiveBoost, p.emissiveBoost * 1.1);
+        }
+      }
+
+      mat.needsUpdate = true;
     });
   });
 }
