@@ -5,8 +5,8 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
-import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
-import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
+import { GUI } from "three/examples/jsm/libs/lil-gui.module.min.js";
 import {
   cloneMaterialsPerMesh,
   enhanceMetallicMaterials,
@@ -49,6 +49,8 @@ export class CarouselScene {
   private renderer: THREE.WebGLRenderer;
   private mirrorReflector: Reflector | null = null;
   private mirrorDiskGeometry: THREE.BufferGeometry | null = null;
+  private mirrorRimGeometry: THREE.TorusGeometry | null = null;
+  private mirrorRimMaterial: THREE.MeshStandardMaterial | null = null;
   private hdrTexture: THREE.Texture | null = null;
   private disposed = false;
   private orbitControls: OrbitControls;
@@ -366,6 +368,21 @@ export class CarouselScene {
     group.add(mesh);
     group.add(reflector);
 
+    // Add a metallic rim (torus) around the mirror edge
+    const rimThickness = radius * 0.04;
+    const rimTubeRadius = rimThickness * 0.5;
+    const rimGeo = new THREE.TorusGeometry(radius, rimTubeRadius, 16, 64);
+    this.mirrorRimGeometry = rimGeo;
+    const rimMat = new THREE.MeshStandardMaterial({
+      color: 0x888888,
+      metalness: 1.0,
+      roughness: 0.25,
+    });
+    this.mirrorRimMaterial = rimMat;
+    const rimMesh = new THREE.Mesh(rimGeo, rimMat);
+    rimMesh.position.set(centerX, centerY, bbox.max.z + 0.001);
+    group.add(rimMesh);
+
     return reflector;
   }
 
@@ -601,6 +618,12 @@ export class CarouselScene {
     }
     if (this.mirrorDiskGeometry) {
       this.mirrorDiskGeometry.dispose();
+    }
+    if (this.mirrorRimGeometry) {
+      this.mirrorRimGeometry.dispose();
+    }
+    if (this.mirrorRimMaterial) {
+      this.mirrorRimMaterial.dispose();
     }
 
     const disposeGroup = (group: THREE.Group | null) => {
