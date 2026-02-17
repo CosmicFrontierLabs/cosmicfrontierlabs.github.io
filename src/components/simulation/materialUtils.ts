@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 // --- Metallic material enhancement parameters ---
-interface MetallicEnhanceParams {
+export interface MetallicEnhanceParams {
   /** Minimum base-color luminance; darker colors get boosted to this. */
   minLuminance: number;
   /** Maximum color boost multiplier to avoid extreme blowout. */
@@ -18,11 +18,11 @@ interface MetallicEnhanceParams {
   metallicThreshold: number;
   /** Subtle emissive boost for very dark metallic parts so they read against space. */
   emissiveBoost: number;
-  /** Base color tint for very bright (white) metals to give them a cooler steel tone. */
-  whiteMetalColor: THREE.Color;
+  /** Environment map intensity on the scene (controls reflection strength). */
+  envMapIntensity: number;
 }
 
-const defaultMetallicParams: MetallicEnhanceParams = {
+export const defaultMetallicParams: MetallicEnhanceParams = {
   minLuminance: 0.06,
   maxBoostFactor: 4.0,
   minMetalness: 0.7,
@@ -31,8 +31,19 @@ const defaultMetallicParams: MetallicEnhanceParams = {
   brushedMetalRoughness: 0.45,
   metallicThreshold: 0.4,
   emissiveBoost: 0.04,
-  whiteMetalColor: new THREE.Color(0.7, 0.72, 0.78),
+  envMapIntensity: 0.6,
 };
+
+/** Snapshot of a material's original properties before enhancement. */
+interface MaterialSnapshot {
+  color: THREE.Color;
+  metalness: number;
+  roughness: number;
+  emissive: THREE.Color;
+}
+
+/** Stored original data keyed by material uuid. */
+const originalMaterialData = new Map<string, MaterialSnapshot>();
 
 /** Type guard for MeshStandardMaterial (covers MeshPhysicalMaterial too). */
 function isStandardMaterial(mat: THREE.Material): mat is THREE.MeshStandardMaterial {
@@ -60,17 +71,46 @@ export function cloneMaterialsPerMesh(root: THREE.Object3D): void {
   });
 }
 
+/** Store the original material properties before any enhancement. */
+function snapshotMaterial(mat: THREE.MeshStandardMaterial): void {
+  if (originalMaterialData.has(mat.uuid)) return; // already stored
+  originalMaterialData.set(mat.uuid, {
+    color: mat.color.clone(),
+    metalness: mat.metalness,
+    roughness: mat.roughness,
+    emissive: mat.emissive.clone(),
+  });
+}
+
+/** Restore a material to its original properties from the snapshot. */
+function restoreMaterial(mat: THREE.MeshStandardMaterial): void {
+  const snap = originalMaterialData.get(mat.uuid);
+  if (!snap) return;
+  mat.color.copy(snap.color);
+  mat.metalness = snap.metalness;
+  mat.roughness = snap.roughness;
+  mat.emissive.copy(snap.emissive);
+}
+
 /**
  * Enhance materials for a metallic telescope look. Designed to work with an
  * HDR environment map providing reflections. Instead of suppressing metalness
  * (the old approach), this preserves and enhances it so surfaces pick up
  * environment reflections and look like real machined/anodised metal.
  *
+ * Safe to call multiple times with different params — original material
+ * properties are restored before each application.
+ *
  * @param root - The root object to traverse
  * @param skipMeshNames - Set of mesh names to skip (e.g. mirrors that will be replaced)
+ * @param params - Tunable parameters (defaults used if omitted)
  */
-export function enhanceMetallicMaterials(root: THREE.Object3D, skipMeshNames?: Set<string>): void {
-  const p = defaultMetallicParams;
+export function enhanceMetallicMaterials(
+  root: THREE.Object3D,
+  skipMeshNames?: Set<string>,
+  params?: MetallicEnhanceParams
+): void {
+  const p = params ?? defaultMetallicParams;
 
   root.traverse((child) => {
     if (!(child instanceof THREE.Mesh) || !child.material) return;
@@ -80,6 +120,10 @@ export function enhanceMetallicMaterials(root: THREE.Object3D, skipMeshNames?: S
 
     materials.forEach((mat) => {
       if (!isStandardMaterial(mat)) return;
+
+      // Snapshot originals on first call, then restore before re-applying
+      snapshotMaterial(mat);
+      restoreMaterial(mat);
 
       const lum = luminance(mat.color);
       const origMetalness = mat.metalness;
@@ -96,7 +140,7 @@ export function enhanceMetallicMaterials(root: THREE.Object3D, skipMeshNames?: S
 
       // --- Tint very bright metals to a cool steel tone ---
       if (isOriginallyMetallic && lum > 0.8) {
-        mat.color.copy(p.whiteMetalColor);
+        mat.color.setRGB(0.7, 0.72, 0.78);
       }
 
       // --- Enhance metalness ---

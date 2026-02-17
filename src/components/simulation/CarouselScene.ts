@@ -6,7 +6,13 @@ import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLigh
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
-import { cloneMaterialsPerMesh, enhanceMetallicMaterials } from "./materialUtils";
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+import {
+  cloneMaterialsPerMesh,
+  enhanceMetallicMaterials,
+  defaultMetallicParams,
+  type MetallicEnhanceParams,
+} from "./materialUtils";
 import { carouselData } from "./carouselData";
 import gsap from "gsap";
 
@@ -48,6 +54,10 @@ export class CarouselScene {
   private orbitControls: OrbitControls;
   private dracoLoader: DRACOLoader;
   private activeCameraTween: gsap.core.Tween | null = null;
+  private gui: GUI;
+  private metallicParams: MetallicEnhanceParams;
+  /** Mesh names to skip when enhancing materials (e.g. mirror). */
+  private materialSkipNames = new Set<string>();
 
   /** Tracks the current lookAt target for smooth camera transitions */
   private currentLookAtTarget = new THREE.Vector3(0, 0, 0);
@@ -147,6 +157,34 @@ export class CarouselScene {
     renderer.domElement.addEventListener("mouseenter", this.boundOnMouseEnter);
     renderer.domElement.addEventListener("mouseleave", this.boundOnMouseLeave);
 
+    // --- Debug GUI for metallic material parameters ---
+    this.metallicParams = { ...defaultMetallicParams };
+    const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    this.gui = new GUI({ title: "Metallic Materials" });
+    if (!isLocalhost) {
+      this.gui.hide();
+    }
+    const reapply = () => this.reapplyMetallicParams();
+
+    const metalFolder = this.gui.addFolder("Metalness");
+    metalFolder.add(this.metallicParams, "minMetalness", 0, 1, 0.01).name("Min Metalness").onChange(reapply);
+    metalFolder.add(this.metallicParams, "dielectricMetalness", 0, 1, 0.01).name("Dielectric Metalness").onChange(reapply);
+    metalFolder.add(this.metallicParams, "metallicThreshold", 0, 1, 0.01).name("Metallic Threshold").onChange(reapply);
+
+    const roughFolder = this.gui.addFolder("Roughness");
+    roughFolder.add(this.metallicParams, "maxRoughness", 0, 1, 0.01).name("Max Roughness").onChange(reapply);
+    roughFolder.add(this.metallicParams, "brushedMetalRoughness", 0, 1, 0.01).name("Brushed Metal").onChange(reapply);
+
+    const colorFolder = this.gui.addFolder("Color / Emissive");
+    colorFolder.add(this.metallicParams, "minLuminance", 0, 0.5, 0.01).name("Min Luminance").onChange(reapply);
+    colorFolder.add(this.metallicParams, "maxBoostFactor", 1, 10, 0.5).name("Max Boost").onChange(reapply);
+    colorFolder.add(this.metallicParams, "emissiveBoost", 0, 0.2, 0.005).name("Emissive Boost").onChange(reapply);
+
+    const envFolder = this.gui.addFolder("Environment");
+    envFolder.add(this.metallicParams, "envMapIntensity", 0, 3, 0.05).name("Env Intensity").onChange((v: number) => {
+      this.scene.environmentIntensity = v;
+    });
+
     // Load HDR environment background (async, non-blocking)
     new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
       // Scene was disposed while loading — clean up and bail
@@ -160,7 +198,7 @@ export class CarouselScene {
       this.scene.background = texture;
       this.scene.backgroundIntensity = 0;
       this.scene.environment = texture;
-      this.scene.environmentIntensity = 0.6;
+      this.scene.environmentIntensity = this.metallicParams.envMapIntensity;
       gsap.to(this.scene, {
         backgroundIntensity: 2,
         duration: 1.5,
@@ -220,14 +258,17 @@ export class CarouselScene {
 
           cloneMaterialsPerMesh(root);
 
-          // Build set of mesh names to skip during brightening (they'll be replaced)
-          const skipNames = new Set<string>();
+          // Build set of mesh names to skip during enhancement (they'll be replaced)
           if (opts.mirrorMeshName) {
-            skipNames.add(opts.mirrorMeshName);
+            this.materialSkipNames.add(opts.mirrorMeshName);
           }
 
           if (opts.brighten) {
-            enhanceMetallicMaterials(root, skipNames.size > 0 ? skipNames : undefined);
+            enhanceMetallicMaterials(
+              root,
+              this.materialSkipNames.size > 0 ? this.materialSkipNames : undefined,
+              this.metallicParams
+            );
           }
 
           // Replace mirror mesh with a Reflector (only on this specific model)
@@ -506,6 +547,21 @@ export class CarouselScene {
     }
   }
 
+  /** Re-apply metallic material enhancement with current GUI params. */
+  private reapplyMetallicParams(): void {
+    const skip = this.materialSkipNames.size > 0 ? this.materialSkipNames : undefined;
+    const applyToGroup = (group: THREE.Group | null) => {
+      if (!group) return;
+      // The model root is the first child of the wrapper group
+      const root = group.children[0];
+      if (root) {
+        enhanceMetallicMaterials(root, skip, this.metallicParams);
+      }
+    };
+    applyToGroup(this.telescope);
+    applyToGroup(this.fullAssy);
+  }
+
   dispose(): void {
     this.disposed = true;
 
@@ -525,6 +581,7 @@ export class CarouselScene {
     this.renderer.domElement.removeEventListener("mouseleave", this.boundOnMouseLeave);
     this.onSpaceHeldChange = null;
 
+    this.gui.destroy();
     this.orbitControls.dispose();
     if (this.hdrTexture) {
       this.hdrTexture.dispose();
