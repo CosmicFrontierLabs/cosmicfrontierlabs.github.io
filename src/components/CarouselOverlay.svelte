@@ -22,8 +22,8 @@
   let activeSlideIndex = $state(0);
   let progress = $state(0);
   let initialized = $state(false);
-  let titleEl: HTMLHeadingElement;
-  let descriptionEl: HTMLParagraphElement;
+  let titleEl: HTMLHeadingElement | null = $state(null);
+  let descriptionEl: HTMLParagraphElement | null = $state(null);
   let panelEl: HTMLDivElement;
   let panelInnerEl: HTMLDivElement;
 
