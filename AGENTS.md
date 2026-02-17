@@ -11,7 +11,7 @@ When writing Svelte components:
   - `$state` - For mutable reactive state
   - `$derived` - For computed/derived values that depend on other state
   - `$effect` - Use judiciously, only when side effects are necessary (e.g., DOM manipulation, subscriptions)
-- **Prefer `$derived` over `$effect`** when possible - derived values are more efficient and declarative
+- **Prefer `$derived` and secondly function calls over `$effect`** when possible - derived values are more efficient and declarative
 - **Component structure**: Keep reactive logic in `<script>` tags, use runes for all reactive variables
 
 ## Code Formatting
