@@ -104,7 +104,7 @@ export class CarouselScene {
     this.renderer = renderer;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0a1428);
+    this.scene.background = new THREE.Color(0x03060b); // Same as var(--body-bg)
 
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 50);
     const initialCamera = carouselData[0].camera;
@@ -168,6 +168,8 @@ export class CarouselScene {
     if (!isLocalhost) {
       this.gui.hide();
     }
+    this.gui.hide(); // TODO: remove
+
     const reapply = () => this.reapplyMetallicParams();
 
     const metalFolder = this.gui.addFolder("Metalness");
