@@ -200,7 +200,7 @@ export class CarouselScene {
       this.scene.environment = texture;
       this.scene.environmentIntensity = this.metallicParams.envMapIntensity;
       gsap.to(this.scene, {
-        backgroundIntensity: 2,
+        backgroundIntensity: 5,
         duration: 1.5,
         ease: "power2.inOut",
       });
