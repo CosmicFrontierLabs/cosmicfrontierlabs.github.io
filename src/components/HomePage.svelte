@@ -1,7 +1,7 @@
 <script lang="ts">
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
-  import SimulationCanvas from "../components/SimulationCanvas.svelte";
+  import Canvas from "../components/Canvas.svelte";
   import { onMount } from "svelte";
 
   gsap.registerPlugin(ScrollTrigger);
@@ -109,7 +109,7 @@
 </script>
 
 <div class="simulation-container">
-  <SimulationCanvas bind:activeScene {canvasOpacity} {heroScrollProgress} />
+  <Canvas bind:activeScene {canvasOpacity} {heroScrollProgress} />
 </div>
 
 <div class="hero" bind:this={heroEl}>
@@ -155,7 +155,7 @@
 
 <div class="carousel-anchor" bind:this={carouselAnchorEl}>
   <!-- Empty scroll-trigger anchor. The carousel 3D content is rendered
-       by SimulationCanvas's shared WebGL canvas, which is fixed-position.
+       by Canvas's shared WebGL canvas, which is fixed-position.
        This div's 200lvh height provides the scroll distance that drives
        the carousel fade-in via ScrollTrigger. -->
 </div>
