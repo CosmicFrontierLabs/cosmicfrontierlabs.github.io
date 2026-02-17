@@ -99,6 +99,9 @@ export class CarouselScene {
   private boundOnMouseEnter: () => void;
   private boundOnMouseLeave: () => void;
 
+  /** Resolves when all async assets (models, HDR) have finished loading. */
+  readonly loaded: Promise<void>;
+
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
     RectAreaLightUniformsLib.init();
     this.renderer = renderer;
@@ -198,6 +201,7 @@ export class CarouselScene {
       });
 
     // Load HDR environment background (async, non-blocking)
+    const hdrLoaded = new Promise<void>((resolveHdr) => {
     new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
       // Scene was disposed while loading — clean up and bail
       if (this.disposed) {
@@ -216,6 +220,8 @@ export class CarouselScene {
         duration: 1.5,
         ease: "power2.inOut",
       });
+      resolveHdr();
+    });
     });
 
     // Loaders
@@ -226,7 +232,7 @@ export class CarouselScene {
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
     // Load payload model (with mirror reflector)
-    this.loadModel(gltfLoader, {
+    const payloadLoaded = this.loadModel(gltfLoader, {
       url: "/models/20260102_Payload_assy_no_baffle.glb",
       scale: 5.0,
       brighten: true,
@@ -236,7 +242,7 @@ export class CarouselScene {
     });
 
     // Load full assembly model
-    this.loadModel(gltfLoader, {
+    const fullAssyLoaded = this.loadModel(gltfLoader, {
       url: "/models/20260102_Full_Assy.glb",
       scale: 3.0,
       brighten: true,
@@ -244,6 +250,9 @@ export class CarouselScene {
       group.visible = false;
       this.fullAssy = group;
     });
+
+    // Resolve loaded promise when all assets are ready
+    this.loaded = Promise.all([hdrLoaded, payloadLoaded, fullAssyLoaded]).then(() => {});
   }
 
   /**
