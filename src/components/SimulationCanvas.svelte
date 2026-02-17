@@ -34,8 +34,13 @@
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
 
-  // Allow explore interactions only when carousel is visible and not already in orbit mode
-  let allowExplore = $derived(activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
+  // Detect touch-only devices — explore mode requires a mouse
+  let isTouchDevice = $state(false);
+
+  // Allow explore interactions only on non-touch devices when carousel is visible and not already in orbit mode
+  let allowExplore = $derived(
+    !isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0,
+  );
 
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
@@ -268,6 +273,9 @@
   }
 
   onMount(() => {
+    // Detect touch-only devices (no fine pointer = no mouse)
+    isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
+
     if (!checkWebGLSupport()) {
       webglSupported = false;
       initError =
