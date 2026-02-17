@@ -21,6 +21,7 @@
 
   let activeSlideIndex = $state(0);
   let progress = $state(0);
+  let initialized = $state(false);
   let titleEl: HTMLHeadingElement;
   let descriptionEl: HTMLParagraphElement;
   let panelEl: HTMLDivElement;
@@ -60,7 +61,8 @@
 
   function goToIndex(index: number) {
     if (!carouselScene) return;
-    if (index === activeSlideIndex) return;
+    if (initialized && index === activeSlideIndex) return;
+    initialized = true;
 
     // Restart autoplay timer immediately (resets progress bar)
     activeSlideIndex = index;
@@ -95,6 +97,13 @@
     const prevIndex = (activeSlideIndex - 1 + carouselData.length) % carouselData.length;
     goToIndex(prevIndex);
   }
+
+  // Initialize the first slide when the carousel scene becomes available
+  $effect(() => {
+    if (carouselScene && !initialized) {
+      goToIndex(0);
+    }
+  });
 
   // Pause/resume autoplay when explore mode toggles
   // `paused` is a reactive prop; `autoplayTween` is a plain variable read at

@@ -159,7 +159,9 @@ export class CarouselScene {
 
     // --- Debug GUI for metallic material parameters ---
     this.metallicParams = { ...defaultMetallicParams };
-    const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    const isLocalhost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
     this.gui = new GUI({ title: "Metallic Materials" });
     if (!isLocalhost) {
       this.gui.hide();
@@ -168,7 +170,10 @@ export class CarouselScene {
 
     const metalFolder = this.gui.addFolder("Metalness");
     metalFolder.add(this.metallicParams, "minMetalness", 0, 1, 0.01).name("Min Metalness").onChange(reapply);
-    metalFolder.add(this.metallicParams, "dielectricMetalness", 0, 1, 0.01).name("Dielectric Metalness").onChange(reapply);
+    metalFolder
+      .add(this.metallicParams, "dielectricMetalness", 0, 1, 0.01)
+      .name("Dielectric Metalness")
+      .onChange(reapply);
     metalFolder.add(this.metallicParams, "metallicThreshold", 0, 1, 0.01).name("Metallic Threshold").onChange(reapply);
 
     const roughFolder = this.gui.addFolder("Roughness");
@@ -181,9 +186,12 @@ export class CarouselScene {
     colorFolder.add(this.metallicParams, "emissiveBoost", 0, 0.2, 0.005).name("Emissive Boost").onChange(reapply);
 
     const envFolder = this.gui.addFolder("Environment");
-    envFolder.add(this.metallicParams, "envMapIntensity", 0, 3, 0.05).name("Env Intensity").onChange((v: number) => {
-      this.scene.environmentIntensity = v;
-    });
+    envFolder
+      .add(this.metallicParams, "envMapIntensity", 0, 3, 0.05)
+      .name("Env Intensity")
+      .onChange((v: number) => {
+        this.scene.environmentIntensity = v;
+      });
 
     // Load HDR environment background (async, non-blocking)
     new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
