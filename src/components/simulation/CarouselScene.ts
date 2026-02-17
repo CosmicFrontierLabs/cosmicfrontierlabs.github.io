@@ -42,6 +42,7 @@ export class CarouselScene {
   private rimLight: THREE.PointLight;
   private renderer: THREE.WebGLRenderer;
   private mirrorReflector: Reflector | null = null;
+  private mirrorDiskGeometry: THREE.BufferGeometry | null = null;
   private hdrTexture: THREE.Texture | null = null;
   private disposed = false;
   private orbitControls: OrbitControls;
@@ -69,6 +70,14 @@ export class CarouselScene {
   /** Whether the mouse is currently over the canvas */
   private mouseOverCanvas = false;
 
+  // Pre-allocated vectors for pan math (avoid allocations in hot path)
+  private readonly _panRight = new THREE.Vector3();
+  private readonly _panUp = new THREE.Vector3();
+  private readonly _panDelta = new THREE.Vector3();
+  private readonly _panNewTarget = new THREE.Vector3();
+  private readonly _panNewCameraPos = new THREE.Vector3();
+  private readonly _panBaseTarget = new THREE.Vector3();
+
   // Bound event handlers for cleanup
   private boundOnKeyDown: (e: KeyboardEvent) => void;
   private boundOnKeyUp: (e: KeyboardEvent) => void;
@@ -85,7 +94,7 @@ export class CarouselScene {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a1428);
 
-    this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 50);
     const initialCamera = carouselData[0].camera;
     this.camera.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
     this.camera.lookAt(initialCamera.lookAt.x, initialCamera.lookAt.y, initialCamera.lookAt.z);
@@ -275,6 +284,7 @@ export class CarouselScene {
 
     // Create a circular reflector disk sized to cover the mesh surface
     const diskGeo = new THREE.CircleGeometry(radius, 64);
+    this.mirrorDiskGeometry = diskGeo;
     const reflector = new Reflector(diskGeo, {
       clipBias: 0.003,
       textureWidth: w,
@@ -361,29 +371,26 @@ export class CarouselScene {
     const canvasHeight = this.renderer.domElement.clientHeight;
     const pixelToWorld = heightInWorld / canvasHeight;
 
-    // Camera right and up vectors in world space
-    const right = new THREE.Vector3();
-    const up = new THREE.Vector3();
-    this.camera.getWorldDirection(new THREE.Vector3()); // ensure matrix is current
-    right.setFromMatrixColumn(this.camera.matrixWorld, 0); // camera X axis
-    up.setFromMatrixColumn(this.camera.matrixWorld, 1); // camera Y axis
+    // Camera right and up vectors in world space (reuse pre-allocated vectors)
+    this.camera.updateMatrixWorld(); // ensure matrix is current
+    this._panRight.setFromMatrixColumn(this.camera.matrixWorld, 0);
+    this._panUp.setFromMatrixColumn(this.camera.matrixWorld, 1);
 
     // Pan offset in world space (negate dx so dragging right moves view right)
-    const panDelta = new THREE.Vector3();
-    panDelta.addScaledVector(right, -dx * pixelToWorld);
-    panDelta.addScaledVector(up, dy * pixelToWorld);
+    this._panDelta.set(0, 0, 0);
+    this._panDelta.addScaledVector(this._panRight, -dx * pixelToWorld);
+    this._panDelta.addScaledVector(this._panUp, dy * pixelToWorld);
 
     // New target and camera positions
-    const newTarget = this.panStartTarget.clone().add(panDelta);
-    const newCameraPos = this.panStartCameraPos.clone().add(panDelta);
+    this._panNewTarget.copy(this.panStartTarget).add(this._panDelta);
+    this._panNewCameraPos.copy(this.panStartCameraPos).add(this._panDelta);
 
     // Track pan offset for reset
-    const baseTarget = new THREE.Vector3();
-    baseTarget.copy(this.currentLookAtTarget).sub(this.panOffset);
-    this.panOffset.copy(newTarget).sub(baseTarget);
+    this._panBaseTarget.copy(this.currentLookAtTarget).sub(this.panOffset);
+    this.panOffset.copy(this._panNewTarget).sub(this._panBaseTarget);
 
-    this.orbitControls.target.copy(newTarget);
-    this.camera.position.copy(newCameraPos);
+    this.orbitControls.target.copy(this._panNewTarget);
+    this.camera.position.copy(this._panNewCameraPos);
   }
 
   private onPanPointerUp(e: PointerEvent): void {
@@ -417,7 +424,9 @@ export class CarouselScene {
     if (!this.spaceHeld) {
       this.orbitControls.enabled = this.enableOrbitControls;
     }
-    this.orbitControls.update();
+    if (this.orbitControls.enabled) {
+      this.orbitControls.update();
+    }
   }
 
   resize(width: number, height: number): void {
@@ -524,6 +533,9 @@ export class CarouselScene {
 
     if (this.mirrorReflector) {
       this.mirrorReflector.dispose();
+    }
+    if (this.mirrorDiskGeometry) {
+      this.mirrorDiskGeometry.dispose();
     }
 
     const disposeGroup = (group: THREE.Group | null) => {
