@@ -2,16 +2,8 @@
   import { onMount } from "svelte";
   import * as THREE from "three";
   import { ThreePerf } from "three-perf";
-  import { Telescope } from "./simulation/Telescope";
-  import { ReactiveStarfield } from "./simulation/ReactiveStarfield";
-  import { Earth } from "./simulation/Earth";
   import { simulationConfig } from "./simulation/simulationConfig";
-  import { sampleArray, grid3d } from "./simulation/mathUtils";
-  import { GrainShader } from "./simulation/GrainShader";
-  import { MouseTracker } from "./simulation/MouseTracker";
-  import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-  import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-  import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+  import { EarthScene } from "./simulation/EarthScene";
   import { CarouselScene } from "./simulation/CarouselScene";
   import CarouselOverlay from "./CarouselOverlay.svelte";
 
@@ -50,23 +42,11 @@
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
-  let telescopes: Telescope[] = [];
-  let earth: Earth | null = null;
-  let reactiveStarfield: ReactiveStarfield | null = null;
   let perf: ThreePerf | null = null;
-  let camera: THREE.OrthographicCamera | null = null;
-  const initialCameraFrustumSize = 3.0;
-  let cameraFrustumSize = initialCameraFrustumSize;
   let renderer: THREE.WebGLRenderer | null = null;
-  let scene: THREE.Scene | null = null;
-  let effectComposer: EffectComposer | null = null;
-  let renderPass: RenderPass | null = null;
-  let grainPass: ShaderPass | null = null;
 
-  // Mouse position tracking
-  let mouseTracker: MouseTracker | null = null;
-
-  // Carousel scene instance (exposed to CarouselOverlay)
+  // Scene instances
+  let earthScene = $state<EarthScene | null>(null);
   let carouselScene = $state<CarouselScene | null>(null);
 
   // Frame tracking for initialization opacity — stops incrementing once ready
@@ -97,24 +77,7 @@
     const height = container.offsetHeight || container.clientHeight;
     newRenderer.setSize(width, height);
     container.appendChild(newRenderer.domElement);
-
-    if (scene && camera && newRenderer) {
-      renderPass = new RenderPass(scene, camera);
-      grainPass = new ShaderPass(GrainShader);
-      grainPass.uniforms.uResolution.value.set(width, height);
-      effectComposer = new EffectComposer(newRenderer);
-      effectComposer.addPass(renderPass);
-      effectComposer.addPass(grainPass);
-    }
-
     return newRenderer;
-  }
-
-  function setupLighting(): void {
-    if (!scene) return;
-    const config = simulationConfig.lighting;
-    const ambientLight = new THREE.AmbientLight(0xffffff, config.ambient.intensity);
-    scene.add(ambientLight);
   }
 
   function setupResizeObserver(): ResizeObserver {
@@ -125,7 +88,7 @@
     const mobileHeightThreshold = 150; // px — iOS chrome bar is typically ~50-100px
 
     const observer = new ResizeObserver((entries) => {
-      if (camera && renderer && container) {
+      if (renderer && container) {
         const entry = entries[0];
         const width = entry.contentRect.width || entry.borderBoxSize[0]?.inlineSize || container.clientWidth;
         const height = entry.contentRect.height || entry.borderBoxSize[0]?.blockSize || container.clientHeight;
@@ -141,35 +104,13 @@
         prevWidth = width;
         prevHeight = height;
 
-        updateCamera();
         renderer.setSize(width, height);
-        reactiveStarfield?.setResolution(width, height);
+        earthScene?.resize(width, height);
         carouselScene?.resize(width, height);
-
-        if (grainPass) {
-          grainPass.uniforms.uResolution.value.set(width, height);
-        }
-        if (effectComposer) {
-          effectComposer.setSize(width, height);
-        }
       }
     });
     observer.observe(container);
     return observer;
-  }
-
-  function updateCamera(): void {
-    if (camera && container) {
-      const width = container.offsetWidth || container.clientWidth;
-      const height = container.offsetHeight || container.clientHeight;
-      const aspect = width && height ? width / height : 1;
-
-      camera.left = (-cameraFrustumSize / 2) * aspect;
-      camera.right = (cameraFrustumSize / 2) * aspect;
-      camera.top = cameraFrustumSize / 2;
-      camera.bottom = -cameraFrustumSize / 2;
-      camera.updateProjectionMatrix();
-    }
   }
 
   function handleContextLost(event: Event): void {
@@ -178,32 +119,12 @@
   }
 
   function startAnimationLoop(): () => void {
-    if (!scene || !camera || !renderer || !telescopes || !earth || !reactiveStarfield) {
+    if (!renderer || !earthScene) {
       return () => {};
     }
 
-    // Capture refs that don't change for the lifetime of the loop
-    const loopScene = scene;
-    const loopCamera = camera;
     const loopRenderer = renderer;
-    const loopEarth = earth;
-    const loopReactiveStarfield = reactiveStarfield;
-
     const clock = new THREE.Clock();
-    const numTelescopes = telescopes.length;
-
-    // Pre-allocate origin/target arrays with Vector3 instances (reused every frame)
-    const telescopeOrigins: THREE.Vector3[] = new Array(numTelescopes);
-    const telescopeTargets: THREE.Vector3[] = new Array(numTelescopes);
-    for (let i = 0; i < numTelescopes; i++) {
-      telescopeOrigins[i] = new THREE.Vector3();
-      telescopeTargets[i] = new THREE.Vector3();
-    }
-
-    // Pre-allocate reusable objects to avoid per-frame GC pressure
-    const sphereCenter = new THREE.Vector3(0, 0, 0);
-    const sphereRadius = simulationConfig.background.geometry.radius;
-    const mouseWorldPosition = new THREE.Vector3();
 
     let rafId: number;
 
@@ -215,34 +136,11 @@
 
       // Read activeScene from the reactive prop on each frame
       // (captured via the outer closure over the $props binding)
-      if (activeScene === "simulation") {
-        if (mouseTracker && loopCamera) {
-          mouseTracker.update(loopCamera);
-        }
-
-        if (mouseTracker) {
-          mouseTracker.getIntersectionWithSphere(sphereCenter, sphereRadius, mouseWorldPosition);
-        } else {
-          mouseWorldPosition.copy(sphereCenter);
-        }
-
-        for (let i = 0; i < numTelescopes; i++) {
-          telescopes[i].update(elapsedTime, mouseWorldPosition);
-          telescopeOrigins[i].copy(telescopes[i].origin);
-          telescopeTargets[i].copy(telescopes[i].target);
-        }
-
-        loopEarth.update(delta);
-        loopCamera.updateMatrixWorld();
-        loopReactiveStarfield.updateFrustums(telescopeOrigins, telescopeTargets, loopCamera);
+      if (activeScene === "simulation" && earthScene) {
+        earthScene.update(delta, elapsedTime);
 
         if (perf) perf.begin();
-
-        if (effectComposer && grainPass) {
-          effectComposer.render();
-        } else {
-          loopRenderer.render(loopScene, loopCamera);
-        }
+        earthScene.render();
       } else if (activeScene === "carousel" && carouselScene) {
         carouselScene.update(delta);
 
@@ -291,14 +189,8 @@
     let handleCursorLeave: (() => void) | null = null;
 
     try {
-      const config = simulationConfig;
-      scene = new THREE.Scene();
-      scene.background = null;
-
-      camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
-      camera.position.set(0, 0, 300);
-      camera.lookAt(new THREE.Vector3(0, 0, 0));
-      updateCamera();
+      const width = container.offsetWidth || container.clientWidth;
+      const height = container.offsetHeight || container.clientHeight;
 
       renderer = createRenderer(container);
       renderer.setClearColor(0x000000, 0);
@@ -306,7 +198,7 @@
       // Listen for WebGL context loss (#20)
       renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
 
-      if (config.perf.enabled) {
+      if (simulationConfig.perf.enabled) {
         perf = new ThreePerf({
           anchorX: "left",
           anchorY: "top",
@@ -315,29 +207,8 @@
         });
       }
 
-      setupLighting();
-
-      const width = container.offsetWidth || container.clientWidth;
-      const height = container.offsetHeight || container.clientHeight;
-      reactiveStarfield = new ReactiveStarfield(scene, width, height, renderer);
-      earth = new Earth(scene, renderer);
-
-      // Set up telescopes
-      const originGridPoints: THREE.Vector3[] = grid3d(
-        simulationConfig.earth.position,
-        simulationConfig.earth.radius * simulationConfig.telescope.orbitalRadiusScalar,
-        1600
-      );
-      const origins = sampleArray(originGridPoints, simulationConfig.telescope.numTelescopes);
-      const numMouseTrackingTelescopes = simulationConfig.telescope.numMouseTrackingTelescopes;
-      telescopes = origins.map((origin, index) => {
-        const shouldTrackMouse = index < numMouseTrackingTelescopes;
-        if (!scene) throw new Error("Scene not initialized");
-        return new Telescope(scene, origin, shouldTrackMouse);
-      });
-
-      mouseTracker = new MouseTracker();
-      camera.updateMatrixWorld();
+      // Create the earth scene
+      earthScene = new EarthScene(width, height, renderer);
 
       // Carousel scene is created lazily when first needed (see $effect below)
 
@@ -346,13 +217,13 @@
 
       // Mouse tracking (also drives explore cursor position)
       handleMouseMove = (event: MouseEvent) => {
-        if (container && mouseTracker) {
+        if (container && earthScene) {
           const rect = container.getBoundingClientRect();
           const w = container.offsetWidth || container.clientWidth;
           const h = container.offsetHeight || container.clientHeight;
           const x = ((event.clientX - rect.left) / w) * 2 - 1;
           const y = -((event.clientY - rect.top) / h) * 2 + 1;
-          mouseTracker.updateMousePositionNDC(x, y);
+          earthScene.updateMouseNDC(x, y);
         }
 
         // Update explore cursor position when in carousel mode
@@ -365,14 +236,14 @@
       container.addEventListener("mousemove", handleMouseMove);
 
       handleMouseClick = (event: MouseEvent) => {
-        if (container && mouseTracker && camera) {
+        if (container && earthScene) {
           const rect = container.getBoundingClientRect();
           const w = container.offsetWidth || container.clientWidth;
           const h = container.offsetHeight || container.clientHeight;
           const x = ((event.clientX - rect.left) / w) * 2 - 1;
           const y = -((event.clientY - rect.top) / h) * 2 + 1;
-          mouseTracker.updateMousePositionNDC(x, y);
-          mouseTracker.update(camera);
+          earthScene.updateMouseNDC(x, y);
+          earthScene.updateMouseTracker();
         }
       };
       container.addEventListener("click", handleMouseClick);
@@ -403,12 +274,7 @@
         renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
       }
 
-      telescopes.forEach((telescope) => telescope.dispose());
-      telescopes = [];
-      Telescope.disposeStaticResources();
-
-      earth?.dispose();
-      reactiveStarfield?.dispose();
+      earthScene?.dispose();
       carouselScene?.dispose();
       perf?.dispose();
       cleanupAnimation?.();
@@ -459,9 +325,12 @@
 
   // Drive camera zoom from hero scroll progress
   $effect(() => {
-    const zoomScaleFactor = 1.5;
-    cameraFrustumSize = initialCameraFrustumSize - heroScrollProgress * zoomScaleFactor;
-    updateCamera();
+    if (earthScene && container) {
+      earthScene.setHeroScrollProgress(heroScrollProgress);
+      const width = container.offsetWidth || container.clientWidth;
+      const height = container.offsetHeight || container.clientHeight;
+      earthScene.updateCamera(width, height);
+    }
   });
 </script>
 
