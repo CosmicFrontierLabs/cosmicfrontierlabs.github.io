@@ -73,7 +73,7 @@
   const minFramesForReady = 100;
   let framesRendered = 0;
   let isReady = $state(false);
-  let isCarouselLoading = $state(false);
+  let isCarouselReady = $state(false);
 
   // Error boundary state
   let initError = $state<string | null>(null);
@@ -420,11 +420,11 @@
     if (activeScene === "carousel" && !carouselScene && renderer && container) {
       const width = container.offsetWidth || container.clientWidth;
       const height = container.offsetHeight || container.clientHeight;
-      isCarouselLoading = true;
+      isCarouselReady = false;
       const newScene = new CarouselScene(width, height, renderer);
       carouselScene = newScene;
       newScene.loaded.then(() => {
-        isCarouselLoading = false;
+        isCarouselReady = true;
       });
     }
   });
