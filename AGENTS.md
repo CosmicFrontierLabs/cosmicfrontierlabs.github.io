@@ -1,6 +1,18 @@
 # Agent Guidelines for Cosmic Frontier
 
-This is an Astro project with Svelte 5 components.
+This is an Astro 5 + Svelte 5 site with interactive Three.js 3D scenes. Deployed as a static site (GitHub Pages).
+
+## Commands
+
+```bash
+npm run dev          # Dev server at http://localhost:4321 (binds 0.0.0.0)
+npm run build        # Production build
+npm run preview      # Preview production build
+npm run check        # Astro type checking (uses --max-old-space-size=8192)
+npm run format       # Prettier format all files
+```
+
+No test framework is configured.
 
 ## Svelte 5 Conventions
 
@@ -13,10 +25,6 @@ When writing Svelte components:
   - `$effect` - Use judiciously, only when side effects are necessary (e.g., DOM manipulation, subscriptions)
 - **Prefer `$derived` and secondly function calls over `$effect`** when possible - derived values are more efficient and declarative
 - **Component structure**: Keep reactive logic in `<script>` tags, use runes for all reactive variables
-
-## Code Formatting
-
-- **Prettier** is configured and should be used (`npm run format`)
 
 ## TypeScript
 
@@ -35,6 +43,7 @@ When writing Svelte components:
   - Composition classes in `src/styles/compositions/` for layout patterns
 - **Color system**: Use design tokens (e.g., `var(--color-primary)`, `var(--color-text)`) instead of hardcoded colors
 - **Typography**: Use size step variables (`--size-step-0`, `--size-step-1`, etc.) and font family tokens
+- **Z-index layers** defined in `src/styles/tokens.scss`: simulation=1, hero=2, subhero=3, items=4, carousel-ui=10; canvas elevates to 13 when carousel is active
 
 ## Three.js Patterns
 
@@ -46,6 +55,51 @@ When writing Svelte components:
   - Clean up resources (dispose geometries, materials, textures) when components unmount
 - **Camera setup**: Prefer orthographic cameras for consistent scaling, use perspective when depth perception is needed
 - **Lighting**: Configure ambient and directional lights through simulation config
+
+## Architecture
+
+### Dual-Scene Rendering Pattern
+
+The core visual experience uses **two Three.js scenes sharing one WebGLRenderer**, orchestrated by scroll position:
+
+1. **EarthScene** (`src/components/simulation/EarthScene.ts`) — Earth with orbiting telescopes and a reactive starfield. Uses an orthographic camera with post-processing (film grain via EffectComposer).
+2. **CarouselScene** (`src/components/simulation/CarouselScene.ts`) — 3D product carousel showing GLB telescope models with a planar mirror (Reflector), OrbitControls, and GSAP-driven camera animations between slides.
+
+**Canvas.svelte** owns the WebGLRenderer and animation loop but does not own the scenes — it injects the renderer into each scene class. Scene switching is triggered by GSAP ScrollTrigger in **HomePage.svelte**.
+
+### Scroll-Driven UI Flow
+
+`HomePage.svelte` sets up three GSAP ScrollTrigger zones that control:
+- `canvasOpacity` — fades the canvas in/out between sections
+- `activeScene` — switches between `"simulation"` and `"carousel"`
+- `heroScrollProgress` — drives camera zoom on the hero
+
+`CarouselOverlay.svelte` provides slide navigation UI on top of the carousel scene.
+
+### Key Simulation Modules
+
+- `Telescope.ts` — Orbital mechanics, trail rendering, frustum visualization
+- `ReactiveStarfield.ts` — Shader-based starfield responsive to telescope frustum positions
+- `Earth.ts` — Textured sphere with custom CRT grid shader
+- `materialUtils.ts` — Enhances GLB metallic materials with tweakable parameters
+- `mathUtils.ts` — Kepler orbit math, spherical coordinates, ray-sphere intersection
+- `carouselData.ts` — Slide definitions (camera positions, model visibility, text)
+- `simulationConfig.ts` — Shared constants for both scenes
+
+GLSL shaders are in `src/components/simulation/shaders/` and bundled via `vite-plugin-glslify`.
+
+### Content
+
+- Blog posts: Markdown in `src/site-content/blog/` with frontmatter (`title`, `date`, `category`, `isDraft`, etc.)
+- Job postings: `src/site-content/jobs.yaml`
+- Dynamic blog routes: `src/pages/blog/[slug].astro`
+- Decap CMS integration for content management
+
+### Build Configuration
+
+- `astro.config.mjs`: Svelte + Sitemap integrations, glslify Vite plugin, manual Rollup chunks for Three.js and GSAP
+- GLB models in `public/models/` are meshopt-compressed; CarouselScene loads them with both MeshoptDecoder and DRACOLoader
+- HDR environment texture in `public/textures/`
 
 ## General Best Practices
 
