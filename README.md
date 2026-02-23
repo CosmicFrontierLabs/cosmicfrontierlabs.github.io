@@ -168,3 +168,6 @@ Edit `src/site-content/jobs.yaml`:
 
 The canvasOpacity must control if anything in Canvas.svelte and it's children are visible
 That's what must determine whether the loader of carousel or hero animation are visible.
+
+That doesn't look great on slow 4g because it requires all the js to load, so need to think about it a bit more. and what my preferred pattern is for htis kind of thing.
+probably a pen and paper think for a sec.
