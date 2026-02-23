@@ -20,6 +20,8 @@
     heroScrollProgress = $bindable(0),
   }: Props = $props();
 
+  $inspect(heroScrollProgress);
+
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
   let isLoading = $derived(!isEarthReady);
@@ -410,8 +412,8 @@
     position: fixed;
     inset: 0;
     background-color: var(--body-bg);
-    transition: opacity 0.3s ease-in;
     z-index: 1;
+    /* Don't transition opacity since it's canvasOpacity, which is controlled by the parent component */
   }
 
   /* When carousel is active, elevate above all page content */
