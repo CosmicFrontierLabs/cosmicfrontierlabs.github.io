@@ -15,7 +15,7 @@
 
   // Bindable state passed down to SimulationCanvas
   let activeScene = $state<"simulation" | "carousel">("simulation");
-  let canvasOpacity = $state(1);
+  let canvasOpacity = $state(0);
   let heroScrollProgress = $state(0);
   let subheroOpacity = $state(1);
   let subheroPointerEvents = $derived(subheroOpacity > 0 ? "auto" : "none");
@@ -64,8 +64,20 @@
       },
     });
 
-    // Refresh trigger positions after images / layout settles
+    // Refresh trigger positions after images / layout settles,
+    // then force each trigger to evaluate so initial state is correct
+    // (e.g., when the browser restores a non-zero scroll position).
     ScrollTrigger.refresh();
+    heroTrigger.update();
+    carouselEnterTrigger.update();
+    subheroFadeTrigger.update();
+
+    // If we're above both triggers (top of page), neither onUpdate fired,
+    // so canvasOpacity is still 0. Set it to the correct initial value:
+    // fully visible unless the hero has started fading it out.
+    if (heroTrigger.progress === 0 && carouselEnterTrigger.progress === 0) {
+      canvasOpacity = 1;
+    }
 
     return () => {
       heroTrigger.kill();

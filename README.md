@@ -10,6 +10,7 @@ TODO:
   - Maybe start by adding logging to onMount in canvas
   - Need to do this BEFORE sending to aaron because it looks slow
   - Preload HDR after hero Three.js scene is running ?
+- There's an issue with OverlayComponent's fade in. It fades in the flashes out and back in on scroll.
 - What happens if graphics acceleration is disabled?
 - What happens if the internet is super slow? What's our fallback?
 - Make sure mobile view looks good
@@ -162,3 +163,8 @@ Edit `src/site-content/jobs.yaml`:
 - `location` - Job location
 - `greenhouseLink` - Greenhouse application URL
 - `isDraft` - Set to `false` to publish, `true` to hide
+
+## Dev notes
+
+The canvasOpacity must control if anything in Canvas.svelte and it's children are visible
+That's what must determine whether the loader of carousel or hero animation are visible.
