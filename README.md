@@ -11,6 +11,10 @@ TODO:
   - Need to do this BEFORE sending to aaron because it looks slow
 - What happens if graphics acceleration is disabled?
 - What happens if the internet is super slow? What's our fallback?
+- Make sure mobile view looks good
+- Explore mouse effect on hero
+- More gap between rolodex cards in desktop viewport
+- Make sure carousel resets to 0 on entry to viewport
 - Check A11y
 - Check lighthouse
 - Optional:

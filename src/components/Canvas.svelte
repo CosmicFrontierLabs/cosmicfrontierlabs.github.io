@@ -20,11 +20,26 @@
     heroScrollProgress = $bindable(0),
   }: Props = $props();
 
+  let isLoading = $state(true);
+
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
 
   // Orbit controls state — managed internally, with side-effect sync
+  // Prefer to use setOrbitMode() to set this state
   let orbitMode = $state(false);
+
+  // Detect touch-only devices — explore mode requires a mouse
+  let isTouchDevice = $state(false);
+
+  // Allow explore interactions only on non-touch devices when carousel is visible and not already in orbit mode
+  let allowExplore = $derived(!isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
+
+  // Mouse cursor position for the "click to explore" circle
+  let cursorX = $state(0);
+  let cursorY = $state(0);
+  let cursorOver = $state(false);
+  let cursorVisible = $derived(allowExplore && cursorOver);
 
   function setOrbitMode(newOrbitMode: boolean) {
     orbitMode = newOrbitMode;
@@ -36,20 +51,6 @@
       spaceHeldForPan = false;
     }
   }
-
-  // Detect touch-only devices — explore mode requires a mouse
-  let isTouchDevice = $state(false);
-
-  // Allow explore interactions only on non-touch devices when carousel is visible and not already in orbit mode
-  let allowExplore = $derived(
-    !isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0,
-  );
-
-  // Mouse cursor position for the "click to explore" circle
-  let cursorX = $state(0);
-  let cursorY = $state(0);
-  let cursorOver = $state(false);
-  let cursorVisible = $derived(allowExplore && cursorOver);
 
   // Svelte use:action for mouse/keyboard interaction on the container
   function containerInteraction(node: HTMLDivElement) {
@@ -91,8 +92,12 @@
       }
     }
 
-    function handleEnter() { cursorOver = true; }
-    function handleLeave() { cursorOver = false; }
+    function handleEnter() {
+      cursorOver = true;
+    }
+    function handleLeave() {
+      cursorOver = false;
+    }
 
     node.addEventListener("mousemove", handleMouseMove);
     node.addEventListener("click", handleClick);
@@ -274,7 +279,6 @@
       renderer.setClearColor(0x000000, 0);
       renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
 
-
       // Initialize cursorX and cursorY to the center of the container
       cursorX = container.clientWidth / 2;
       cursorY = container.clientHeight / 2;
@@ -295,6 +299,7 @@
       earthScene.loaded.then(() => {
         isEarthReady = true;
         console.log("EarthScene ready time:", performance.now() - t0);
+        isLoading = false;
       });
 
       // TODO: load this asynchronously so we don't slow down the view?  // Or is it fast enough?
@@ -333,8 +338,6 @@
       cleanupAnimation?.();
     };
   });
-
-
 </script>
 
 {#if initError}
@@ -361,21 +364,38 @@
 ></div>
 
 {#if cursorVisible}
-  <div
-    class="explore-cursor"
-    style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));"
-  >
+  <div class="explore-cursor" style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));">
     <svg class="explore-cursor__ring" width="80" height="80" viewBox="0 0 80 80">
       <circle cx="40" cy="40" r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
-      <circle cx="40" cy="40" r="38" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"
-        stroke-dasharray="60 180" stroke-dashoffset="0" class="explore-cursor__arc" />
+      <circle
+        cx="40"
+        cy="40"
+        r="38"
+        fill="none"
+        stroke="rgba(255,255,255,0.8)"
+        stroke-width="1.5"
+        stroke-dasharray="60 180"
+        stroke-dashoffset="0"
+        class="explore-cursor__arc"
+      />
     </svg>
-    <span class="explore-cursor__label">Click to<br/>explore</span>
+    <span class="explore-cursor__label">Click to<br />explore</span>
   </div>
 {/if}
 
 <div style="opacity: {canvasOpacity * (activeScene === 'carousel' ? 1 : 0)};">
-  <CarouselOverlay {carouselScene} paused={orbitMode} onExitOrbit={() => { setOrbitMode(false); }} />
+  <CarouselOverlay
+    {carouselScene}
+    paused={orbitMode}
+    onExitOrbit={() => {
+      setOrbitMode(false);
+    }}
+  />
+</div>
+
+
+<div class="loading-indicator" data-loading={isLoading} data-hidden={heroScrollProgress > 0.5}>
+  <div class="loading-indicator__message">Loading 3D simulation...</div>
 </div>
 
 <style>
@@ -441,8 +461,12 @@
   }
 
   @keyframes explore-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .explore-cursor__label {
@@ -495,5 +519,44 @@
       radial-gradient(1px 1px at 300px 100px, rgba(255, 255, 255, 0.5), transparent);
     background-size: 350px 200px;
     opacity: 0.5;
+  }
+
+  .loading-indicator {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s 1s ease-in;
+    background-color: var(--body-bg);
+
+    display: none;
+    opacity: 0;
+
+    &[data-hidden="true"][data-loading="true"] {
+      display: none;
+    }
+
+    &[data-hidden="true"][data-loading="false"] {
+      display: none;
+    }
+
+    &[data-hidden="false"][data-loading="true"] {
+      opacity: 1;
+      display: flex;
+    }
+
+    &[data-hidden="false"][data-loading="false"] {
+      display: flex;
+      opacity: 0;
+    }
+  }
+
+  .loading-indicator__message {
+    font-size: var(--size-step--1, 0.875rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 </style>
