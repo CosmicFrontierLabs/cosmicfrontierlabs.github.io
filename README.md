@@ -173,3 +173,25 @@ That's what must determine whether the loader of carousel or hero animation are 
 
 That doesn't look great on slow 4g because it requires all the js to load, so need to think about it a bit more. and what my preferred pattern is for htis kind of thing.
 probably a pen and paper think for a sec.
+
+
+---
+
+Svelte runs onMounts from the inside out, so children are run before their parents.
+Which means the approach, in general, of having the outer component determines what shown, is hard during loading time, when loading is slow and the onMount takes a while.
+
+What's the right way to think about this?
+
+I want the Loading... / loader to be part of the default site
+
+And then on load, it gets swapped out. Or hidden.
+Maybe this:
+The Loading... is an overlay in HomePage.svelte.
+There's a binding from HomePage to Canvas. Which canvas updates when it's loaded and ready to show.
+And that then changes Loading... to be hidden.
+Or, we can just put a foreground on everything. so that it covers up the Loading... because really the only issue is that (a) it's not showing soon enough and
+(b) when it does show soon enough, it's conflicting with the subhero text.
+
+We could also just go simpler: we have a whole site loader, that covers the whole thing until we're ready. Maybe that's what we try.
+And then we have an aborted version.
+
