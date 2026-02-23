@@ -10,7 +10,7 @@
   interface Props {
     activeScene: "simulation" | "carousel";
     canvasOpacity: number;
-    /** 0–1 scroll progress through the hero section, drives camera zoom */
+    /** 0–1 scroll progress through the hero section, drives camera zoom in the EarthScene */
     heroScrollProgress: number;
   }
 
@@ -19,8 +19,6 @@
     canvasOpacity = $bindable(0),
     heroScrollProgress = $bindable(0),
   }: Props = $props();
-
-  $inspect(canvasOpacity);
 
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
@@ -133,7 +131,7 @@
   let initError = $state<string | null>(null);
   let webglSupported = $state(true);
 
-  // --- WebGL & Simulation Setup ---
+  // --- WebGL & Canvas Setup ---
   function checkWebGLSupport(): boolean {
     try {
       const canvas = document.createElement("canvas");
@@ -330,8 +328,8 @@
       // Mouse/keyboard interaction is handled by the use:containerInteraction action
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error("Simulation initialization failed:", error);
-      initError = `Failed to initialize 3D simulation: ${errorMessage}`;
+      console.error("Canvas initialization failed:", error);
+      initError = `Failed to initialize 3D: ${errorMessage}`;
       return;
     }
 
@@ -349,97 +347,103 @@
   });
 </script>
 
-{#if initError}
-  <div class="simulation-fallback">
-    <div class="fallback-content">
-      <div class="fallback-stars"></div>
-      <p class="fallback-message">{initError}</p>
+<div class="canvas-container" style="--canvas-opacity: {canvasOpacity};">
+  {#if initError}
+    <div class="canvas-fallback">
+      <div class="fallback-content">
+        <div class="fallback-stars"></div>
+        <p class="fallback-message">{initError}</p>
+      </div>
     </div>
+  {/if}
+
+  <div
+    bind:this={container}
+    use:containerInteraction
+    class="canvas"
+    class:carousel-active={activeScene === "carousel"}
+    class:allow-explore={allowExplore}
+    class:orbit-mode={orbitMode}
+    class:pan-mode={orbitMode && spaceHeldForPan}
+    style="opacity: {isEarthReady ? canvasOpacity : 0};"
+    role="button"
+    tabindex="-1"
+  ></div>
+
+  {#if cursorVisible}
+    <div class="explore-cursor" style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));">
+      <svg class="explore-cursor__ring" width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
+        <circle
+          cx="40"
+          cy="40"
+          r="38"
+          fill="none"
+          stroke="rgba(255,255,255,0.8)"
+          stroke-width="1.5"
+          stroke-dasharray="60 180"
+          stroke-dashoffset="0"
+          class="explore-cursor__arc"
+        />
+      </svg>
+      <span class="explore-cursor__label">Click to<br />explore</span>
+    </div>
+  {/if}
+
+  <div style="opacity: {activeScene === 'carousel' ? canvasOpacity : 0};">
+    <CarouselOverlay
+      {carouselScene}
+      paused={orbitMode}
+      onExitOrbit={() => {
+        setOrbitMode(false);
+      }}
+    />
   </div>
-{/if}
 
-<div
-  bind:this={container}
-  use:containerInteraction
-  class="simulation-viewer"
-  class:carousel-active={activeScene === "carousel"}
-  class:allow-explore={allowExplore}
-  class:orbit-mode={orbitMode}
-  class:pan-mode={orbitMode && spaceHeldForPan}
-  style="opacity: {isEarthReady ? canvasOpacity : 0};"
-  role="button"
-  tabindex="-1"
-></div>
-
-{#if cursorVisible}
-  <div class="explore-cursor" style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));">
-    <svg class="explore-cursor__ring" width="80" height="80" viewBox="0 0 80 80">
-      <circle cx="40" cy="40" r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
-      <circle
-        cx="40"
-        cy="40"
-        r="38"
-        fill="none"
-        stroke="rgba(255,255,255,0.8)"
-        stroke-width="1.5"
-        stroke-dasharray="60 180"
-        stroke-dashoffset="0"
-        class="explore-cursor__arc"
-      />
-    </svg>
-    <span class="explore-cursor__label">Click to<br />explore</span>
+  <div class="loading-indicator" data-loading={isLoading}>
+    <div class="loading-indicator__message">Loading...</div>
   </div>
-{/if}
-
-<div style="opacity: {canvasOpacity * (activeScene === 'carousel' ? 1 : 0)};">
-  <CarouselOverlay
-    {carouselScene}
-    paused={orbitMode}
-    onExitOrbit={() => {
-      setOrbitMode(false);
-    }}
-  />
 </div>
 
+<style lang="scss">
+  .canvas-container {
+    opacity: var(--canvas-opacity);
+  }
 
-<div class="loading-indicator" data-hidden={!isLoading || canvasOpacity <= 0.25} style="opacity: {isLoading ? canvasOpacity : 0};">
-  <div class="loading-indicator__message">Loading 3D simulation...</div>
-</div>
-
-<style>
-  .simulation-viewer {
+  .canvas {
     position: fixed;
     inset: 0;
     background-color: var(--body-bg);
     z-index: 1;
-    /* Don't transition opacity since it's canvasOpacity, which is controlled by the parent component */
+    // Be careful with transition on opacity since it's canvasOpacity
+    // which is controlled by the parent component
   }
 
   /* When carousel is active, elevate above all page content */
-  .simulation-viewer.carousel-active {
+  .canvas.carousel-active {
     z-index: 13;
   }
 
   /* Hide default cursor when explore cursor is showing (mouse devices only) */
   @media (pointer: fine) {
-    .simulation-viewer.allow-explore {
+    .canvas.allow-explore {
       cursor: none;
     }
   }
 
-  .simulation-viewer.orbit-mode {
+  .canvas.orbit-mode {
     cursor: grab;
   }
 
-  .simulation-viewer.orbit-mode:active {
+  .canvas.orbit-mode:active {
     cursor: grabbing;
   }
 
-  .simulation-viewer.pan-mode {
+  .canvas.pan-mode {
     cursor: grab !important;
   }
 
-  .simulation-viewer.pan-mode:active {
+  .canvas.pan-mode:active {
     cursor: grabbing !important;
   }
 
@@ -488,7 +492,7 @@
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
   }
 
-  .simulation-fallback {
+  .canvas-fallback {
     position: absolute;
     inset: 0;
     background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
@@ -541,8 +545,12 @@
     pointer-events: none;
     transition: opacity 0.5s ease-out;
 
-    &[data-hidden="true"] {
-      display: none;
+    &[data-loading="true"] {
+      opacity: 1;
+    }
+
+    &[data-loading="false"] {
+      opacity: 0;
     }
   }
 
