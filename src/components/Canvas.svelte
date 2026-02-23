@@ -20,7 +20,9 @@
     heroScrollProgress = $bindable(0),
   }: Props = $props();
 
-  let isLoading = $state(true);
+  let isEarthReady = $state(false);
+  let isCarouselReady = $state(false);
+  let isLoading = $derived(!isEarthReady);
 
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
@@ -124,9 +126,6 @@
   // Scene instances
   let earthScene = $state<EarthScene | null>(null);
   let carouselScene = $state<CarouselScene | null>(null);
-
-  let isEarthReady = $state(false);
-  let isCarouselReady = $state(false);
 
   // Error boundary state
   let initError = $state<string | null>(null);
@@ -296,11 +295,15 @@
       earthScene = new EarthScene(width, height, renderer);
       console.log("CarouselScene init time:", performance.now() - t0);
 
-      earthScene.loaded.then(() => {
-        isEarthReady = true;
-        console.log("EarthScene ready time:", performance.now() - t0);
-        isLoading = false;
-      });
+      earthScene.loaded
+        .then(() => {
+          isEarthReady = true;
+          console.log("EarthScene ready time:", performance.now() - t0);
+        })
+        .catch((err) => {
+          console.error("EarthScene failed to load:", err);
+          initError = "Failed to load 3D scene. Please reload the page.";
+        });
 
       // TODO: load this asynchronously so we don't slow down the view?  // Or is it fast enough?
       carouselScene = new CarouselScene(width, height, renderer);
@@ -308,10 +311,14 @@
       carouselScene.onSpaceHeldChange = (held: boolean) => {
         spaceHeldForPan = held;
       };
-      carouselScene.loaded.then(() => {
-        isCarouselReady = true;
-        console.log("CarouselScene ready time:", performance.now() - t0);
-      });
+      carouselScene.loaded
+        .then(() => {
+          isCarouselReady = true;
+          console.log("CarouselScene ready time:", performance.now() - t0);
+        })
+        .catch((err) => {
+          console.error("CarouselScene failed to load:", err);
+        });
 
       console.log("After carouselScene.loaded.then:", performance.now() - t0);
 
@@ -394,7 +401,7 @@
 </div>
 
 
-<div class="loading-indicator" data-loading={isLoading} data-hidden={heroScrollProgress > 0.5}>
+<div class="loading-indicator" data-visible={isLoading && heroScrollProgress <= 0.5}>
   <div class="loading-indicator__message">Loading 3D simulation...</div>
 </div>
 
@@ -524,32 +531,18 @@
   .loading-indicator {
     position: fixed;
     inset: 0;
-    z-index: 1;
-
+    z-index: 2;
+    display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 1s 1s ease-in;
     background-color: var(--body-bg);
-
-    display: none;
     opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-out;
 
-    &[data-hidden="true"][data-loading="true"] {
-      display: none;
-    }
-
-    &[data-hidden="true"][data-loading="false"] {
-      display: none;
-    }
-
-    &[data-hidden="false"][data-loading="true"] {
+    &[data-visible="true"] {
       opacity: 1;
-      display: flex;
-    }
-
-    &[data-hidden="false"][data-loading="false"] {
-      display: flex;
-      opacity: 0;
+      pointer-events: auto;
     }
   }
 
