@@ -16,7 +16,7 @@
 
   let {
     activeScene = $bindable("simulation"),
-    canvasOpacity = $bindable(0),
+    canvasOpacity = 0,
     heroScrollProgress = $bindable(0),
   }: Props = $props();
 
@@ -257,6 +257,7 @@
   }
 
   onMount(() => {
+    console.log("Canvas onMount start");
     let t0 = performance.now();
     console.log("Canvas onMount start time:", t0);
     // Detect touch-only devices (no fine pointer = no mouse)
@@ -333,6 +334,7 @@
       return;
     }
 
+    console.log("Canvas onMount end", performance.now());
     return () => {
       resizeObserver?.disconnect();
       if (renderer) {

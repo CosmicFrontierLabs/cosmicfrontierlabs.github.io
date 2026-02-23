@@ -3,6 +3,7 @@
   import { ScrollTrigger } from "gsap/ScrollTrigger";
   import Canvas from "../components/Canvas.svelte";
   import { onMount } from "svelte";
+  import { scrollY, innerHeight } from "svelte/reactivity/window";
 
   gsap.registerPlugin(ScrollTrigger);
 
@@ -15,7 +16,15 @@
 
   // Bindable state passed down to SimulationCanvas
   let activeScene = $state<"simulation" | "carousel">("simulation");
-  let canvasOpacity = $state(0);
+
+  // Before mount, derive opacity from raw scroll position so the canvas
+  // is hidden if the browser restores a non-zero scroll position.
+  // After mount, ScrollTrigger takes over via scrollTriggeredOpacity.
+  let scrollTriggeredOpacity = $state<number | null>(null);
+  let canvasOpacity = $derived(
+    scrollTriggeredOpacity !== null ? scrollTriggeredOpacity : (scrollY.current ?? 0) > 10 ? 0 : 1,
+  );
+
   let heroScrollProgress = $state(0);
   let subheroOpacity = $state(1);
   let subheroPointerEvents = $derived(subheroOpacity > 0 ? "auto" : "none");
@@ -35,7 +44,7 @@
         // Skip camera zoom on mobile — the resize/scroll interactions cause jarring size changes
         const isMobile = window.matchMedia("(max-width: 768px)").matches;
         heroScrollProgress = isMobile ? 0 : self.progress;
-        canvasOpacity = 1 - self.progress;
+        scrollTriggeredOpacity = 1 - self.progress;
       },
     });
 
@@ -48,7 +57,7 @@
       invalidateOnRefresh: true,
       onUpdate: (self) => {
         if (activeScene !== "carousel") activeScene = "carousel";
-        canvasOpacity = self.progress;
+        scrollTriggeredOpacity = self.progress;
       },
     });
 
@@ -73,11 +82,12 @@
     subheroFadeTrigger.update();
 
     // If we're above both triggers (top of page), neither onUpdate fired,
-    // so canvasOpacity is still 0. Set it to the correct initial value:
-    // fully visible unless the hero has started fading it out.
+    // so scrollTriggeredOpacity is still 1 (fully visible). If a trigger
+    // did fire during refresh, it already set the correct value.
     if (heroTrigger.progress === 0 && carouselEnterTrigger.progress === 0) {
-      canvasOpacity = 1;
+      scrollTriggeredOpacity = 1;
     }
+
 
     return () => {
       heroTrigger.kill();
