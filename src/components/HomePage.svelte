@@ -21,9 +21,16 @@
   // is hidden if the browser restores a non-zero scroll position.
   // After mount, ScrollTrigger takes over via scrollTriggeredOpacity.
   let scrollTriggeredOpacity = $state<number | null>(null);
-  let canvasOpacity = $derived(
-    scrollTriggeredOpacity !== null ? scrollTriggeredOpacity : (scrollY.current ?? 0) > 10 ? 0 : 1,
-  );
+  let canvasOpacity = $derived.by(() => {
+    if (scrollTriggeredOpacity !== null) {
+      return scrollTriggeredOpacity;
+    } 
+
+    if (scrollY.current !== null && scrollY.current !== undefined && innerHeight.current !== null && innerHeight.current !== undefined) {
+      return scrollY.current / (innerHeight.current);
+    }
+    return 0;
+  });
 
   let heroScrollProgress = $state(0);
   let subheroOpacity = $state(1);

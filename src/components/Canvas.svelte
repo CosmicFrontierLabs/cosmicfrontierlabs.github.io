@@ -269,6 +269,7 @@
     }
 
     let cleanupAnimation: (() => void) | null = null;
+    $inspect(canvasOpacity);
 
     try {
       const width = container.offsetWidth || container.clientWidth;
