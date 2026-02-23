@@ -15,12 +15,13 @@
 
   // Bindable state passed down to SimulationCanvas
   let activeScene = $state<"simulation" | "carousel">("simulation");
-  let canvasOpacity = $state(1);
+  let canvasOpacity = $state(0);
   let heroScrollProgress = $state(0);
   let subheroOpacity = $state(1);
   let subheroPointerEvents = $derived(subheroOpacity > 0 ? "auto" : "none");
 
   onMount(() => {
+    canvasOpacity = heroEl.offsetHeight > 0 ? 1 : 0;
     // 1. Hero: fade canvas out and drive camera zoom
     //    The 1.5× multiplier makes the canvas fully transparent by ~67% scroll
     //    through the hero, leaving a visual pause before the next section.

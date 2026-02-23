@@ -16,11 +16,11 @@
 
   let {
     activeScene = $bindable("simulation"),
-    canvasOpacity = $bindable(1),
+    canvasOpacity = $bindable(0),
     heroScrollProgress = $bindable(0),
   }: Props = $props();
 
-  $inspect(heroScrollProgress);
+  $inspect(canvasOpacity);
 
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
@@ -362,12 +362,11 @@
   bind:this={container}
   use:containerInteraction
   class="simulation-viewer"
-  class:ready={isEarthReady}
   class:carousel-active={activeScene === "carousel"}
   class:allow-explore={allowExplore}
   class:orbit-mode={orbitMode}
   class:pan-mode={orbitMode && spaceHeldForPan}
-  style="opacity: {canvasOpacity};"
+  style="opacity: {isEarthReady ? canvasOpacity : 0};"
   role="button"
   tabindex="-1"
 ></div>
@@ -403,7 +402,7 @@
 </div>
 
 
-<div class="loading-indicator" data-visible={isLoading && heroScrollProgress <= 0.5}>
+<div class="loading-indicator" data-hidden={!isLoading || canvasOpacity <= 0.25} style="opacity: {isLoading ? canvasOpacity : 0};">
   <div class="loading-indicator__message">Loading 3D simulation...</div>
 </div>
 
@@ -533,7 +532,7 @@
   .loading-indicator {
     position: fixed;
     inset: 0;
-    z-index: 2;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -542,9 +541,8 @@
     pointer-events: none;
     transition: opacity 0.5s ease-out;
 
-    &[data-visible="true"] {
-      opacity: 1;
-      pointer-events: auto;
+    &[data-hidden="true"] {
+      display: none;
     }
   }
 

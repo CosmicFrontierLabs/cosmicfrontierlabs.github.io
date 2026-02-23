@@ -56,7 +56,8 @@ export class Earth {
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.mesh.position.copy(config.position);
         this.scene.add(this.mesh);
-        resolve();
+        // Delay so the GPU can compile shaders and render initial frames
+        setTimeout(resolve, 500);
       },
       undefined,
       (error) => {
