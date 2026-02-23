@@ -16,7 +16,7 @@
 
   let {
     activeScene = $bindable("simulation"),
-    canvasOpacity = 0,
+    canvasOpacity,
     heroScrollProgress = $bindable(0),
   }: Props = $props();
 
@@ -257,9 +257,7 @@
   }
 
   onMount(() => {
-    console.log("Canvas onMount start");
     let t0 = performance.now();
-    console.log("Canvas onMount start time:", t0);
     // Detect touch-only devices (no fine pointer = no mouse)
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
 
@@ -292,14 +290,11 @@
         });
       }
 
-      console.log("EarthScene init time:", performance.now() - t0);
       earthScene = new EarthScene(width, height, renderer);
-      console.log("CarouselScene init time:", performance.now() - t0);
 
       earthScene.loaded
         .then(() => {
           isEarthReady = true;
-          console.log("EarthScene ready time:", performance.now() - t0);
         })
         .catch((err) => {
           console.error("EarthScene failed to load:", err);
@@ -308,20 +303,17 @@
 
       // TODO: load this asynchronously so we don't slow down the view?  // Or is it fast enough?
       carouselScene = new CarouselScene(width, height, renderer);
-      console.log("CarouselScene loaded time:", performance.now() - t0);
       carouselScene.onSpaceHeldChange = (held: boolean) => {
         spaceHeldForPan = held;
       };
       carouselScene.loaded
         .then(() => {
           isCarouselReady = true;
-          console.log("CarouselScene ready time:", performance.now() - t0);
         })
         .catch((err) => {
           console.error("CarouselScene failed to load:", err);
         });
 
-      console.log("After carouselScene.loaded.then:", performance.now() - t0);
 
       resizeObserver = setupResizeObserver();
       cleanupAnimation = startAnimationLoop();
@@ -334,7 +326,6 @@
       return;
     }
 
-    console.log("Canvas onMount end", performance.now());
     return () => {
       resizeObserver?.disconnect();
       if (renderer) {
@@ -349,7 +340,7 @@
   });
 </script>
 
-<div class="canvas-container" style="--canvas-opacity: {canvasOpacity};">
+<div class="canvas-container" style="--canvas-opacity: {canvasOpacity ?? 0};">
   {#if initError}
     <div class="canvas-fallback">
       <div class="fallback-content">
@@ -409,7 +400,7 @@
 
 <style lang="scss">
   .canvas-container {
-    opacity: var(--canvas-opacity);
+    opacity: var(--canvas-opacity, 0);
   }
 
   .canvas {
