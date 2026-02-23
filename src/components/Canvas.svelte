@@ -22,7 +22,7 @@
 
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
-  let isLoading = $derived(!isEarthReady);
+  let isLoading = $derived(!isEarthReady && activeScene === "simulation");
 
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
@@ -230,7 +230,7 @@
 
         if (perf) perf.begin();
         earthScene.render();
-      } else if (activeScene === "carousel" && carouselScene) {
+      } else if (activeScene === "carousel" && carouselScene && isCarouselReady) {
         carouselScene.update(delta);
 
         if (perf) {
