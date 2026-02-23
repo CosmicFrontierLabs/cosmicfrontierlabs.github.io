@@ -132,16 +132,6 @@
   let webglSupported = $state(true);
 
   // --- WebGL & Canvas Setup ---
-  function checkWebGLSupport(): boolean {
-    try {
-      const canvas = document.createElement("canvas");
-      const gl = canvas.getContext("webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-      return !!gl;
-    } catch {
-      return false;
-    }
-  }
-
   function createRenderer(container: HTMLDivElement): THREE.WebGLRenderer {
     const newRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     newRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
@@ -257,26 +247,34 @@
   }
 
   onMount(() => {
-    let t0 = performance.now();
     // Detect touch-only devices (no fine pointer = no mouse)
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
 
-    if (!checkWebGLSupport()) {
-      webglSupported = false;
-      initError =
-        "WebGL is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.";
-      return;
-    }
-
     let cleanupAnimation: (() => void) | null = null;
-    $inspect(canvasOpacity);
 
-    try {
-      const width = container.offsetWidth || container.clientWidth;
-      const height = container.offsetHeight || container.clientHeight;
-      renderer = createRenderer(container);
-      renderer.setClearColor(0x000000, 0);
-      renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+    let cancelled = false;
+
+    // Use an async IIFE so we can yield to the browser between heavy steps.
+    // The outer onMount returns the cleanup function synchronously.
+    const t0 = performance.now();
+    (async () => {
+      try {
+        const width = container.offsetWidth || container.clientWidth;
+        const height = container.offsetHeight || container.clientHeight;
+        renderer = createRenderer(container);
+        renderer.setClearColor(0x000000, 0);
+        renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+        console.log(`[Canvas] Renderer created in ${(performance.now() - t0).toFixed(1)}ms`);
+      } catch (error) {
+        // Renderer creation failure means WebGL is not available
+        webglSupported = false;
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("Canvas initialization failed:", error);
+        initError = `WebGL is not supported or failed to initialize: ${errorMessage}. Please try a modern browser like Chrome, Firefox, or Safari.`;
+        return;
+      }
+
+      if (cancelled) return;
 
       // Initialize cursorX and cursorY to the center of the container
       cursorX = container.clientWidth / 2;
@@ -291,43 +289,57 @@
         });
       }
 
-      earthScene = new EarthScene(width, height, renderer);
+      // Yield a frame so the browser can paint the empty canvas before
+      // we block the main thread with scene construction.
+      console.log(`[Canvas] Yielding frame at ${(performance.now() - t0).toFixed(1)}ms`);
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      console.log(`[Canvas] Frame yielded, resuming at ${(performance.now() - t0).toFixed(1)}ms`);
+      if (cancelled) return;
 
-      earthScene.loaded
-        .then(() => {
-          isEarthReady = true;
-        })
-        .catch((err) => {
-          console.error("EarthScene failed to load:", err);
-          initError = "Failed to load 3D scene. Please reload the page.";
-        });
+      try {
+        const width = container.offsetWidth || container.clientWidth;
+        const height = container.offsetHeight || container.clientHeight;
 
-      // TODO: load this asynchronously so we don't slow down the view?  // Or is it fast enough?
-      carouselScene = new CarouselScene(width, height, renderer);
-      carouselScene.onSpaceHeldChange = (held: boolean) => {
-        spaceHeldForPan = held;
-      };
-      carouselScene.loaded
-        .then(() => {
-          isCarouselReady = true;
-        })
-        .catch((err) => {
-          console.error("CarouselScene failed to load:", err);
-        });
+        earthScene = new EarthScene(width, height, renderer!);
+        console.log(`[Canvas] EarthScene constructed in ${(performance.now() - t0).toFixed(1)}ms`);
 
+        earthScene.loaded
+          .then(() => {
+            isEarthReady = true;
+            console.log(`[Canvas] EarthScene assets loaded at ${(performance.now() - t0).toFixed(1)}ms`);
+          })
+          .catch((err) => {
+            console.error("EarthScene failed to load:", err);
+            initError = "Failed to load 3D scene. Please reload the page.";
+          });
 
-      resizeObserver = setupResizeObserver();
-      cleanupAnimation = startAnimationLoop();
+        // TODO: load this asynchronously so we don't slow down the view?
+        carouselScene = new CarouselScene(width, height, renderer!);
+        console.log(`[Canvas] CarouselScene constructed at ${(performance.now() - t0).toFixed(1)}ms`);
+        carouselScene.onSpaceHeldChange = (held: boolean) => {
+          spaceHeldForPan = held;
+        };
+        carouselScene.loaded
+          .then(() => {
+            isCarouselReady = true;
+            console.log(`[Canvas] CarouselScene assets loaded at ${(performance.now() - t0).toFixed(1)}ms`);
+          })
+          .catch((err) => {
+            console.error("CarouselScene failed to load:", err);
+          });
 
-      // Mouse/keyboard interaction is handled by the use:containerInteraction action
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error("Canvas initialization failed:", error);
-      initError = `Failed to initialize 3D: ${errorMessage}`;
-      return;
-    }
+        resizeObserver = setupResizeObserver();
+        cleanupAnimation = startAnimationLoop();
+        console.log(`[Canvas] Animation loop started at ${(performance.now() - t0).toFixed(1)}ms`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("Canvas initialization failed:", error);
+        initError = `Failed to initialize 3D: ${errorMessage}`;
+      }
+    })();
 
     return () => {
+      cancelled = true;
       resizeObserver?.disconnect();
       if (renderer) {
         renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
