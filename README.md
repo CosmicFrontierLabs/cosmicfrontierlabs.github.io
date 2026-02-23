@@ -9,6 +9,7 @@ TODO:
 - Improve the loading experience, especially in Canvas and probably onMount in there: What's slow, What can be deferred
   - Maybe start by adding logging to onMount in canvas
   - Need to do this BEFORE sending to aaron because it looks slow
+  - Preload HDR after hero Three.js scene is running ?
 - What happens if graphics acceleration is disabled?
 - What happens if the internet is super slow? What's our fallback?
 - Make sure mobile view looks good
