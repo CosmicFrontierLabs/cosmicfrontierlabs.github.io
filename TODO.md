@@ -2,7 +2,6 @@ TODO:
 
 - Make sure mobile view looks good
 - Explore mouse effect on hero
-- More gap between rolodex cards in desktop viewport
 - Check A11y
 - Check lighthouse
 - Optional:

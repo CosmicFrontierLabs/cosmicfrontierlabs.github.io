@@ -427,10 +427,6 @@
       min-height: calc(90lvh - var(--index) * var(--card-offset) - var(--header-height));
       border-radius: var(--radius-l);
       box-shadow: var(--shadow-card-elevated);
-
-      & + & {
-        margin-block-start: 0;
-      }
     }
   }
 
