@@ -149,6 +149,7 @@
 
 <div class="simulation-container">
   <Canvas bind:activeScene {canvasOpacity} {heroScrollProgress} bind:isLoading={isCanvasLoading} />
+  <div class="simulation-container__loader-overlay" data-loaded={!isCanvasLoading}></div>
 </div>
 
 <div class="hero" bind:this={heroEl}>
@@ -220,6 +221,22 @@
     z-index: var(--z-simulation);
   }
 
+  .simulation-container__loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--body-bg);
+    z-index: var(--z-hero);
+    opacity: 1;
+    transition: opacity 1.5s linear 0.5s;
+    pointer-events: none;
+
+    &[data-loaded="true"] {
+      opacity: 0;
+    }
+  }
+
+
+
   /* HERO */
   .hero {
     min-height: 95lvh;
@@ -283,7 +300,7 @@
     justify-content: center;
     gap: var(--space-s);
     opacity: 1;
-    transition: opacity 0.5s ease-out;
+    transition: opacity 0.3s linear;
   }
 
   .hero-loader--hidden {

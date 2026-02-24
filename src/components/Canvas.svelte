@@ -418,7 +418,6 @@
 <style lang="scss">
   .canvas-container {
     opacity: var(--canvas-opacity, 0);
-    transition: opacity 1s linear;
   }
 
   .canvas {
