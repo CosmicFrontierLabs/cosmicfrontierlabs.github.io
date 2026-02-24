@@ -369,11 +369,10 @@
 
 <div class="canvas-container" style="--canvas-opacity: {canvasOpacity ?? 0};">
   {#if hadError}
-    <div class="canvas-fallback">
-      <div class="fallback-content">
-        <div class="fallback-stars"></div>
-        <p class="fallback-message">Something went wrong loading the 3D scene. Please reload the page or scroll down to view the website without the animations.</p>
-      </div>
+    <div class="canvas-fallback bg-stars">
+      <p class="canvas-fallback__text">
+        Something went wrong loading the 3D scene. Please reload the page or scroll down to view the website without the animations.
+      </p>
     </div>
   {/if}
 
@@ -514,42 +513,19 @@
   .canvas-fallback {
     position: fixed;
     inset: 0;
-    background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
+    background: var(--bg-gradient);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
   }
 
-  .fallback-content {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: var(--space-m);
-  }
-
-  .fallback-message {
-    color: var(--color-text-muted, #888);
-    font-size: var(--size-step--1, 0.875rem);
+  .canvas-fallback__text {
     max-width: 40ch;
+    padding-inline: 0.25em;
     margin: 0 auto;
-    line-height: 1.5;
+    font-size: var(--size-step--1);
+    text-align: center;
+    text-wrap: balance;
   }
-
-  .fallback-stars {
-    position: absolute;
-    inset: 0;
-    background-image:
-      radial-gradient(2px 2px at 20px 30px, white, transparent),
-      radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
-      radial-gradient(1px 1px at 90px 40px, white, transparent),
-      radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 160px 120px, white, transparent),
-      radial-gradient(1px 1px at 200px 50px, rgba(255, 255, 255, 0.7), transparent),
-      radial-gradient(2px 2px at 250px 150px, white, transparent),
-      radial-gradient(1px 1px at 300px 100px, rgba(255, 255, 255, 0.5), transparent);
-    background-size: 350px 200px;
-    opacity: 0.5;
-  }
-
 </style>
