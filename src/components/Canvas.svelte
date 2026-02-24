@@ -405,6 +405,7 @@
       <CarouselOverlay
         {carouselScene}
         paused={orbitMode}
+        {activeScene}
         onExitOrbit={() => {
           setOrbitMode(false);
         }}

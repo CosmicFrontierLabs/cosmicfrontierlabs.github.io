@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import * as THREE from "three";
   import gsap from "gsap";
   import type { CarouselScene } from "./simulation/CarouselScene";
@@ -12,10 +12,11 @@
   interface Props {
     carouselScene: CarouselScene | null;
     paused?: boolean;
+    activeScene?: "simulation" | "carousel";
     onExitOrbit?: () => void;
   }
 
-  let { carouselScene, paused = false, onExitOrbit }: Props = $props();
+  let { carouselScene, paused = false, activeScene = "simulation", onExitOrbit }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
 
@@ -98,10 +99,15 @@
     goToIndex(prevIndex);
   }
 
-  // Initialize the first slide when the carousel scene becomes available
+  // Reset to slide 0 when the carousel becomes the active scene.
+  // State mutations are wrapped in untrack to avoid triggering cascading
+  // effect flushes while Svelte is already flushing effects.
   $effect(() => {
-    if (carouselScene && !initialized) {
-      goToIndex(0);
+    if (activeScene === "carousel" && carouselScene) {
+      untrack(() => {
+        initialized = false;
+        goToIndex(0);
+      });
     }
   });
 
