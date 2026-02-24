@@ -1,9 +1,6 @@
 TODO:
 
-- Improve the loading experience, especially in Canvas and probably onMount in there: What's slow, What can be deferred
-  - Maybe start by adding logging to onMount in canvas
-  - Need to do this BEFORE sending to aaron because it looks slow
-  - Preload HDR after hero Three.js scene is running ?
+- Preload HDR after hero Three.js scene is running ?
 - There's an issue with OverlayComponent's fade in. It fades in the flashes out and back in on scroll.
 - What happens if graphics acceleration is disabled?
 - What happens if the internet is super slow? What's our fallback?

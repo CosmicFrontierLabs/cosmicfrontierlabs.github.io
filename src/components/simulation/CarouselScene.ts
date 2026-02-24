@@ -103,6 +103,7 @@ export class CarouselScene {
   readonly loaded: Promise<void>;
 
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
+    const t0 = performance.now();
     RectAreaLightUniformsLib.init();
     this.renderer = renderer;
 
@@ -200,6 +201,8 @@ export class CarouselScene {
         this.scene.environmentIntensity = v;
       });
 
+    console.log(`[CarouselScene] sync setup (lights, controls, GUI): ${(performance.now() - t0).toFixed(1)}ms`);
+
     // Load HDR environment background (async, non-blocking)
     const hdrLoaded = new Promise<void>((resolveHdr) => {
       new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
@@ -251,8 +254,12 @@ export class CarouselScene {
       this.fullAssy = group;
     });
 
+    console.log(`[CarouselScene] async loads kicked off: ${(performance.now() - t0).toFixed(1)}ms`);
+
     // Resolve loaded promise when all assets are ready
-    this.loaded = Promise.all([hdrLoaded, payloadLoaded, fullAssyLoaded]).then(() => {});
+    this.loaded = Promise.all([hdrLoaded, payloadLoaded, fullAssyLoaded]).then(() => {
+      console.log(`[CarouselScene] fully loaded (HDR + models): ${(performance.now() - t0).toFixed(1)}ms`);
+    });
   }
 
   /**

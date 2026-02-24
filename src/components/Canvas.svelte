@@ -255,26 +255,24 @@
 
     let cancelled = false;
 
-    // Use an async IIFE so we can yield to the browser between heavy steps.
+    // Async IIFE so we can yield to the browser between heavy steps.
     // The outer onMount returns the cleanup function synchronously.
     const t0 = performance.now();
     (async () => {
+      // --- 1. Create renderer ---
       try {
         renderer = createRenderer(container);
         renderer.setClearColor(0x000000, 0);
         renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
         console.log(`[Canvas] Renderer created in ${(performance.now() - t0).toFixed(1)}ms`);
       } catch (error) {
-        // Renderer creation failure means WebGL is not available
         console.error("Canvas initialization failed:", error);
         hadError = true;
         isLoading = false;
         return;
       }
-
       if (cancelled) return;
 
-      // Initialize cursorX and cursorY to the center of the container
       cursorX = container.clientWidth / 2;
       cursorY = container.clientHeight / 2;
 
@@ -287,66 +285,64 @@
         });
       }
 
-      // Yield a frame so the browser can paint the empty canvas before
-      // we block the main thread with scene construction.
+      // Yield a frame so the browser can paint before scene construction
       console.log(`[Canvas] Yielding frame at ${(performance.now() - t0).toFixed(1)}ms`);
       await new Promise<void>((r) => requestAnimationFrame(() => r()));
       console.log(`[Canvas] Frame yielded, resuming at ${(performance.now() - t0).toFixed(1)}ms`);
       if (cancelled) return;
 
+      // --- 2. Build EarthScene and start the render loop ---
+      const width = container.offsetWidth || container.clientWidth;
+      const height = container.offsetHeight || container.clientHeight;
+
       try {
-        const width = container.offsetWidth || container.clientWidth;
-        const height = container.offsetHeight || container.clientHeight;
-
         earthScene = new EarthScene(width, height, renderer!);
-
-        loadTimeout = setTimeout(() => {
-          if (isLoading) {
-            isLoading = false;
-            hadError = true;
-          }
-        }, LOAD_TIMEOUT);
-
-        earthScene.loaded
-          .then(() => {
-            clearTimeout(loadTimeout);
-            if (hadError) {
-              // Timed out, so don't show the scene
-              return; 
-            }
-            isEarthReady = true;
-            isLoading = false;
-          })
-          .catch((err) => {
-            clearTimeout(loadTimeout);
-            console.error("EarthScene failed to load:", err);
-            hadError = true;
-            isLoading = false;
-          });
-
-        // TODO: load this asynchronously so we don't slow down the view?
-        carouselScene = new CarouselScene(width, height, renderer!);
-        carouselScene.onSpaceHeldChange = (held: boolean) => {
-          spaceHeldForPan = held;
-        };
-        carouselScene.loaded
-          .then(() => {
-            if (hadError) {
-              // Timed out, so don't show the scene
-              return; 
-            }
-            isCarouselReady = true;
-          })
-          .catch((err) => {
-            console.error("CarouselScene failed to load:", err);
-          });
-
         resizeObserver = setupResizeObserver();
         cleanupAnimation = startAnimationLoop();
       } catch (error) {
         console.error("Canvas setup failed:", error);
         hadError = true;
         isLoading = false;
+        return;
+      }
+
+      // --- 3. Wait for EarthScene assets (texture) ---
+      loadTimeout = setTimeout(() => {
+        if (isLoading) {
+          isLoading = false;
+          hadError = true;
+        }
+      }, LOAD_TIMEOUT);
+
+      try {
+        await earthScene.loaded;
+      } catch (err) {
+        clearTimeout(loadTimeout);
+        console.error("EarthScene failed to load:", err);
+        hadError = true;
+        isLoading = false;
+        return;
+      }
+
+      clearTimeout(loadTimeout);
+      if (hadError || cancelled) return;
+
+      isEarthReady = true;
+      isLoading = false;
+
+      // --- 4. Load CarouselScene after earth is ready ---
+      // Deferred so its network/GPU work doesn't compete with the earth texture
+      try {
+        carouselScene = new CarouselScene(width, height, renderer!);
+        carouselScene.onSpaceHeldChange = (held: boolean) => {
+          spaceHeldForPan = held;
+        };
+        await carouselScene.loaded;
+        if (!hadError) {
+          isCarouselReady = true;
+        }
+      } catch (err) {
+        console.error("CarouselScene failed to load:", err);
       }
     })();
 

@@ -41,6 +41,7 @@ export class EarthScene {
   private disposed = false;
 
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
+    const t0 = performance.now();
     this.renderer = renderer;
     this.cameraFrustumSize = this.initialCameraFrustumSize;
 
@@ -60,13 +61,17 @@ export class EarthScene {
     this.scene.add(ambientLight);
 
     // Starfield
+    console.log(`[EarthScene] camera+lighting setup: ${(performance.now() - t0).toFixed(1)}ms`);
     this.reactiveStarfield = new ReactiveStarfield(this.scene, width, height, renderer);
+    console.log(`[EarthScene] starfield created: ${(performance.now() - t0).toFixed(1)}ms`);
 
     // Earth
     this.earth = new Earth(this.scene, renderer);
     this.loaded = this.earth.loaded;
+    console.log(`[EarthScene] earth created: ${(performance.now() - t0).toFixed(1)}ms`);
 
     // Telescopes
+    console.log(`[EarthScene] earth.loaded promise: ${(performance.now() - t0).toFixed(1)}ms`);
     const originGridPoints: THREE.Vector3[] = grid3d(
       simulationConfig.earth.position,
       simulationConfig.earth.radius * simulationConfig.telescope.orbitalRadiusScalar,
@@ -88,6 +93,8 @@ export class EarthScene {
       this.telescopeTargets[i] = new THREE.Vector3();
     }
 
+    console.log(`[EarthScene] telescopes created: ${(performance.now() - t0).toFixed(1)}ms`);
+
     // Mouse tracker
     this.mouseTracker = new MouseTracker();
     this.camera.updateMatrixWorld();
@@ -99,6 +106,11 @@ export class EarthScene {
     this.effectComposer = new EffectComposer(renderer);
     this.effectComposer.addPass(this.renderPass);
     this.effectComposer.addPass(this.grainPass);
+    console.log(`[EarthScene] constructor done: ${(performance.now() - t0).toFixed(1)}ms`);
+
+    this.loaded.then(() => {
+      console.log(`[EarthScene] fully loaded (textures etc): ${(performance.now() - t0).toFixed(1)}ms`);
+    });
   }
 
   /** Update the orthographic camera frustum for the given viewport dimensions. */
