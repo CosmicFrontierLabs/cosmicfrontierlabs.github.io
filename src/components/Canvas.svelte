@@ -22,8 +22,7 @@
     isLoading = $bindable(true),
   }: Props = $props();
 
-  // const LOAD_TIMEOUT = 15_000;  // 15 seconds
-  const LOAD_TIMEOUT = 1;  // TODO: for testing
+  const LOAD_TIMEOUT = 15_000;  // 15 seconds
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
   let hadError = $state(false);
