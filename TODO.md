@@ -1,6 +1,5 @@
 TODO:
 
-- Preload HDR after hero Three.js scene is running ?
 - There's an issue with OverlayComponent's fade in. It fades in the flashes out and back in on scroll.
 - What happens if graphics acceleration is disabled?
 - What happens if the internet is super slow? What's our fallback?

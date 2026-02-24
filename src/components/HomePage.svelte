@@ -283,8 +283,7 @@
     justify-content: center;
     gap: var(--space-s);
     opacity: 1;
-    transition: opacity 0.8s ease-out;
-    background: var(--body-bg);
+    transition: opacity 0.5s ease-out;
   }
 
   .hero-loader--hidden {
