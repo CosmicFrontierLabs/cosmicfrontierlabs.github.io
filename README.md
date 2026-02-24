@@ -4,8 +4,6 @@ Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and 
 
 ---
 
-
-
 ## Quick start
 
 ```bash

@@ -6,8 +6,8 @@ TODO:
 - Check lighthouse
 - Optional:
   - Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
-- Document the (a) loading pattern (b) error pattern, (c) scroll pattern and architecture so it's understood and reuseable.
 
 NOTES
 
+- Document the (a) loading pattern (b) error pattern, (c) scroll pattern and architecture so it's understood and reuseable.
 - It's mesh_0_55
