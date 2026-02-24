@@ -4,4 +4,5 @@ dist
 *.lock
 package-lock.json
 src/site-content/**
-public/**
+static/**
+public/** 

@@ -174,7 +174,6 @@ That's what must determine whether the loader of carousel or hero animation are 
 That doesn't look great on slow 4g because it requires all the js to load, so need to think about it a bit more. and what my preferred pattern is for htis kind of thing.
 probably a pen and paper think for a sec.
 
-
 ---
 
 Svelte runs onMounts from the inside out, so children are run before their parents.
@@ -194,4 +193,3 @@ Or, we can just put a foreground on everything. so that it covers up the Loading
 
 We could also just go simpler: we have a whole site loader, that covers the whole thing until we're ready. Maybe that's what we try.
 And then we have an aborted version.
-

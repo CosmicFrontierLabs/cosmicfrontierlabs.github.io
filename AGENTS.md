@@ -1,14 +1,14 @@
 # Agent Guidelines for Cosmic Frontier
 
-This is an Astro 5 + Svelte 5 site with interactive Three.js 3D scenes. Deployed as a static site (GitHub Pages).
+This is a SvelteKit + Svelte 5 site with interactive Three.js 3D scenes. Deployed as a static site (GitHub Pages) using `@sveltejs/adapter-static`.
 
 ## Commands
 
 ```bash
-npm run dev          # Dev server at http://localhost:4321 (binds 0.0.0.0)
-npm run build        # Production build
+npm run dev          # Dev server (binds 0.0.0.0)
+npm run build        # Production build (outputs to dist/)
 npm run preview      # Preview production build
-npm run check        # Astro type checking (uses --max-old-space-size=8192)
+npm run check        # svelte-check type checking
 npm run format       # Prettier format all files
 ```
 
@@ -31,6 +31,7 @@ When writing Svelte components:
 - **Type safety**: All code should be properly typed
 - **Three.js types**: Use `@types/three` for Three.js type definitions
 - **Import patterns**: Use TypeScript imports for type checking
+- **Path aliases**: Use `$lib/` for imports from `src/lib/`
 - Run `npm run check` to verify type safety
 
 ## Styling Guidelines
@@ -58,6 +59,17 @@ When writing Svelte components:
 
 ## Architecture
 
+### Routing (SvelteKit)
+
+- `src/routes/+layout.svelte` — Root layout with Header, Footer, and global styles
+- `src/routes/+layout.ts` — Enables `prerender = true` for all pages
+- `src/routes/+page.svelte` — Home page (renders `HomePage.svelte`)
+- `src/routes/blog/+page.server.ts` — Blog index data loading (gray-matter)
+- `src/routes/blog/[slug]/+page.ts` — Blog post loading via mdsvex + `import.meta.glob`
+- `src/routes/join-us/+page.server.ts` — Job listings data loading (js-yaml)
+- `src/routes/contact/+page.svelte` — Contact page
+- `src/app.html` — HTML shell (Google Analytics, meta tags, fonts)
+
 ### Dual-Scene Rendering Pattern
 
 The core visual experience uses **two Three.js scenes sharing one WebGLRenderer**, orchestrated by scroll position:
@@ -70,6 +82,7 @@ The core visual experience uses **two Three.js scenes sharing one WebGLRenderer*
 ### Scroll-Driven UI Flow
 
 `HomePage.svelte` sets up three GSAP ScrollTrigger zones that control:
+
 - `canvasOpacity` — fades the canvas in/out between sections
 - `activeScene` — switches between `"simulation"` and `"carousel"`
 - `heroScrollProgress` — drives camera zoom on the hero
@@ -90,16 +103,17 @@ GLSL shaders are in `src/components/simulation/shaders/` and bundled via `vite-p
 
 ### Content
 
-- Blog posts: Markdown in `src/site-content/blog/` with frontmatter (`title`, `date`, `category`, `isDraft`, etc.)
+- Blog posts: Markdown in `src/site-content/blog/` with frontmatter (`title`, `date`, `category`, `isDraft`, etc.), compiled by mdsvex
 - Job postings: `src/site-content/jobs.yaml`
-- Dynamic blog routes: `src/pages/blog/[slug].astro`
-- Decap CMS integration for content management
+- Dynamic blog routes: `src/routes/blog/[slug]/+page.ts`
 
 ### Build Configuration
 
-- `astro.config.mjs`: Svelte + Sitemap integrations, glslify Vite plugin, manual Rollup chunks for Three.js and GSAP
-- GLB models in `public/models/` are meshopt-compressed; CarouselScene loads them with both MeshoptDecoder and DRACOLoader
-- HDR environment texture in `public/textures/`
+- `svelte.config.js`: adapter-static (output to `dist/`), mdsvex preprocessor for `.md` files
+- `vite.config.ts`: SvelteKit plugin, glslify Vite plugin, manual Rollup chunks for Three.js and GSAP
+- GLB models in `static/models/` are meshopt-compressed; CarouselScene loads them with both MeshoptDecoder and DRACOLoader
+- HDR environment texture in `static/textures/`
+- Static assets (images, models, draco, textures) in `static/`
 
 ## General Best Practices
 

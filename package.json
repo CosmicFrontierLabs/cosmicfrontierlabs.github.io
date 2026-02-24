@@ -3,36 +3,37 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev --host 0.0.0.0",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro",
-    "check": "NODE_OPTIONS='--max-old-space-size=8192' astro check",
+    "dev": "vite dev --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.6",
-    "@astrojs/sitemap": "^3.6.0",
-    "@lucide/astro": "^0.553.0",
+    "@sveltejs/adapter-static": "^3.0.0",
+    "@sveltejs/kit": "^2.0.0",
     "@types/three": "^0.181.0",
-    "astro": "^5.15.5",
-    "decap-cms-app": "^3.4.0",
     "figlet": "^1.9.3",
     "glsl-film-grain": "^1.0.4",
     "glsl-noise": "^0.0.0",
     "glslify": "^7.1.1",
+    "gray-matter": "^4.0.3",
     "gsap": "^3.13.0",
     "js-yaml": "^4.1.1",
+    "mdsvex": "^0.12.0",
     "svelte": "^5.43.6",
     "three": "^0.182.0",
     "three-perf": "^1.0.11",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@astrojs/svelte": "^7.2.2",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@types/js-yaml": "^4.0.9",
+    "@types/node": "^25.3.0",
     "prettier": "^3.6.2",
     "sass": "^1.83.4",
+    "svelte-check": "^4.0.0",
+    "vite": "^6.0.0",
     "vite-plugin-glslify": "^2.3.0"
   }
 }

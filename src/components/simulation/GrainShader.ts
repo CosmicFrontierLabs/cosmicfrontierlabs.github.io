@@ -1,5 +1,5 @@
 import * as THREE from "three";
-// @ts-expect-error: no type definitions for 'glslify'
+// @ts-ignore: no type definitions for 'glslify'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as tagged template literal below
 import glslify from "glslify";
 // Mark glslify as used so Vite doesn't warn about unused import
