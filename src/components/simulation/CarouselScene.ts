@@ -133,13 +133,18 @@ export class CarouselScene {
     // Fog
     this.scene.fog = new THREE.Fog(0x0a1428, 5.0, 30.0);
 
-    // Orbit controls
+    // Orbit controls — construct with the DOM element so it knows the
+    // target, then immediately disconnect so its pointer listeners don't
+    // block touch scrolling.  We reconnect in update() when orbit mode
+    // is actually enabled.
     this.orbitControls = new OrbitControls(this.camera, renderer.domElement);
-    this.orbitControls.enabled = this.enableOrbitControls;
     this.orbitControls.enableDamping = true;
     this.orbitControls.dampingFactor = 0.1;
     this.orbitControls.enablePan = false;
     this.orbitControls.target.copy(this.currentLookAtTarget);
+    // Disconnect immediately — listeners will be re-added when orbit mode activates
+    this.orbitControls.disconnect();
+    this.orbitControls.enabled = false;
 
     // --- Pan event listeners ---
     this.boundOnKeyDown = this.onKeyDown.bind(this);
@@ -405,6 +410,7 @@ export class CarouselScene {
     this.spaceHeld = true;
     // Disable OrbitControls entirely while space is held so it doesn't
     // capture pointer events or interfere with our pan drag
+    this.orbitControls.disconnect();
     this.orbitControls.enabled = false;
     this.onSpaceHeldChange?.(true);
   }
@@ -415,6 +421,7 @@ export class CarouselScene {
     this.isPanning = false;
     // Re-enable OrbitControls (update() will also sync enabled state each frame)
     if (this.enableOrbitControls) {
+      this.orbitControls.connect(this.renderer.domElement);
       this.orbitControls.enabled = true;
     }
     this.onSpaceHeldChange?.(false);
@@ -487,7 +494,8 @@ export class CarouselScene {
     this.spaceHeld = false;
     this.isPanning = false;
     // Re-enable OrbitControls in case space was held when reset was called
-    if (this.enableOrbitControls) {
+    if (this.enableOrbitControls && !this.orbitControls.enabled) {
+      this.orbitControls.connect(this.renderer.domElement);
       this.orbitControls.enabled = true;
     }
     this.onSpaceHeldChange?.(false);
@@ -498,9 +506,18 @@ export class CarouselScene {
    */
   update(deltaTimeSeconds: number): void {
     // Don't re-enable OrbitControls while space is held (pan mode takes over)
-    if (!this.spaceHeld) {
-      this.orbitControls.enabled = this.enableOrbitControls;
+    const shouldEnable = this.spaceHeld ? this.orbitControls.enabled : this.enableOrbitControls;
+
+    // Connect/disconnect listeners when orbit mode toggles so they don't
+    // block touch scrolling while inactive.
+    if (shouldEnable && !this.orbitControls.enabled) {
+      this.orbitControls.connect(this.renderer.domElement);
+      this.orbitControls.enabled = true;
+    } else if (!shouldEnable && this.orbitControls.enabled) {
+      this.orbitControls.disconnect();
+      this.orbitControls.enabled = false;
     }
+
     if (this.orbitControls.enabled) {
       this.orbitControls.update();
     }

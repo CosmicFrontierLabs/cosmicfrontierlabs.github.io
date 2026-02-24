@@ -1,5 +1,6 @@
 TODO:
 
+- Loader isn't smooth on mobile
 - Make sure mobile view looks good
 - Explore mouse effect on hero
 - Check A11y
