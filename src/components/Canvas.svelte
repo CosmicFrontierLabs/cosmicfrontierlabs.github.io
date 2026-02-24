@@ -401,7 +401,7 @@
   {/if}
 
   {#if !hadError}
-    <div style="opacity: {activeScene === 'carousel' ? canvasOpacity : 0};">
+    <div style="opacity: {activeScene === 'carousel' ? 1 : 0};">
       <CarouselOverlay
         {carouselScene}
         paused={orbitMode}
