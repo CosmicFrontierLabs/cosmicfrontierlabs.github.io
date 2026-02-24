@@ -12,17 +12,18 @@
     canvasOpacity: number;
     /** 0–1 scroll progress through the hero section, drives camera zoom in the EarthScene */
     heroScrollProgress: number;
+    isLoading: boolean;
   }
 
   let {
     activeScene = $bindable("simulation"),
     canvasOpacity,
     heroScrollProgress = $bindable(0),
+    isLoading = $bindable(true),
   }: Props = $props();
 
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
-  let isLoading = $derived(!isEarthReady && activeScene === "simulation");
 
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
@@ -259,8 +260,6 @@
     const t0 = performance.now();
     (async () => {
       try {
-        const width = container.offsetWidth || container.clientWidth;
-        const height = container.offsetHeight || container.clientHeight;
         renderer = createRenderer(container);
         renderer.setClearColor(0x000000, 0);
         renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
@@ -306,6 +305,7 @@
         earthScene.loaded
           .then(() => {
             isEarthReady = true;
+            isLoading = false;
             console.log(`[Canvas] EarthScene assets loaded at ${(performance.now() - t0).toFixed(1)}ms`);
           })
           .catch((err) => {
@@ -371,7 +371,7 @@
     class:allow-explore={allowExplore}
     class:orbit-mode={orbitMode}
     class:pan-mode={orbitMode && spaceHeldForPan}
-    style="opacity: {isEarthReady ? canvasOpacity : 0};"
+    style="opacity: {isEarthReady ? canvasOpacity : 0}; transition: {isEarthReady ? 'none' : 'opacity 0.8s ease-out'};"
     role="button"
     tabindex="-1"
   ></div>
@@ -406,9 +406,6 @@
     />
   </div>
 
-  <div class="loading-indicator" data-loading={isLoading}>
-    <div class="loading-indicator__message">Loading...</div>
-  </div>
 </div>
 
 <style lang="scss">
@@ -539,31 +536,4 @@
     opacity: 0.5;
   }
 
-  .loading-indicator {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--body-bg);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.5s ease-out;
-
-    &[data-loading="true"] {
-      opacity: 1;
-    }
-
-    &[data-loading="false"] {
-      opacity: 0;
-    }
-  }
-
-  .loading-indicator__message {
-    font-size: var(--size-step--1, 0.875rem);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
 </style>

@@ -16,6 +16,7 @@
 
   // Bindable state passed down to SimulationCanvas
   let activeScene = $state<"simulation" | "carousel">("simulation");
+  let isCanvasLoading = $state(true);
 
   // Before mount, derive opacity from raw scroll position so the canvas
   // is hidden if the browser restores a non-zero scroll position.
@@ -138,7 +139,7 @@
 </script>
 
 <div class="simulation-container">
-  <Canvas bind:activeScene {canvasOpacity} {heroScrollProgress} />
+  <Canvas bind:activeScene {canvasOpacity} {heroScrollProgress} bind:isLoading={isCanvasLoading} />
 </div>
 
 <div class="hero" bind:this={heroEl}>
@@ -146,6 +147,9 @@
     <div class="hero__content__text">
       <span class="hero__subtitle">Open more windows to the Universe </span>
     </div>
+  </div>
+  <div class="hero__loader" class:hero__loader--hidden={!isCanvasLoading}>
+    <p>LOADING...</p>
   </div>
 </div>
 
@@ -247,6 +251,23 @@
     @media (min-width: 56rem) {
       font-size: var(--size-step-5);
     }
+  }
+
+  .hero__loader {
+    position: absolute;
+    height: 80lvh;
+    width: 100%;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    opacity: 1;
+    transition: opacity 0.8s ease-out;
+    background: var(--body-bg);
+  }
+
+  .hero__loader--hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 
   /* SUBHERO */
