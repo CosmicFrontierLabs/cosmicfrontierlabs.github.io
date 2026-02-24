@@ -290,6 +290,12 @@
   }
 
   .hero-loader {
+    --loader-ring-outer: var(--color-gray-400);
+    --loader-ring-middle: var(--color-gray-500);
+    --loader-ring-inner: var(--color-primary-light);
+    --loader-dot: var(--color-primary-light);
+    --loader-text: var(--color-text-mid);
+
     position: absolute;
     height: 80lvh;
     width: 100%;
