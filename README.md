@@ -4,27 +4,7 @@ Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and 
 
 ---
 
-TODO:
 
-- Improve the loading experience, especially in Canvas and probably onMount in there: What's slow, What can be deferred
-  - Maybe start by adding logging to onMount in canvas
-  - Need to do this BEFORE sending to aaron because it looks slow
-  - Preload HDR after hero Three.js scene is running ?
-- There's an issue with OverlayComponent's fade in. It fades in the flashes out and back in on scroll.
-- What happens if graphics acceleration is disabled?
-- What happens if the internet is super slow? What's our fallback?
-- Make sure mobile view looks good
-- Explore mouse effect on hero
-- More gap between rolodex cards in desktop viewport
-- Make sure carousel resets to 0 on entry to viewport
-- Race condition on fast scroll — if a user scrolls quickly past the content sections to the carousel anchor before GLB models load, the carousel scene renders with potentially incomplete geometry.
-  Whether this is visually noticeable depends on how CarouselScene.update/render handles missing models.
-- Check A11y
-- Check lighthouse
-- Optional:
-  - Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
-
-## It's mesh_0_55
 
 ## Quick start
 

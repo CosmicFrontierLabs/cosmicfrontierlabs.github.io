@@ -22,10 +22,11 @@
     isLoading = $bindable(true),
   }: Props = $props();
 
-  // TODO: test this!
-  const LOAD_TIMEOUT = 15_000;  // 15 seconds
+  // const LOAD_TIMEOUT = 15_000;  // 15 seconds
+  const LOAD_TIMEOUT = 1;  // TODO: for testing
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
+  let hadError = $state(false);
 
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
@@ -38,7 +39,7 @@
   let isTouchDevice = $state(false);
 
   // Allow explore interactions only on non-touch devices when carousel is visible and not already in orbit mode
-  let allowExplore = $derived(!isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
+  let allowExplore = $derived(!hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
 
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
@@ -130,9 +131,6 @@
   let earthScene = $state<EarthScene | null>(null);
   let carouselScene = $state<CarouselScene | null>(null);
 
-  // Error boundary state
-  let initError = $state<string | null>(null);
-  let webglSupported = $state(true);
 
   // --- WebGL & Canvas Setup ---
   function createRenderer(container: HTMLDivElement): THREE.WebGLRenderer {
@@ -180,7 +178,7 @@
 
   function handleContextLost(event: Event): void {
     event.preventDefault();
-    initError = "WebGL context was lost. Please reload the page.";
+    hadError = true;
   }
 
   function startAnimationLoop(): () => void {
@@ -269,10 +267,8 @@
         console.log(`[Canvas] Renderer created in ${(performance.now() - t0).toFixed(1)}ms`);
       } catch (error) {
         // Renderer creation failure means WebGL is not available
-        webglSupported = false;
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error("Canvas initialization failed:", error);
-        initError = `WebGL is not supported or failed to initialize: ${errorMessage}. Please try a modern browser like Chrome, Firefox, or Safari.`;
+        hadError = true;
         isLoading = false;
         return;
       }
@@ -304,39 +300,43 @@
         const height = container.offsetHeight || container.clientHeight;
 
         earthScene = new EarthScene(width, height, renderer!);
-        console.log(`[Canvas] EarthScene constructed in ${(performance.now() - t0).toFixed(1)}ms`);
 
         loadTimeout = setTimeout(() => {
           if (isLoading) {
             isLoading = false;
-            initError = "Loading took too long. Please reload the page.";
+            hadError = true;
           }
         }, LOAD_TIMEOUT);
 
         earthScene.loaded
           .then(() => {
             clearTimeout(loadTimeout);
+            if (hadError) {
+              // Timed out, so don't show the scene
+              return; 
+            }
             isEarthReady = true;
             isLoading = false;
-            console.log(`[Canvas] EarthScene assets loaded at ${(performance.now() - t0).toFixed(1)}ms`);
           })
           .catch((err) => {
             clearTimeout(loadTimeout);
             console.error("EarthScene failed to load:", err);
-            initError = "Failed to load 3D scene. Please reload the page.";
+            hadError = true;
             isLoading = false;
           });
 
         // TODO: load this asynchronously so we don't slow down the view?
         carouselScene = new CarouselScene(width, height, renderer!);
-        console.log(`[Canvas] CarouselScene constructed at ${(performance.now() - t0).toFixed(1)}ms`);
         carouselScene.onSpaceHeldChange = (held: boolean) => {
           spaceHeldForPan = held;
         };
         carouselScene.loaded
           .then(() => {
+            if (hadError) {
+              // Timed out, so don't show the scene
+              return; 
+            }
             isCarouselReady = true;
-            console.log(`[Canvas] CarouselScene assets loaded at ${(performance.now() - t0).toFixed(1)}ms`);
           })
           .catch((err) => {
             console.error("CarouselScene failed to load:", err);
@@ -344,11 +344,9 @@
 
         resizeObserver = setupResizeObserver();
         cleanupAnimation = startAnimationLoop();
-        console.log(`[Canvas] Animation loop started at ${(performance.now() - t0).toFixed(1)}ms`);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error("Canvas initialization failed:", error);
-        initError = `Failed to initialize 3D: ${errorMessage}`;
+        console.error("Canvas setup failed:", error);
+        hadError = true;
         isLoading = false;
       }
     })();
@@ -370,11 +368,11 @@
 </script>
 
 <div class="canvas-container" style="--canvas-opacity: {canvasOpacity ?? 0};">
-  {#if initError}
+  {#if hadError}
     <div class="canvas-fallback">
       <div class="fallback-content">
         <div class="fallback-stars"></div>
-        <p class="fallback-message">{initError}</p>
+        <p class="fallback-message">Something went wrong loading the 3D scene. Please reload the page or scroll down to view the website without the animations.</p>
       </div>
     </div>
   {/if}
@@ -412,15 +410,17 @@
     </div>
   {/if}
 
-  <div style="opacity: {activeScene === 'carousel' ? canvasOpacity : 0};">
-    <CarouselOverlay
-      {carouselScene}
-      paused={orbitMode}
-      onExitOrbit={() => {
-        setOrbitMode(false);
-      }}
-    />
-  </div>
+  {#if !hadError}
+    <div style="opacity: {activeScene === 'carousel' ? canvasOpacity : 0};">
+      <CarouselOverlay
+        {carouselScene}
+        paused={orbitMode}
+        onExitOrbit={() => {
+          setOrbitMode(false);
+        }}
+      />
+    </div>
+  {/if}
 
 </div>
 
@@ -512,7 +512,7 @@
   }
 
   .canvas-fallback {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
     display: flex;
