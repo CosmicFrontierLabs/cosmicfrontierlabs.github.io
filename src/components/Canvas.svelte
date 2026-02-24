@@ -22,6 +22,8 @@
     isLoading = $bindable(true),
   }: Props = $props();
 
+  // TODO: test this!
+  const LOAD_TIMEOUT = 15_000;  // 15 seconds
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
 
@@ -252,6 +254,7 @@
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
 
     let cleanupAnimation: (() => void) | null = null;
+    let loadTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let cancelled = false;
 
@@ -270,6 +273,7 @@
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error("Canvas initialization failed:", error);
         initError = `WebGL is not supported or failed to initialize: ${errorMessage}. Please try a modern browser like Chrome, Firefox, or Safari.`;
+        isLoading = false;
         return;
       }
 
@@ -302,15 +306,25 @@
         earthScene = new EarthScene(width, height, renderer!);
         console.log(`[Canvas] EarthScene constructed in ${(performance.now() - t0).toFixed(1)}ms`);
 
+        loadTimeout = setTimeout(() => {
+          if (isLoading) {
+            isLoading = false;
+            initError = "Loading took too long. Please reload the page.";
+          }
+        }, LOAD_TIMEOUT);
+
         earthScene.loaded
           .then(() => {
+            clearTimeout(loadTimeout);
             isEarthReady = true;
             isLoading = false;
             console.log(`[Canvas] EarthScene assets loaded at ${(performance.now() - t0).toFixed(1)}ms`);
           })
           .catch((err) => {
+            clearTimeout(loadTimeout);
             console.error("EarthScene failed to load:", err);
             initError = "Failed to load 3D scene. Please reload the page.";
+            isLoading = false;
           });
 
         // TODO: load this asynchronously so we don't slow down the view?
@@ -335,6 +349,7 @@
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error("Canvas initialization failed:", error);
         initError = `Failed to initialize 3D: ${errorMessage}`;
+        isLoading = false;
       }
     })();
 
@@ -345,6 +360,7 @@
         renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
       }
 
+      clearTimeout(loadTimeout);
       earthScene?.dispose();
       carouselScene?.dispose();
       perf?.dispose();
