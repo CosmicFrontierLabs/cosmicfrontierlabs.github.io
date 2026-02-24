@@ -32,7 +32,7 @@
 	</p>
 	<p class="join-us__cta">Help us build it.</p>
 	<p class="join-us__apply">
-		To apply, email <a class="obfuscated-email" data-encoded={data.obfuscatedEmail} href="#"
+		To apply, email <a class="obfuscated-email" data-encoded={data.obfuscatedEmail} href="mailto:"
 			>[enable JavaScript to see email]</a
 		>
 		with the subject line including <strong>"{data.keyword}"</strong> and the position title.
