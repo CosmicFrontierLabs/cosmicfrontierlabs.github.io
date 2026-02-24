@@ -257,14 +257,12 @@
 
     // Async IIFE so we can yield to the browser between heavy steps.
     // The outer onMount returns the cleanup function synchronously.
-    const t0 = performance.now();
     (async () => {
       // --- 1. Create renderer ---
       try {
         renderer = createRenderer(container);
         renderer.setClearColor(0x000000, 0);
         renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
-        console.log(`[Canvas] Renderer created in ${(performance.now() - t0).toFixed(1)}ms`);
       } catch (error) {
         console.error("Canvas initialization failed:", error);
         hadError = true;
@@ -286,9 +284,7 @@
       }
 
       // Yield a frame so the browser can paint before scene construction
-      console.log(`[Canvas] Yielding frame at ${(performance.now() - t0).toFixed(1)}ms`);
       await new Promise<void>((r) => requestAnimationFrame(() => r()));
-      console.log(`[Canvas] Frame yielded, resuming at ${(performance.now() - t0).toFixed(1)}ms`);
       if (cancelled) return;
 
       // --- 2. Build EarthScene and start the render loop ---
