@@ -505,7 +505,6 @@
   .canvas-fallback {
     position: fixed;
     inset: 0;
-    background: var(--bg-gradient);
     display: flex;
     align-items: center;
     justify-content: center;
