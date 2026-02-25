@@ -319,7 +319,6 @@
     gap: 0.35rem;
     font-size: var(--size-step--1);
     color: rgba(255, 255, 255, 0.75);
-    letter-spacing: 0.02em;
   }
 
   .carousel__explore-hint svg {
