@@ -8,6 +8,7 @@ export default defineConfig({
     noExternal: ["gsap"],
   },
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
