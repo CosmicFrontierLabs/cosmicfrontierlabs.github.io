@@ -88,8 +88,8 @@ export const simulationConfig: Readonly<SimulationConfig> = Object.freeze({
   background: {
     geometry: {
       radius: 1.3,
-      widthSegments: 64,
-      heightSegments: 64,
+      widthSegments: 32,
+      heightSegments: 32,
     },
     texture: {
       url: "/textures/sky1.jpg",

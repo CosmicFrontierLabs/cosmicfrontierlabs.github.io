@@ -28,6 +28,10 @@ export class EarthScene {
   private renderPass: RenderPass;
   private grainPass: ShaderPass;
 
+  // InstancedMesh objects for telescope bodies and frustum cones (1 draw call each)
+  private frustumInstanced: THREE.InstancedMesh;
+  private telescopeInstanced: THREE.InstancedMesh;
+
   private readonly initialCameraFrustumSize = 3.0;
   private cameraFrustumSize: number;
 
@@ -76,11 +80,28 @@ export class EarthScene {
     const numMouseTrackingTelescopes = simulationConfig.telescope.numMouseTrackingTelescopes;
     this.telescopes = origins.map((origin, index) => {
       const shouldTrackMouse = index < numMouseTrackingTelescopes;
-      return new Telescope(this.scene, origin, shouldTrackMouse);
+      return new Telescope(this.scene, origin, shouldTrackMouse, index);
     });
 
-    // Pre-allocate origin/target arrays
+    // Create InstancedMesh objects (shared geometry + material, 1 draw call per mesh)
     const numTelescopes = this.telescopes.length;
+
+    this.frustumInstanced = new THREE.InstancedMesh(
+      Telescope.frustumGeometry!,
+      Telescope.frustumMaterial!,
+      numTelescopes
+    );
+    this.frustumInstanced.renderOrder = 0;
+    this.scene.add(this.frustumInstanced);
+
+    this.telescopeInstanced = new THREE.InstancedMesh(
+      Telescope.telescopeBodyGeometry!,
+      Telescope.telescopeMaterial!,
+      numTelescopes
+    );
+    this.scene.add(this.telescopeInstanced);
+
+    // Pre-allocate origin/target arrays
     this.telescopeOrigins = new Array(numTelescopes);
     this.telescopeTargets = new Array(numTelescopes);
     for (let i = 0; i < numTelescopes; i++) {
@@ -144,10 +165,19 @@ export class EarthScene {
 
     const numTelescopes = this.telescopes.length;
     for (let i = 0; i < numTelescopes; i++) {
-      this.telescopes[i].update(elapsedTime, this.mouseWorldPosition);
+      this.telescopes[i].update(
+        elapsedTime,
+        this.mouseWorldPosition,
+        this.frustumInstanced,
+        this.telescopeInstanced
+      );
       this.telescopeOrigins[i].copy(this.telescopes[i].origin);
       this.telescopeTargets[i].copy(this.telescopes[i].target);
     }
+
+    // Signal that instance matrices were updated this frame
+    this.frustumInstanced.instanceMatrix.needsUpdate = true;
+    this.telescopeInstanced.instanceMatrix.needsUpdate = true;
 
     this.earth.update(delta);
     this.camera.updateMatrixWorld();
@@ -168,6 +198,12 @@ export class EarthScene {
     this.telescopes.forEach((telescope) => telescope.dispose());
     this.telescopes = [];
     Telescope.disposeStaticResources();
+
+    // Dispose InstancedMesh objects
+    this.scene.remove(this.frustumInstanced);
+    this.frustumInstanced.dispose();
+    this.scene.remove(this.telescopeInstanced);
+    this.telescopeInstanced.dispose();
 
     this.earth.dispose();
     this.reactiveStarfield.dispose();

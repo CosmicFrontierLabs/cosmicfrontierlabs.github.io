@@ -9,6 +9,10 @@ import { ArcLoader } from "./ArcLoader";
  *
  * Performance: all per-frame temporaries are pre-allocated as instance or
  * static fields to eliminate GC pressure in the animation loop.
+ *
+ * Telescope bodies and frustum cones are rendered via InstancedMesh (owned by
+ * EarthScene). Each Telescope stores its instance index and updates the
+ * corresponding instance matrix in update().
  */
 export class Telescope {
   // Static constant for up vector (avoids allocation in update loop)
@@ -19,12 +23,16 @@ export class Telescope {
   static frustumMaterial: THREE.MeshBasicMaterial | null = null;
   static frustumGeometry: THREE.CylinderGeometry | null = null;
   static telescopeMaterial: THREE.MeshBasicMaterial | null = null;
-  static telescopeGroup: THREE.Group | null = null;
+  static telescopeBodyGeometry: THREE.BoxGeometry | null = null;
   static trailCubeGeometry: THREE.BoxGeometry | null = null;
 
+  // Static helpers for instanced matrix computation
+  private static _dummy: THREE.Object3D;
+  private static _childRotMatrix: THREE.Matrix4;
+  private static _tempMatrix: THREE.Matrix4;
+
   scene: THREE.Scene;
-  frustumMesh: THREE.Mesh;
-  telescopeMesh: THREE.Group;
+  instanceIndex: number;
 
   origin: THREE.Vector3;
   target: THREE.Vector3;
@@ -55,8 +63,10 @@ export class Telescope {
   originToTargetMidPoint: THREE.Vector3;
   private _desiredTarget: THREE.Vector3;
 
-  constructor(scene: THREE.Scene, origin: THREE.Vector3, shouldTrackMouse: boolean) {
+  constructor(scene: THREE.Scene, origin: THREE.Vector3, shouldTrackMouse: boolean, instanceIndex: number) {
     this.scene = scene;
+    this.instanceIndex = instanceIndex;
+
     // 1. Initialize static resources
     this.initializeStaticResources();
 
@@ -94,19 +104,10 @@ export class Telescope {
     this.lastTrailSpawnTime = 0;
     this.scene.add(this.trailGroup);
 
-    this.frustumMesh = new THREE.Mesh(Telescope.frustumGeometry!, Telescope.frustumMaterial!);
-    this.frustumMesh.renderOrder = 0;
-    this.update(0, new THREE.Vector3(0, 0, 0));
-    this.scene.add(this.frustumMesh);
+    // Compute initial orbital position (no mesh updates yet — EarthScene drives that)
+    this.updateOriginAndTarget(0, new THREE.Vector3(0, 0, 0));
 
-    // Clone the shared telescope group
-    this.telescopeMesh = Telescope.telescopeGroup!.clone();
-    this.scene.add(this.telescopeMesh);
-
-    // Set up so z+ is "up" for correct orientation when facing the midpoint
-    this.telescopeMesh.up.set(0, 0, 1);
-
-    this.radioArcLoader = new ArcLoader(this.scene, origin.clone());
+    this.radioArcLoader = new ArcLoader(this.scene, this.origin.clone());
   }
 
   private initializeStaticResources(): void {
@@ -138,18 +139,18 @@ export class Telescope {
     // 3. Initialize telescope material
     Telescope.telescopeMaterial = new THREE.MeshBasicMaterial({ color: simulationConfig.baseColor });
 
-    // 4. Initialize telescope body geometry
-    Telescope.telescopeGroup = new THREE.Group();
+    // 4. Initialize telescope body geometry (BoxGeometry used by InstancedMesh)
     const radius = simulationConfig.telescope.telescopeWidth;
-    const bodyGeometry = new THREE.BoxGeometry(radius, radius, radius);
-    const bodyMesh = new THREE.Mesh(bodyGeometry, Telescope.telescopeMaterial!);
-    bodyMesh.rotation.x = Math.PI / 2;
-    Telescope.telescopeGroup.add(bodyMesh);
-    Telescope.telescopeGroup.scale.set(1, 1, 0.92);
+    Telescope.telescopeBodyGeometry = new THREE.BoxGeometry(radius, radius, radius);
 
     // 5. Initialize trail cube geometry
     const cubeSize = simulationConfig.telescope.telescopeWidth * 0.25;
     Telescope.trailCubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+
+    // 6. Initialize instancing helpers
+    Telescope._dummy = new THREE.Object3D();
+    Telescope._childRotMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 2);
+    Telescope._tempMatrix = new THREE.Matrix4();
   }
 
   /**
@@ -266,13 +267,15 @@ export class Telescope {
   }
 
   /**
-   * Updates the telescope mesh position and orientation based on current origin and destination.
+   * Updates the telescope position, orientation, and instance matrices for the
+   * shared InstancedMesh objects (frustum + telescope body).
    */
-  update(elapsedTime: number, mouseWorldPosition: THREE.Vector3): void {
-    if (!this.telescopeMesh || !this.frustumMesh) {
-      return;
-    }
-
+  update(
+    elapsedTime: number,
+    mouseWorldPosition: THREE.Vector3,
+    frustumInstanced: THREE.InstancedMesh,
+    telescopeInstanced: THREE.InstancedMesh
+  ): void {
     // 1. Update origin (the orbital position of the telescope)
     this.updateOriginAndTarget(elapsedTime, mouseWorldPosition);
 
@@ -281,15 +284,23 @@ export class Telescope {
     const originToTargetDistance = this.originToTargetVector.length();
     this.originToTargetVector.normalize();
 
-    // 3. Update frustum
+    // 3. Update frustum instance matrix
     this.originToTargetMidPoint.addVectors(this.origin, this.target).multiplyScalar(0.5);
-    this.frustumMesh.position.copy(this.originToTargetMidPoint);
-    this.frustumMesh.quaternion.setFromUnitVectors(Telescope.UP_VECTOR, this.originToTargetVector);
-    this.frustumMesh.scale.y = originToTargetDistance / simulationConfig.telescope.telescopeLength;
+    Telescope._dummy.position.copy(this.originToTargetMidPoint);
+    Telescope._dummy.quaternion.setFromUnitVectors(Telescope.UP_VECTOR, this.originToTargetVector);
+    Telescope._dummy.scale.set(1, originToTargetDistance / simulationConfig.telescope.telescopeLength, 1);
+    Telescope._dummy.updateMatrix();
+    frustumInstanced.setMatrixAt(this.instanceIndex, Telescope._dummy.matrix);
 
-    // 4. Update telescope mesh
-    this.telescopeMesh.position.copy(this.origin);
-    this.telescopeMesh.lookAt(this.originToTargetMidPoint);
+    // 4. Update telescope body instance matrix
+    //    Bake the child rotation (PI/2 around X) and group scale (1, 1, 0.92) into the matrix
+    Telescope._dummy.position.copy(this.origin);
+    Telescope._dummy.up.set(0, 0, 1);
+    Telescope._dummy.lookAt(this.originToTargetMidPoint);
+    Telescope._dummy.scale.set(1, 1, 0.92);
+    Telescope._dummy.updateMatrix();
+    Telescope._tempMatrix.multiplyMatrices(Telescope._dummy.matrix, Telescope._childRotMatrix);
+    telescopeInstanced.setMatrixAt(this.instanceIndex, Telescope._tempMatrix);
 
     // 5. Update radio arc loader (pass origin directly, no clone)
     this.radioArcLoader.update(this.origin, elapsedTime);
@@ -315,12 +326,6 @@ export class Telescope {
 
     this.scene.remove(this.trailGroup);
 
-    // Clean up frustum mesh
-    this.scene.remove(this.frustumMesh);
-
-    // Clean up telescope mesh
-    this.scene.remove(this.telescopeMesh);
-
     // Clean up radio arc loader
     this.radioArcLoader.dispose();
   }
@@ -341,18 +346,11 @@ export class Telescope {
     Telescope.telescopeMaterial?.dispose();
     Telescope.telescopeMaterial = null;
 
+    Telescope.telescopeBodyGeometry?.dispose();
+    Telescope.telescopeBodyGeometry = null;
+
     Telescope.trailCubeGeometry?.dispose();
     Telescope.trailCubeGeometry = null;
-
-    // Dispose geometries from the telescope group
-    if (Telescope.telescopeGroup) {
-      Telescope.telescopeGroup.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry?.dispose();
-        }
-      });
-      Telescope.telescopeGroup = null;
-    }
 
     Telescope.hasInitializedStaticResources = false;
   }
