@@ -7,20 +7,7 @@
 </script>
 
 <div class="hero-loader" class:hero-loader--hidden={!visible}>
-  <svg class="hero-loader__spinner" viewBox="0 0 50 50" aria-hidden="true">
-    <circle cx="25" cy="25" r="20" fill="none" stroke="var(--color-gray-500)" stroke-width="2" />
-    <circle cx="25" cy="25" r="20" fill="none" stroke="var(--color-primary-light)" stroke-width="2"
-      stroke-dasharray="31.4 94.2" stroke-linecap="round">
-      <animateTransform
-        attributeName="transform"
-        type="rotate"
-        from="0 25 25"
-        to="360 25 25"
-        dur="0.8s"
-        repeatCount="indefinite"
-      />
-    </circle>
-  </svg>
+  <div class="hero-loader__spinner"></div>
   <p class="hero-loader__text">Loading</p>
 </div>
 
@@ -34,7 +21,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-xs);
+    gap: var(--space-m);
     opacity: 1;
     transition: opacity 0.3s linear;
   }
@@ -45,14 +32,51 @@
   }
 
   .hero-loader__spinner {
-    width: 32px;
-    height: 32px;
+    transform: rotateZ(45deg);
+    perspective: 1000px;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    color: #fff;
+    position: relative;
+
+    &::before,
+    &::after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: inherit;
+      height: inherit;
+      border-radius: 50%;
+      transform: rotateX(70deg);
+      animation: 1s spin linear infinite;
+    }
+
+    &::after {
+      color: #e05050;
+      transform: rotateY(70deg);
+      animation-delay: 0.4s;
+    }
   }
 
   .hero-loader__text {
     font-family: var(--font-mono);
-    font-size: var(--size-step--2);
-    letter-spacing: 0.2em;
-    color: var(--color-text-mid);
+    font-size: var(--size-step--1);
+    letter-spacing: 0.25em;
+    color: var(--color-text);
+  }
+
+  @keyframes spin {
+    0%,
+    100% { box-shadow: 0.2em 0 0 0 currentcolor; }
+    12% { box-shadow: 0.2em 0.2em 0 0 currentcolor; }
+    25% { box-shadow: 0 0.2em 0 0 currentcolor; }
+    37% { box-shadow: -0.2em 0.2em 0 0 currentcolor; }
+    50% { box-shadow: -0.2em 0 0 0 currentcolor; }
+    62% { box-shadow: -0.2em -0.2em 0 0 currentcolor; }
+    75% { box-shadow: 0 -0.2em 0 0 currentcolor; }
+    87% { box-shadow: 0.2em -0.2em 0 0 currentcolor; }
   }
 </style>
