@@ -174,7 +174,7 @@
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
             </svg>
-            Drag to orbit
+            Drag to rotate
           </span>
           <span class="carousel__explore-hint">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -272,7 +272,7 @@
 
     position: fixed;
     top: var(--header-height);
-    left: calc((100lvw - var(--content-width)) / 2 + 1rem);
+    left: calc((100lvw - var(--content-width)) / 2 + 0.75rem);
 
     z-index: 14;
 
@@ -363,7 +363,7 @@
   .carousel__panel {
     position: fixed;
     bottom: 3lvh;
-    left: calc((100lvw - var(--content-width)) / 2 + 1rem);
+    left: calc((100lvw - var(--content-width)) / 2 + 0.75rem);
     z-index: 14;
 
     overflow: hidden;

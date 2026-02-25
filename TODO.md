@@ -1,6 +1,6 @@
 TODO:
 
-- Flashing of the carousel overlay - maybe z fighting
+- Realign title of carousel overlay with left side. Got off
 - Review site with reduced motion enabled
 - Explore mouse effect on hero
 - Check lighthouse
