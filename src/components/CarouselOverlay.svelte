@@ -27,6 +27,7 @@
   let descriptionEl: HTMLParagraphElement | null = $state(null);
   let panelEl: HTMLDivElement;
   let panelInnerEl: HTMLDivElement;
+  let autoplayPaused = $state(false);
 
   // GSAP-based autoplay timeline
   let autoplayTween: gsap.core.Tween | null = null;
@@ -40,9 +41,7 @@
       value: 100,
       duration: SLIDE_DURATION_MS / 1000,
       ease: "none",
-      // `paused` is a Svelte 5 reactive prop (compiled to a getter), so this
-      // reads the *current* value each time startAutoplay() is called.
-      paused: paused,
+      paused: paused || autoplayPaused,
       onUpdate() {
         progress = proxy.value;
       },
@@ -58,6 +57,17 @@
       autoplayTween = null;
     }
     progress = 0;
+  }
+
+  function toggleAutoplay() {
+    autoplayPaused = !autoplayPaused;
+    if (autoplayTween) {
+      if (autoplayPaused) {
+        autoplayTween.pause();
+      } else {
+        autoplayTween.resume();
+      }
+    }
   }
 
   function goToIndex(index: number) {
@@ -100,8 +110,6 @@
   }
 
   // Reset to slide 0 when the carousel becomes the active scene.
-  // State mutations are wrapped in untrack to avoid triggering cascading
-  // effect flushes while Svelte is already flushing effects.
   $effect(() => {
     if (activeScene === "carousel" && carouselScene) {
       untrack(() => {
@@ -112,11 +120,8 @@
   });
 
   // Pause/resume autoplay when explore mode toggles
-  // `paused` is a reactive prop; `autoplayTween` is a plain variable read at
-  // effect-run time — that's fine because this effect only needs to fire when
-  // `paused` changes, and then it acts on whatever tween currently exists.
   $effect(() => {
-    const shouldPause = paused; // subscribe to reactive prop
+    const shouldPause = paused || autoplayPaused;
     if (autoplayTween) {
       if (shouldPause) {
         autoplayTween.pause();
@@ -128,11 +133,9 @@
 
   // Animate panel height when content changes (explore toggle or slide change)
   $effect(() => {
-    // Subscribe to reactive triggers
     void paused;
     void activeSlideIndex;
 
-    // Wait a tick for DOM to update with new content
     requestAnimationFrame(() => {
       if (!panelEl || !panelInnerEl) return;
       const targetHeight = panelInnerEl.offsetHeight;
@@ -145,7 +148,6 @@
   });
 
   onMount(() => {
-    // Set initial height without animation
     if (panelEl && panelInnerEl) {
       panelEl.style.height = panelInnerEl.offsetHeight + "px";
     }
@@ -159,25 +161,15 @@
 </script>
 
 <h2 class="carousel__heading">Explore our telescope</h2>
-<div class="carousel__panel bg-glass2" bind:this={panelEl}>
+<div class="carousel__panel bg-glass2" bind:this={panelEl} role="region" aria-label="Telescope carousel">
   <div class="carousel__panel-inner" bind:this={panelInnerEl}>
     {#if paused}
       <div class="carousel__explore-controls">
-        <h3 class="carousel__explore-title">Explore our Telescope</h3>
+        <p class="carousel__explore-title">Explore our Telescope</p>
 
         <div class="carousel__explore-hints">
           <span class="carousel__explore-hint">
-            <!-- Drag/orbit icon -->
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" opacity="0.3" />
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
@@ -185,17 +177,7 @@
             Drag to orbit
           </span>
           <span class="carousel__explore-hint">
-            <!-- Scroll/zoom icon -->
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="2" width="6" height="12" rx="3" />
               <path d="M12 6v3" />
               <path d="M8 18l4 4 4-4" />
@@ -203,17 +185,7 @@
             Scroll to zoom
           </span>
           <span class="carousel__explore-hint">
-            <!-- Pan/move icon -->
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 9l-3 3 3 3" />
               <path d="M9 5l3-3 3 3" />
               <path d="M15 19l-3 3-3-3" />
@@ -227,17 +199,7 @@
 
         <div class="carousel__explore-nav">
           <button class="carousel__exit-btn" onclick={() => onExitOrbit?.()}>
-            <!-- Arrow-return icon -->
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 14L4 9l5-5" />
               <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H16" />
             </svg>
@@ -246,7 +208,7 @@
         </div>
       </div>
     {:else}
-      <div class="carousel__body">
+      <div class="carousel__body" aria-live="polite">
         <h3 class="carousel__title" bind:this={titleEl}>
           {activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}
         </h3>
@@ -255,7 +217,7 @@
 
       <div class="carousel__controls">
         <button class="carousel__nav-btn" onclick={() => goToPrev()} aria-label="Previous slide">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
@@ -273,9 +235,21 @@
           {/each}
         </div>
         <button class="carousel__nav-btn" onclick={() => goToNext()} aria-label="Next slide">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
+        </button>
+        <button class="carousel__pause-btn" onclick={toggleAutoplay} aria-label={autoplayPaused ? 'Play carousel' : 'Pause carousel'}>
+          {#if autoplayPaused}
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          {:else}
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          {/if}
         </button>
       </div>
     {/if}
@@ -322,15 +296,10 @@
   }
 
   .carousel__explore-title {
-    /* font-size: var(--size-step-1);
+    font-size: 1.125rem;
     font-weight: 500;
-    margin: 0;
-    line-height: 1.2;
-    color: rgba(255, 255, 255, 0.95); */
-
-   font-size: 1.125rem;
     text-wrap: balance;
-    margin-block-start: 0lh;
+    margin-block-start: 0;
     margin-block-end: 0.25lh;
 
     @media (min-width: 56rem) {
@@ -349,7 +318,7 @@
     align-items: center;
     gap: 0.35rem;
     font-size: var(--size-step--1);
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.75);
     letter-spacing: 0.02em;
   }
 
@@ -485,6 +454,28 @@
     border-color: var(--border-color-subtle-hover);
   }
 
+  .carousel__pause-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: var(--stroke);
+    border-radius: 50%;
+    cursor: pointer;
+    color: currentColor;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .carousel__pause-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--border-color-subtle-hover);
+  }
+
   .carousel__indicators {
     display: none;
     gap: 8px;
@@ -497,29 +488,41 @@
   .carousel__indicator {
     position: relative;
     width: 24px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
+    height: 24px;
+    background: transparent;
     border: none;
     border-radius: var(--radius-s);
     cursor: pointer;
     overflow: hidden;
-    transition: background 0.2s ease;
     padding: 0;
+    display: flex;
+    align-items: center;
   }
 
-  .carousel__indicator:hover {
+  .carousel__indicator::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-s);
+    transition: background 0.2s ease;
+  }
+
+  .carousel__indicator:hover::after {
     background: rgba(255, 255, 255, 0.5);
   }
 
-  .carousel__indicator--active {
+  .carousel__indicator--active::after {
     background: rgba(255, 255, 255, 0.3);
   }
 
   .carousel__progress {
     position: absolute;
-    top: 0;
+    top: 50%;
     left: 0;
-    height: 100%;
+    transform: translateY(-50%);
+    height: 4px;
     background: rgba(255, 255, 255, 0.9);
     border-radius: var(--radius-s);
     transition: width 0.05s linear;

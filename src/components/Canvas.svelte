@@ -360,7 +360,7 @@
 
 <div class="canvas-container" style="--canvas-opacity: {canvasOpacity ?? 0};">
   {#if hadError}
-    <div class="canvas-fallback bg-stars">
+    <div class="canvas-fallback bg-stars" role="alert">
       <p class="canvas-fallback__text">
         Something went wrong loading the 3D scene. Please reload the page or scroll down to view the website without the animations.
       </p>
@@ -376,12 +376,12 @@
     class:orbit-mode={orbitMode}
     class:pan-mode={orbitMode && spaceHeldForPan}
     style="opacity: {isEarthReady ? canvasOpacity : 0}; transition: {isEarthReady ? 'none' : 'opacity 0.8s ease-out'};"
-    role="button"
-    tabindex="-1"
+    role="img"
+    aria-label="Interactive 3D scene showing Earth with orbiting telescopes"
   ></div>
 
   {#if cursorVisible}
-    <div class="explore-cursor" style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));">
+    <div class="explore-cursor" aria-hidden="true" style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));">
       <svg class="explore-cursor__ring" width="80" height="80" viewBox="0 0 80 80">
         <circle cx="40" cy="40" r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
         <circle
@@ -401,7 +401,11 @@
   {/if}
 
   {#if !hadError}
-    <div style="opacity: {activeScene === 'carousel' ? 1 : 0};">
+    <div
+      class="carousel-overlay-wrapper"
+      class:carousel-overlay-wrapper--hidden={activeScene !== 'carousel'}
+      aria-hidden={activeScene !== 'carousel'}
+    >
       <CarouselOverlay
         {carouselScene}
         paused={orbitMode}
@@ -472,10 +476,26 @@
     height: 80px;
   }
 
+  .carousel-overlay-wrapper {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .carousel-overlay-wrapper--hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .explore-cursor__ring {
     position: absolute;
     inset: 0;
-    animation: explore-spin 4s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .explore-cursor__ring {
+      animation: explore-spin 4s linear infinite;
+    }
   }
 
   .explore-cursor__arc {

@@ -2,6 +2,10 @@
 	let { data } = $props();
 </script>
 
+<svelte:head>
+	<title>Blog - Cosmic Frontier Labs</title>
+</svelte:head>
+
 <section class="flow blog">
 	<h1>Blog</h1>
 
@@ -14,7 +18,7 @@
 							<a href={post.url}>{post.title}</a>
 						</h2>
 						<time datetime={post.date}>
-							{new Date(post.date).toLocaleDateString()}
+							{new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 						</time>
 					</article>
 				</li>

@@ -14,11 +14,13 @@
   --z-join-us: 13;
   --z-footer: 14;
 
-  /* Includes a buffer for where content can start. For use with position fixed & stick elements */
-  --header-height: 88px;
+  /* Includes a buffer for where content can start. For use with position fixed & stick elements.
+     Dynamically updated by Header.svelte's ResizeObserver. */
+  --header-height: 5.5rem;
 }
 
 html {
+  color-scheme: dark;
   scroll-behavior: smooth;
 }
 
@@ -258,8 +260,10 @@ caption {
   margin-block-start: var(--space-s);
 }
 
-/* Focus styles for accessibility */
-:focus {
+/* Focus styles for accessibility — suppress the outline only when :focus-visible
+   does NOT match (i.e. mouse clicks). This keeps keyboard focus rings intact in
+   all browsers, including those without full :focus-visible support. */
+:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -267,16 +271,6 @@ caption {
   outline: 2px solid var(--color-focus, var(--color-primary-light));
   outline-offset: var(--focus-offset, 0.2lh);
   border-radius: var(--radius-s, 0.25rem);
-}
-
-/* Ensure focus is visible on all interactive elements */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--color-focus, var(--color-primary-light));
-  outline-offset: var(--focus-offset, 0.2lh);
 }
 
 /* Firefox is the only browser that doesn't outline the whole element unless you make it display: inline-block. That in itself causes multiple flow issues so we can detect it, using its own vendor prefix and reduce focus offset
@@ -367,7 +361,8 @@ label:has(input) input {
 }
 
 input:disabled {
-  background: var(--color-text-mid);
+  background: var(--color-gray-200, #333);
+  opacity: 0.6;
 }
 
 input:disabled,
@@ -409,6 +404,10 @@ main {
 
 @media (prefers-reduced-motion: reduce) {
   /* https://www.a11yproject.com/posts/understanding-vestibular-disorders/ */
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   ::before,
   ::after {

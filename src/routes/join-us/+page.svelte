@@ -24,6 +24,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Join Us - Cosmic Frontier Labs</title>
+</svelte:head>
+
 <section class="flow join-us">
 	<h1>Join Us</h1>
 	<p class="join-us__subtitle">
@@ -32,7 +36,7 @@
 	</p>
 	<p class="join-us__cta">Help us build it.</p>
 	<p class="join-us__apply">
-		To apply, email <a class="obfuscated-email" data-encoded={data.obfuscatedEmail} href="mailto:"
+		To apply, email <a class="obfuscated-email" data-encoded={data.obfuscatedEmail} href="/contact"
 			>[enable JavaScript to see email]</a
 		>
 		with the subject line including <strong>"{data.keyword}"</strong> and the position title.
@@ -111,7 +115,7 @@
 	}
 
 	.join-us__position-location {
-		opacity: 0.7;
+		color: var(--color-text-mid);
 		font-size: var(--size-step--1);
 	}
 

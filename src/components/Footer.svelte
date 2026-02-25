@@ -29,7 +29,7 @@
 <footer class="footer">
 	{#if isRoot}
 		<div class="footer-cta">
-			<h2>Cosmic Frontier Labs</h2>
+			<p class="footer-cta__title">Cosmic Frontier Labs</p>
 			<nav class="footer-nav" aria-label="Footer">
 				<a href="/blog">blog</a>
 				<span aria-hidden="true" class="dot-separator"></span>
@@ -66,6 +66,8 @@
 					class="footer-alerts formkit-alert formkit-alert-error"
 					data-element="errors"
 					data-group="alert"
+					role="alert"
+					aria-live="polite"
 				></ul>
 				<div class="footer-fields" data-element="fields" data-stacked="false">
 					<label class="visually-hidden" for="updates-email">Email address</label>
@@ -109,7 +111,7 @@
 		text-align: center;
 		padding-inline: var(--space-m);
 
-		& h2 {
+		& .footer-cta__title {
 			font-size: var(--size-step-4);
 			font-weight: 700;
 			text-transform: uppercase;

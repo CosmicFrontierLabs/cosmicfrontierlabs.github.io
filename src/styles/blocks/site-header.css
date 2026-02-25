@@ -140,15 +140,13 @@ body:has(.page-type[data-page-type="project"]) .site-header {
   .site-header__nav-toggle {
     display: block;
     background: transparent;
-    aspect-ratio: 1/1;
     border: none;
 
     position: absolute;
     right: var(--space-s);
     top: var(--space-2xs);
     cursor: pointer;
-    padding: 0;
-    cursor: pointer;
+    padding: 0.5rem;
     z-index: var(--header-nav-z-index);
   }
 

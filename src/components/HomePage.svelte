@@ -43,6 +43,8 @@
   let subheroPointerEvents = $derived(subheroOpacity > 0 ? "auto" : "none");
 
   onMount(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     // Ensure the loader is visible for at least MIN_LOADER_MS so the
     // animation is perceptible and the transition doesn't feel jarring.
     const minLoaderTimer = setTimeout(() => { minLoaderTimerElapsed = true; }, MIN_LOADER_MS);
@@ -60,7 +62,7 @@
         if (activeScene !== "simulation") activeScene = "simulation";
         // Skip camera zoom on mobile — the resize/scroll interactions cause jarring size changes
         const isMobile = window.matchMedia("(max-width: 768px)").matches;
-        heroScrollProgress = isMobile ? 0 : self.progress;
+        heroScrollProgress = (isMobile || prefersReducedMotion) ? 0 : self.progress;
         scrollTriggeredOpacity = 1 - self.progress;
       },
     });
@@ -124,6 +126,7 @@
         "Scarcity shapes the science. When telescope time is rationed and missions cannot fail, the system selects for safe bets. Incremental questions win over bold ones. The proposals most likely to change our understanding, the ones that challenge assumptions and risk being wrong, are the first to get cut. We are optimizing for caution when we should be optimizing for discovery.",
       ],
       image: "/images/0-Space-512w.jpg",
+      imageAlt: "A vast expanse of deep space with distant stars and nebulae",
     },
     {
       id: "vision",
@@ -134,6 +137,7 @@
         "The result is fleets of capable observatories instead of lone flagships. Telescope time that is not rationed. Ambitious science that does not wait. Access to the cosmos on the scale of human curiosity.",
       ],
       image: "/images/1-TelescopesOrbiting-512w.jpg",
+      imageAlt: "Multiple telescopes in orbit around Earth, forming a coordinated observation fleet",
     },
     {
       id: "impact",
@@ -144,19 +148,20 @@
         "When we broaden access to space, we broaden what gets discovered. The next breakthrough will not come only from a single flagship. It will come from the instrument no one expected, asking the question no one else thought to ask.",
       ],
       image: "/images/2-TheLab-512w.jpg",
+      imageAlt: "Engineers working in a laboratory assembling telescope components",
     },
   ];
 </script>
 
 <div class="simulation-container">
   <Canvas bind:activeScene {canvasOpacity} {heroScrollProgress} bind:isLoading={isCanvasLoading} />
-  <div class="simulation-container__loader-overlay" data-loaded={!isCanvasLoading}></div>
+  <div class="simulation-container__loader-overlay" data-loaded={!isCanvasLoading} aria-hidden="true"></div>
 </div>
 
 <div class="hero" bind:this={heroEl}>
   <div class="hero__content">
     <div class="hero__content__text">
-      <span class="hero__subtitle">Open more windows to the Universe </span>
+      <h1 class="hero__subtitle">Open more windows to the Universe</h1>
     </div>
   </div>
   <HeroLoader visible={showLoader} />
@@ -184,7 +189,7 @@
         </div>
         <img
           src={section.image}
-          alt={`Illustration for ${section.title} section`}
+          alt={section.imageAlt}
           loading="lazy"
           decoding="async"
           width="512"
@@ -265,7 +270,9 @@
     font-weight: 500;
     line-height: 1;
     text-wrap: balance;
+    margin: 0;
     margin-block-start: 0.125em;
+    max-width: none;
     padding-inline: 0.5rem;
 
     @media (min-width: 40rem) {

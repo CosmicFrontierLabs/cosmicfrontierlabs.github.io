@@ -6,10 +6,12 @@
   let { visible }: Props = $props();
 </script>
 
-<div class="hero-loader" class:hero-loader--hidden={!visible}>
-  <p class="hero-loader__text">
-    Loading<span class="hero-loader__dot hero-loader__dot--1">.</span><span class="hero-loader__dot hero-loader__dot--2">.</span><span class="hero-loader__dot hero-loader__dot--3">.</span>
-  </p>
+<div class="hero-loader" class:hero-loader--hidden={!visible} role="status" aria-live="polite">
+  {#if visible}
+    <p class="hero-loader__text">
+      Loading<span class="hero-loader__dot hero-loader__dot--1">.</span><span class="hero-loader__dot hero-loader__dot--2">.</span><span class="hero-loader__dot hero-loader__dot--3">.</span>
+    </p>
+  {/if}
 </div>
 
 <style lang="scss">
@@ -37,13 +39,15 @@
     color: var(--color-text);
   }
 
-  .hero-loader__dot {
-    animation: dot-fade 1.5s ease-in-out infinite;
-  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-loader__dot {
+      animation: dot-fade 1.5s ease-in-out infinite;
+    }
 
-  .hero-loader__dot--1 { animation-delay: 0s; }
-  .hero-loader__dot--2 { animation-delay: 0.2s; }
-  .hero-loader__dot--3 { animation-delay: 0.4s; }
+    .hero-loader__dot--1 { animation-delay: 0s; }
+    .hero-loader__dot--2 { animation-delay: 0.2s; }
+    .hero-loader__dot--3 { animation-delay: 0.4s; }
+  }
 
   @keyframes dot-fade {
     0%, 100% { opacity: 0; }

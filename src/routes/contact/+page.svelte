@@ -1,3 +1,7 @@
+<svelte:head>
+	<title>Contact - Cosmic Frontier Labs</title>
+</svelte:head>
+
 <section class="flow contact">
 	<h1>Contact</h1>
 	<p>
