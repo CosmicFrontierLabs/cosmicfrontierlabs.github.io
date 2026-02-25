@@ -350,7 +350,7 @@
   .content-section__inner {
     max-width: var(--content-width);
     margin-inline: auto;
-    padding: 2rem 1rem 2.5rem;
+    padding: 2rem 0.375rem 2.5rem;
 
     row-gap: 1lh;
     column-gap: 1lh;
