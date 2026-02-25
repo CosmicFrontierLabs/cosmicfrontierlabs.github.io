@@ -30,7 +30,7 @@
   let canvasOpacity = $derived.by(() => {
     if (scrollTriggeredOpacity !== null) {
       return scrollTriggeredOpacity;
-    } 
+    }
 
     if (scrollY.current !== null && scrollY.current !== undefined && innerHeight.current !== null && innerHeight.current !== undefined) {
       return scrollY.current / (innerHeight.current);
@@ -242,7 +242,7 @@
     justify-content: center;
     align-items: center;
     height: 80lvh;
-    padding-inline: 1rem;
+    padding-inline: 0.25rem;
 
     @media (min-width: 56rem) {
       padding-inline: 0;

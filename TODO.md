@@ -1,9 +1,5 @@
 TODO:
 
-- Mobile improvements
-  - Make the 
-- Loader isn't smooth on mobile
-- Make sure mobile view looks good
 - Explore mouse effect on hero
 - Check A11y
 - Check lighthouse
@@ -11,4 +7,5 @@ TODO:
   - Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
 
 NOTES
+
 - It's mesh_0_55 that gets the mirror
