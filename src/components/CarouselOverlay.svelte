@@ -395,12 +395,11 @@
     padding: 1ch 1.5ch;
     font-size: 0.8125rem;
     max-width: 60ch;
-    min-height: 6lh;
+    min-height: 8lh;
 
     @media (min-width: 56rem) {
       padding: 2ch 2ch;
       font-size: 0.875rem;
-      min-height: 8lh;
     }
   }
 
@@ -432,7 +431,7 @@
   }
 
   .carousel__nav-btn {
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     width: 32px;
@@ -446,6 +445,10 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease;
+
+    @container (min-width: 350px) {
+      display: flex;
+    }
   }
 
   .carousel__nav-btn:hover {
@@ -479,7 +482,7 @@
     display: none;
     gap: 8px;
 
-    @container (min-width: 350px) {
+    @container (min-width: 380px) {
       display: flex;
     }
   }
