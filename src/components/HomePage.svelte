@@ -8,7 +8,7 @@
 
   gsap.registerPlugin(ScrollTrigger);
 
-  const MIN_LOADER_MS = 1_500; // 1.5 seconds
+  const MIN_LOADER_MS = 1_000; // 1 second
 
   let heroEl: HTMLDivElement;
   let subheroEl: HTMLDivElement;
