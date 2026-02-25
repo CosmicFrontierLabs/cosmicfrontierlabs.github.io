@@ -1,5 +1,7 @@
 TODO:
 
+- Mobile improvements
+  - Make the 
 - Loader isn't smooth on mobile
 - Make sure mobile view looks good
 - Explore mouse effect on hero
@@ -9,6 +11,4 @@ TODO:
   - Consider adding gradients via https://www.goodcomponents.io/components/animated-mesh-gradient
 
 NOTES
-
-- Document the (a) loading pattern (b) error pattern, (c) scroll pattern and architecture so it's understood and reuseable.
-- It's mesh_0_55
+- It's mesh_0_55 that gets the mirror
