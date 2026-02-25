@@ -2,8 +2,6 @@
 
 Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and Svelte 5. Features interactive 3D space telescope simulations using Three.js.
 
----
-
 ## Quick start
 
 ```bash

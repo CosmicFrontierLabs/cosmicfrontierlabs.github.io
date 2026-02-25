@@ -176,6 +176,7 @@ export class CarouselScene {
     if (!isLocalhost) {
       this.gui.hide();
     }
+    this.gui.hide(); // also hiding on localhost for now
 
     const reapply = () => this.reapplyMetallicParams();
 
