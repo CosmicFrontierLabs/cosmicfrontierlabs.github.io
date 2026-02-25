@@ -1,8 +1,5 @@
 TODO:
 
-- Check A11y
-  - Basd on A11y change, move the fixed position of the menu hamburger.
-  - Fix the h1 on home page styling. It changed
 - Flashing of the carousel overlay - maybe z fighting
 - Review site with reduced motion enabled
 - Explore mouse effect on hero
@@ -11,7 +8,6 @@ TODO:
 NOTES
 
 - It's mesh_0_55 that gets the mirror
-
 
 - Lazy-load the Three.js scene. Don't block initial page load with it. Load Three.js and your scene assets after the critical content has painted. Use requestIdleCallback or trigger loading after DOMContentLoaded. Show a static image or CSS gradient placeholder first, then swap in the 3D scene.
 - Use <canvas> with willReadFrequently: false and make sure you're not forcing synchronous layout. Also set powerPreference: "high-performance" on your WebGL context.

@@ -229,8 +229,6 @@
     }
   }
 
-
-
   /* HERO */
   .hero {
     min-height: 95lvh;
@@ -267,7 +265,7 @@
       0 0 4px rgba(0, 0, 0, 0.9);
     text-transform: uppercase;
     font-size: var(--size-step-3);
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1;
     text-wrap: balance;
     margin: 0;
