@@ -1,11 +1,11 @@
 TODO:
 
-- Explore mouse effect on hero
 - Check A11y
   - Basd on A11y change, move the fixed position of the menu hamburger.
   - Fix the h1 on home page styling. It changed
 - Flashing of the carousel overlay - maybe z fighting
 - Review site with reduced motion enabled
+- Explore mouse effect on hero
 - Check lighthouse
 
 NOTES
