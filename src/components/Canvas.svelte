@@ -1,10 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import * as THREE from "three";
-  import { ThreePerf } from "three-perf";
-  import { simulationConfig } from "./simulation/simulationConfig";
-  import { EarthScene } from "./simulation/EarthScene";
-  import { CarouselScene } from "./simulation/CarouselScene";
+  import type { WebGLRenderer } from "three";
+  import type { ThreePerf } from "three-perf";
+  import type { EarthScene } from "./simulation/EarthScene";
+  import type { CarouselScene } from "./simulation/CarouselScene";
   import CarouselOverlay from "./CarouselOverlay.svelte";
 
   interface Props {
@@ -124,24 +123,14 @@
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
   let perf: ThreePerf | null = null;
-  let renderer: THREE.WebGLRenderer | null = null;
+  let renderer: WebGLRenderer | null = null;
 
   // Scene instances
   let earthScene = $state<EarthScene | null>(null);
   let carouselScene = $state<CarouselScene | null>(null);
 
 
-  // --- WebGL & Canvas Setup ---
-  function createRenderer(container: HTMLDivElement): THREE.WebGLRenderer {
-    const newRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    newRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
-    const width = container.offsetWidth || container.clientWidth;
-    const height = container.offsetHeight || container.clientHeight;
-    newRenderer.setSize(width, height);
-    container.appendChild(newRenderer.domElement);
-    return newRenderer;
-  }
-
+  // --- Resize Observer (no THREE dependency) ---
   function setupResizeObserver(): ResizeObserver {
     // Track previous dimensions to ignore small height-only changes
     // caused by mobile browser chrome (iOS address bar show/hide)
@@ -180,72 +169,6 @@
     hadError = true;
   }
 
-  function startAnimationLoop(): () => void {
-    if (!renderer || !earthScene) {
-      return () => {};
-    }
-
-    const clock = new THREE.Clock();
-
-    let rafId: number;
-    let prevActiveScene: typeof activeScene = activeScene;
-    let prevHeroScrollProgress: number = heroScrollProgress;
-
-    function animate() {
-      rafId = requestAnimationFrame(animate);
-
-      const delta = clock.getDelta();
-      const elapsedTime = clock.getElapsedTime();
-
-      // Reset state when leaving carousel
-      if (prevActiveScene === "carousel" && activeScene !== "carousel") {
-        setOrbitMode(false);
-        cursorOver = false;
-      }
-      prevActiveScene = activeScene;
-
-      // Sync hero scroll progress to earth scene when it changes
-      if (prevHeroScrollProgress !== heroScrollProgress && earthScene && container) {
-        earthScene.setHeroScrollProgress(heroScrollProgress);
-        const width = container.offsetWidth || container.clientWidth;
-        const height = container.offsetHeight || container.clientHeight;
-        earthScene.updateCamera(width, height);
-        prevHeroScrollProgress = heroScrollProgress;
-      }
-
-      // Read activeScene from the reactive prop on each frame
-      // (captured via the outer closure over the $props binding)
-      if (activeScene === "simulation" && earthScene) {
-        earthScene.update(delta, elapsedTime);
-
-        if (perf) perf.begin();
-        earthScene.render();
-      } else if (activeScene === "carousel" && carouselScene && isCarouselReady) {
-        carouselScene.update(delta);
-
-        if (perf) {
-          perf.begin();
-        }
-
-        if (renderer) {
-          renderer.toneMapping = THREE.ACESFilmicToneMapping;
-          renderer.toneMappingExposure = 1.0;
-          renderer.render(carouselScene.scene, carouselScene.camera);
-          renderer.toneMapping = THREE.NoToneMapping;
-        }
-      }
-
-      if (perf) perf.end();
-    }
-
-    rafId = requestAnimationFrame(animate);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      renderer?.dispose();
-    };
-  }
-
   onMount(() => {
     // Detect touch-only devices (no fine pointer = no mouse)
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
@@ -258,6 +181,106 @@
     // Async IIFE so we can yield to the browser between heavy steps.
     // The outer onMount returns the cleanup function synchronously.
     (async () => {
+      // Defer Three.js loading until after first paint via requestIdleCallback
+      await new Promise<void>((resolve) => {
+        if ("requestIdleCallback" in window) {
+          (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(resolve);
+        } else {
+          setTimeout(resolve, 1);
+        }
+      });
+      if (cancelled) return;
+
+      // --- Dynamic imports (Three.js now lands in an async chunk) ---
+      const THREE = await import("three");
+      const { ThreePerf: ThreePerfClass } = await import("three-perf");
+      const { simulationConfig } = await import("./simulation/simulationConfig");
+      const { EarthScene: EarthSceneClass } = await import("./simulation/EarthScene");
+
+      if (cancelled) return;
+
+      // --- Helper: create WebGL renderer (needs THREE) ---
+      function createRenderer(container: HTMLDivElement) {
+        const newRenderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance",
+        });
+        newRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+        const width = container.offsetWidth || container.clientWidth;
+        const height = container.offsetHeight || container.clientHeight;
+        newRenderer.setSize(width, height);
+        container.appendChild(newRenderer.domElement);
+        return newRenderer;
+      }
+
+      // --- Helper: animation loop (needs THREE for Clock & tone mapping constants) ---
+      function startAnimationLoop(): () => void {
+        if (!renderer || !earthScene) {
+          return () => {};
+        }
+
+        const clock = new THREE.Clock();
+
+        let rafId: number;
+        let prevActiveScene: typeof activeScene = activeScene;
+        let prevHeroScrollProgress: number = heroScrollProgress;
+
+        function animate() {
+          rafId = requestAnimationFrame(animate);
+
+          const delta = clock.getDelta();
+          const elapsedTime = clock.getElapsedTime();
+
+          // Reset state when leaving carousel
+          if (prevActiveScene === "carousel" && activeScene !== "carousel") {
+            setOrbitMode(false);
+            cursorOver = false;
+          }
+          prevActiveScene = activeScene;
+
+          // Sync hero scroll progress to earth scene when it changes
+          if (prevHeroScrollProgress !== heroScrollProgress && earthScene && container) {
+            earthScene.setHeroScrollProgress(heroScrollProgress);
+            const width = container.offsetWidth || container.clientWidth;
+            const height = container.offsetHeight || container.clientHeight;
+            earthScene.updateCamera(width, height);
+            prevHeroScrollProgress = heroScrollProgress;
+          }
+
+          // Read activeScene from the reactive prop on each frame
+          // (captured via the outer closure over the $props binding)
+          if (activeScene === "simulation" && earthScene) {
+            earthScene.update(delta, elapsedTime);
+
+            if (perf) perf.begin();
+            earthScene.render();
+          } else if (activeScene === "carousel" && carouselScene && isCarouselReady) {
+            carouselScene.update(delta);
+
+            if (perf) {
+              perf.begin();
+            }
+
+            if (renderer) {
+              renderer.toneMapping = THREE.ACESFilmicToneMapping;
+              renderer.toneMappingExposure = 1.0;
+              renderer.render(carouselScene.scene, carouselScene.camera);
+              renderer.toneMapping = THREE.NoToneMapping;
+            }
+          }
+
+          if (perf) perf.end();
+        }
+
+        rafId = requestAnimationFrame(animate);
+
+        return () => {
+          cancelAnimationFrame(rafId);
+          renderer?.dispose();
+        };
+      }
+
       // --- 1. Create renderer ---
       try {
         renderer = createRenderer(container);
@@ -275,7 +298,7 @@
       cursorY = container.clientHeight / 2;
 
       if (simulationConfig.perf.enabled) {
-        perf = new ThreePerf({
+        perf = new ThreePerfClass({
           anchorX: "left",
           anchorY: "top",
           domElement: container,
@@ -292,7 +315,7 @@
       const height = container.offsetHeight || container.clientHeight;
 
       try {
-        earthScene = new EarthScene(width, height, renderer!);
+        earthScene = new EarthSceneClass(width, height, renderer!);
         resizeObserver = setupResizeObserver();
         cleanupAnimation = startAnimationLoop();
       } catch (error) {
@@ -329,7 +352,8 @@
       // --- 4. Load CarouselScene after earth is ready ---
       // Deferred so its network/GPU work doesn't compete with the earth texture
       try {
-        carouselScene = new CarouselScene(width, height, renderer!);
+        const { CarouselScene: CarouselSceneClass } = await import("./simulation/CarouselScene");
+        carouselScene = new CarouselSceneClass(width, height, renderer!);
         carouselScene.onSpaceHeldChange = (held: boolean) => {
           spaceHeldForPan = held;
         };
