@@ -161,7 +161,6 @@
       <h1 class="hero__subtitle">Open more windows to the Universe</h1>
     </div>
   </div>
-  <!-- <HeroLoader visible={showLoader} /> -->
 </div>
 
 <div class="subhero" bind:this={subheroEl} style="pointer-events: {subheroPointerEvents}; opacity: {subheroOpacity};">
@@ -204,15 +203,12 @@
        the carousel fade-in via ScrollTrigger. -->
 </div>
 
-
-
 <style lang="scss">
   .simulation-container {
     position: relative;
     z-index: var(--z-simulation);
     isolation: isolate;
   }
-
 
   /* HERO */
   .hero {
