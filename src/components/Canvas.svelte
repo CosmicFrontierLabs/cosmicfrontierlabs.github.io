@@ -242,6 +242,11 @@
           const delta = clock.getDelta();
           const elapsedTime = clock.getElapsedTime();
 
+          // If the scene changed, clear the frame buffer (transparent, per setClearColor)
+          if (prevActiveScene !== activeScene) {
+            renderer?.clear();
+          }
+
           // Reset state when leaving carousel
           if (prevActiveScene === "carousel" && activeScene !== "carousel") {
             setOrbitMode(false);
