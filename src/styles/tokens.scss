@@ -29,6 +29,11 @@
   --color-focus: var(--color-primary-light);
   --bg-gradient: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
 
+  /* Glass-replacement gradient base colors */
+  --glass-color-1: oklch(7% 0.015 270);
+  --glass-color-2: oklch(11% 0.025 270);
+  --glass-color-3: oklch(9% 0.02 265);
+
   --content-width: clamp(min(calc(100% - 1rem), 400px), calc(100% - 2rem), 74rem);
   --content-width-narrow: clamp(min(100%, 250px), calc(100% - 2rem), 40rem);
 

@@ -59,19 +59,18 @@
 
   background: rgb(from var(--bg-glass-color) r g b / var(--bg-glass-opacity));
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(var(--bg-glass-blur));
-  -webkit-backdrop-filter: blur(var(--bg-glass-blur));
   border: 1px solid rgb(from var(--bg-glass-color) r g b / 0.21);
 }
 
 .bg-glass2 {
-  /* From https://css.glass */
-  background: rgba(100, 100, 100, 0.4);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  /* border: 1px solid transparent; */
-  /* border-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.4)) 1; */
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklch, var(--glass-color-1) 90%, transparent) 0%,
+    color-mix(in oklch, var(--glass-color-2) 82%, transparent) 35%,
+    color-mix(in oklch, var(--glass-color-3) 85%, transparent) 70%,
+    color-mix(in oklch, var(--glass-color-1) 92%, transparent) 100%
+  );
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
 
   border: var(--stroke);
   border-radius: var(--radius-s);
