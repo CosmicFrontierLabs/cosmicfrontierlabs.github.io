@@ -19,9 +19,7 @@
 
   // Bindable state passed down to SimulationCanvas
   let intendedScene = $state<"simulation" | "carousel">("simulation");
-  let isCanvasLoading = $state(true);
   let minLoaderTimerElapsed = $state(false);
-  let showLoader = $derived(isCanvasLoading || !minLoaderTimerElapsed);
 
   // Before mount, derive opacity from raw scroll position so the canvas
   // is hidden if the browser restores a non-zero scroll position.
@@ -154,8 +152,7 @@
 </script>
 
 <div class="simulation-container">
-  <Canvas bind:intendedScene {canvasOpacity} {heroScrollProgress} bind:isLoading={isCanvasLoading} />
-  <div class="simulation-container__loader-overlay" data-loaded={!isCanvasLoading} aria-hidden="true"></div>
+  <Canvas {intendedScene} {canvasOpacity} {heroScrollProgress} />
 </div>
 
 <div class="hero" bind:this={heroEl}>
@@ -164,7 +161,7 @@
       <h1 class="hero__subtitle">Open more windows to the Universe</h1>
     </div>
   </div>
-  <HeroLoader visible={showLoader} />
+  <!-- <HeroLoader visible={showLoader} /> -->
 </div>
 
 <div class="subhero" bind:this={subheroEl} style="pointer-events: {subheroPointerEvents}; opacity: {subheroOpacity};">
@@ -215,19 +212,6 @@
     z-index: var(--z-simulation);
   }
 
-  .simulation-container__loader-overlay {
-    position: fixed;
-    inset: 0;
-    background: var(--body-bg);
-    z-index: var(--z-hero);
-    opacity: 1;
-    transition: opacity 1.5s linear 0.5s;
-    pointer-events: none;
-
-    &[data-loaded="true"] {
-      opacity: 0;
-    }
-  }
 
   /* HERO */
   .hero {

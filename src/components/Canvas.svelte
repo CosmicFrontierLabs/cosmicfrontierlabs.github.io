@@ -5,26 +5,36 @@
   import type { EarthScene } from "./simulation/EarthScene";
   import type { CarouselScene } from "./simulation/CarouselScene";
   import CarouselOverlay from "./CarouselOverlay.svelte";
+  import HeroLoader from "./HeroLoader.svelte";
 
   interface Props {
     intendedScene: "simulation" | "carousel";
     canvasOpacity: number;
     /** 0–1 scroll progress through the hero section, drives camera zoom in the EarthScene */
     heroScrollProgress: number;
-    isLoading: boolean;
   }
 
   let {
-    intendedScene = $bindable("simulation"),
+    intendedScene,
     canvasOpacity,
     heroScrollProgress = $bindable(0),
-    isLoading = $bindable(true),
   }: Props = $props();
 
   const LOAD_TIMEOUT = 15_000;  // 15 seconds
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
   let hadError = $state(false);
+
+  let activeScene: "simulation" | "carousel" | "loader" | "error" = $derived.by(() => {
+    if (hadError) {
+      return "error";
+    } else if (intendedScene === "simulation" && isEarthReady) {
+      return "simulation";
+    } else if (intendedScene === "carousel" && isCarouselReady) {
+      return "carousel";
+    }
+    return "loader"
+  });
 
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
@@ -37,7 +47,7 @@
   let isTouchDevice = $state(false);
 
   // Allow explore interactions only on non-touch devices when carousel is visible and not already in orbit mode
-  let allowExplore = $derived(!hadError && !isTouchDevice && intendedScene === "carousel" && !orbitMode && canvasOpacity > 0);
+  let allowExplore = $derived(!hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
 
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
@@ -223,7 +233,7 @@
         const clock = new THREE.Clock();
 
         let rafId: number;
-        let prevIntendedScene: typeof intendedScene = intendedScene;
+        let prevActiveScene: typeof activeScene = activeScene;
         let prevHeroScrollProgress: number = heroScrollProgress;
 
         function animate() {
@@ -233,11 +243,11 @@
           const elapsedTime = clock.getElapsedTime();
 
           // Reset state when leaving carousel
-          if (prevIntendedScene === "carousel" && intendedScene !== "carousel") {
+          if (prevActiveScene === "carousel" && activeScene !== "carousel") {
             setOrbitMode(false);
             cursorOver = false;
           }
-          prevIntendedScene = intendedScene;
+          prevActiveScene = activeScene;
 
           // Sync hero scroll progress to earth scene when it changes
           if (prevHeroScrollProgress !== heroScrollProgress && earthScene && container) {
@@ -248,14 +258,14 @@
             prevHeroScrollProgress = heroScrollProgress;
           }
 
-          // Read intendedScene from the reactive prop on each frame
+          // Read activeScene from the reactive prop on each frame
           // (captured via the outer closure over the $props binding)
-          if (intendedScene === "simulation" && earthScene) {
+          if (activeScene === "simulation" && earthScene) {
             earthScene.update(delta, elapsedTime);
 
             if (perf) perf.begin();
             earthScene.render();
-          } else if (intendedScene === "carousel" && carouselScene && isCarouselReady) {
+          } else if (activeScene === "carousel" && carouselScene && isCarouselReady) {
             carouselScene.update(delta);
 
             if (perf) {
@@ -289,7 +299,6 @@
       } catch (error) {
         console.error("Canvas initialization failed:", error);
         hadError = true;
-        isLoading = false;
         return;
       }
       if (cancelled) return;
@@ -321,14 +330,12 @@
       } catch (error) {
         console.error("Canvas setup failed:", error);
         hadError = true;
-        isLoading = false;
         return;
       }
 
       // --- 3. Wait for EarthScene assets (texture) ---
       loadTimeout = setTimeout(() => {
-        if (isLoading) {
-          isLoading = false;
+        if (activeScene === "loader") {
           hadError = true;
         }
       }, LOAD_TIMEOUT);
@@ -339,7 +346,6 @@
         clearTimeout(loadTimeout);
         console.error("EarthScene failed to load:", err);
         hadError = true;
-        isLoading = false;
         return;
       }
 
@@ -347,7 +353,6 @@
       if (hadError || cancelled) return;
 
       isEarthReady = true;
-      isLoading = false;
 
       // --- 4. Load CarouselScene after earth is ready ---
       // Deferred so its network/GPU work doesn't compete with the earth texture
@@ -395,7 +400,7 @@
     bind:this={container}
     use:containerInteraction
     class="canvas"
-    class:carousel-active={intendedScene === "carousel"}
+    class:carousel-active={activeScene === "carousel"}
     class:allow-explore={allowExplore}
     class:orbit-mode={orbitMode}
     class:pan-mode={orbitMode && spaceHeldForPan}
@@ -403,6 +408,8 @@
     role="img"
     aria-label="Interactive 3D scene showing Earth with orbiting telescopes"
   ></div>
+  <HeroLoader visible={activeScene === "loader"} />
+  <!-- <div class="loader" data-show={activeScene==="loader"} ></div> -->
 
   {#if cursorVisible}
     <div class="explore-cursor" aria-hidden="true" style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));">
@@ -427,13 +434,13 @@
   {#if !hadError}
     <div
       class="carousel-overlay-wrapper"
-      class:carousel-overlay-wrapper--hidden={intendedScene !== 'carousel'}
-      aria-hidden={intendedScene !== 'carousel'}
+      class:carousel-overlay-wrapper--hidden={activeScene !== 'carousel'}
+      aria-hidden={activeScene !== 'carousel'}
     >
       <CarouselOverlay
         {carouselScene}
         paused={orbitMode}
-        {intendedScene}
+        {activeScene}
         onExitOrbit={() => {
           setOrbitMode(false);
         }}

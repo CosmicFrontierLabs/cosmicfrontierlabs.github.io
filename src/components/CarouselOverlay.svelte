@@ -12,11 +12,11 @@
   interface Props {
     carouselScene: CarouselScene | null;
     paused?: boolean;
-    intendedScene?: "simulation" | "carousel";
+    activeScene?: "simulation" | "carousel" | "error" | "loader";
     onExitOrbit?: () => void;
   }
 
-  let { carouselScene, paused = false, intendedScene = "simulation", onExitOrbit }: Props = $props();
+  let { carouselScene, paused = false, activeScene = "simulation", onExitOrbit }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
 
@@ -111,7 +111,7 @@
 
   // Reset to slide 0 when the carousel becomes the active scene.
   $effect(() => {
-    if (intendedScene === "carousel" && carouselScene) {
+    if (activeScene === "carousel" && carouselScene) {
       untrack(() => {
         initialized = false;
         goToIndex(0);

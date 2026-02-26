@@ -16,9 +16,7 @@
 
 <style lang="scss">
   .hero-loader {
-    position: absolute;
-    height: 80lvh;
-    width: 100%;
+    position: fixed;
     inset: 0;
     display: flex;
     align-items: center;
