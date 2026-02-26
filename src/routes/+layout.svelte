@@ -3,8 +3,6 @@
   import Header from "../components/Header.svelte";
   import Footer from "../components/Footer.svelte";
   import { onMount } from "svelte";
-  import { page } from "$app/state";
-  import { afterNavigate } from "$app/navigation";
 
   let { children } = $props();
 
@@ -19,13 +17,6 @@
     };
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
-  });
-
-  afterNavigate(() => {
-    const main = document.getElementById("content");
-    if (main) {
-      main.focus({ preventScroll: true });
-    }
   });
 </script>
 
