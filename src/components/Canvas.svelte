@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { WebGLRenderer } from "three";
-  import type { ThreePerf } from "three-perf";
   import type { EarthScene } from "./simulation/EarthScene";
   import type { CarouselScene } from "./simulation/CarouselScene";
   import CarouselOverlay from "./CarouselOverlay.svelte";
@@ -130,7 +129,6 @@
 
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
-  let perf: ThreePerf | null = null;
   let renderer: WebGLRenderer | null = null;
 
   // Scene instances
@@ -177,12 +175,9 @@
   }
 
   onMount(() => {
-    // Detect touch-only devices (no fine pointer = no mouse)
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
-
     let cleanupAnimation: (() => void) | null = null;
     let loadTimeout: ReturnType<typeof setTimeout> | undefined;
-
     let cancelled = false;
 
     // Async IIFE so we can yield to the browser between heavy steps.
@@ -200,7 +195,6 @@
 
       // --- Dynamic imports (Three.js now lands in an async chunk) ---
       const THREE = await import("three");
-      const { ThreePerf: ThreePerfClass } = await import("three-perf");
       const { simulationConfig } = await import("./simulation/simulationConfig");
       const { EarthScene: EarthSceneClass } = await import("./simulation/EarthScene");
 
@@ -265,14 +259,9 @@
           if (activeScene === "simulation" && earthScene) {
             earthScene.update(delta, elapsedTime);
 
-            if (perf) perf.begin();
             earthScene.render();
           } else if (activeScene === "carousel" && carouselScene && isCarouselReady) {
             carouselScene.update(delta);
-
-            if (perf) {
-              perf.begin();
-            }
 
             if (renderer) {
               renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -281,8 +270,6 @@
               renderer.toneMapping = THREE.NoToneMapping;
             }
           }
-
-          if (perf) perf.end();
         }
 
         rafId = requestAnimationFrame(animate);
@@ -307,15 +294,6 @@
 
       cursorX = container.clientWidth / 2;
       cursorY = container.clientHeight / 2;
-
-      if (simulationConfig.perf.enabled) {
-        perf = new ThreePerfClass({
-          anchorX: "left",
-          anchorY: "top",
-          domElement: container,
-          renderer: renderer,
-        });
-      }
 
       // Yield a frame so the browser can paint before scene construction
       await new Promise<void>((r) => requestAnimationFrame(() => r()));
@@ -344,6 +322,7 @@
 
       try {
         await earthScene.loaded;
+        isEarthReady = true;
       } catch (err) {
         clearTimeout(loadTimeout);
         console.error("EarthScene failed to load:", err);
@@ -353,8 +332,6 @@
 
       clearTimeout(loadTimeout);
       if (hadError || cancelled) return;
-
-      isEarthReady = true;
 
       // --- 4. Load CarouselScene after earth is ready ---
       // Deferred so its network/GPU work doesn't compete with the earth texture
@@ -383,7 +360,6 @@
       clearTimeout(loadTimeout);
       earthScene?.dispose();
       carouselScene?.dispose();
-      perf?.dispose();
       cleanupAnimation?.();
     };
   });
