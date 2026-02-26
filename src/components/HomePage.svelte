@@ -210,6 +210,7 @@
   .simulation-container {
     position: relative;
     z-index: var(--z-simulation);
+    isolation: isolate;
   }
 
 
