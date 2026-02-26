@@ -19,7 +19,7 @@
 
   // Bindable state passed down to SimulationCanvas
   let intendedScene = $state<"simulation" | "carousel">("simulation");
-  let minLoaderTimerElapsed = $state(false);
+  let minLoaderTimerElapsed = $state(false); // TODO:
 
   // Before mount, derive opacity from raw scroll position so the canvas
   // is hidden if the browser restores a non-zero scroll position.
@@ -30,14 +30,19 @@
       return scrollTriggeredOpacity;
     }
 
-    if (scrollY.current !== null && scrollY.current !== undefined && innerHeight.current !== null && innerHeight.current !== undefined) {
-      return scrollY.current / (innerHeight.current);
+    if (
+      scrollY.current !== null &&
+      scrollY.current !== undefined &&
+      innerHeight.current !== null &&
+      innerHeight.current !== undefined
+    ) {
+      return scrollY.current / innerHeight.current;
     }
     return 0;
   });
 
   let heroScrollProgress = $state(0);
-  let subheroOpacity = $state(1);
+  let subheroOpacity = $state(0); // TODO: can be 0?
   let subheroPointerEvents = $derived(subheroOpacity > 0 ? "auto" : "none");
 
   onMount(() => {
@@ -45,7 +50,9 @@
 
     // Ensure the loader is visible for at least MIN_LOADER_MS so the
     // animation is perceptible and the transition doesn't feel jarring.
-    const minLoaderTimer = setTimeout(() => { minLoaderTimerElapsed = true; }, MIN_LOADER_MS);
+    const minLoaderTimer = setTimeout(() => {
+      minLoaderTimerElapsed = true;
+    }, MIN_LOADER_MS);
 
     // 1. Hero: fade canvas out and drive camera zoom
     //    The 1.5× multiplier makes the canvas fully transparent by ~67% scroll
@@ -60,7 +67,7 @@
         if (intendedScene !== "simulation") intendedScene = "simulation";
         // Skip camera zoom on mobile — the resize/scroll interactions cause jarring size changes
         const isMobile = window.matchMedia("(max-width: 768px)").matches;
-        heroScrollProgress = (isMobile || prefersReducedMotion) ? 0 : self.progress;
+        heroScrollProgress = isMobile || prefersReducedMotion ? 0 : self.progress;
         scrollTriggeredOpacity = 1 - self.progress;
       },
     });
@@ -104,7 +111,6 @@
     if (heroTrigger.progress === 0 && carouselEnterTrigger.progress === 0) {
       scrollTriggeredOpacity = 1;
     }
-
 
     return () => {
       clearTimeout(minLoaderTimer);
@@ -183,14 +189,7 @@
             <p>{paragraph}</p>
           {/each}
         </div>
-        <img
-          src={section.image}
-          alt={section.imageAlt}
-          loading="lazy"
-          decoding="async"
-          width="512"
-          height="512"
-        />
+        <img src={section.image} alt={section.imageAlt} loading="lazy" decoding="async" width="512" height="512" />
       </div>
     </div>
   {/each}
