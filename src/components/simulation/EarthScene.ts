@@ -165,12 +165,7 @@ export class EarthScene {
 
     const numTelescopes = this.telescopes.length;
     for (let i = 0; i < numTelescopes; i++) {
-      this.telescopes[i].update(
-        elapsedTime,
-        this.mouseWorldPosition,
-        this.frustumInstanced,
-        this.telescopeInstanced
-      );
+      this.telescopes[i].update(elapsedTime, this.mouseWorldPosition, this.frustumInstanced, this.telescopeInstanced);
       this.telescopeOrigins[i].copy(this.telescopes[i].origin);
       this.telescopeTargets[i].copy(this.telescopes[i].target);
     }

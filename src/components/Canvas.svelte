@@ -14,13 +14,9 @@
     heroScrollProgress: number;
   }
 
-  let {
-    intendedScene,
-    canvasOpacity,
-    heroScrollProgress = $bindable(0),
-  }: Props = $props();
+  let { intendedScene, canvasOpacity, heroScrollProgress = $bindable(0) }: Props = $props();
 
-  const LOAD_TIMEOUT = 15_000;  // 15 seconds
+  const LOAD_TIMEOUT = 15_000; // 15 seconds
   let isEarthReady = $state(false);
   let isCarouselReady = $state(false);
   let hadError = $state(false);
@@ -33,7 +29,7 @@
     } else if (intendedScene === "carousel" && isCarouselReady) {
       return "carousel";
     }
-    return "loader"
+    return "loader";
   });
 
   // Space key held (for pan cursor feedback)
@@ -47,7 +43,9 @@
   let isTouchDevice = $state(false);
 
   // Allow explore interactions only on non-touch devices when carousel is visible and not already in orbit mode
-  let allowExplore = $derived(!hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
+  let allowExplore = $derived(
+    !hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0
+  );
 
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
@@ -138,7 +136,6 @@
   // Scene instances
   let earthScene = $state<EarthScene | null>(null);
   let carouselScene = $state<CarouselScene | null>(null);
-
 
   // --- Resize Observer (no THREE dependency) ---
   function setupResizeObserver(): ResizeObserver {
@@ -396,7 +393,8 @@
   {#if hadError}
     <div class="canvas-fallback bg-stars" role="alert">
       <p class="canvas-fallback__text">
-        Something went wrong loading the 3D scene. Please reload the page or scroll down to view the website without the animations.
+        Something went wrong loading the 3D scene. Please reload the page or scroll down to view the website without the
+        animations.
       </p>
     </div>
   {/if}
@@ -417,7 +415,11 @@
   <!-- <div class="loader" data-show={activeScene==="loader"} ></div> -->
 
   {#if cursorVisible}
-    <div class="explore-cursor" aria-hidden="true" style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));">
+    <div
+      class="explore-cursor"
+      aria-hidden="true"
+      style="transform: translate(calc({cursorX}px - 50%), calc({cursorY}px - 50%));"
+    >
       <svg class="explore-cursor__ring" width="80" height="80" viewBox="0 0 80 80">
         <circle cx="40" cy="40" r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
         <circle
@@ -439,8 +441,8 @@
   {#if !hadError}
     <div
       class="carousel-overlay-wrapper"
-      class:carousel-overlay-wrapper--hidden={activeScene !== 'carousel'}
-      aria-hidden={activeScene !== 'carousel'}
+      class:carousel-overlay-wrapper--hidden={activeScene !== "carousel"}
+      aria-hidden={activeScene !== "carousel"}
     >
       <CarouselOverlay
         {carouselScene}
@@ -452,7 +454,6 @@
       />
     </div>
   {/if}
-
 </div>
 
 <style lang="scss">

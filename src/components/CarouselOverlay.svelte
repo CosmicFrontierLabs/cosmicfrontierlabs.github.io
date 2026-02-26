@@ -169,7 +169,17 @@
 
         <div class="carousel__explore-hints">
           <span class="carousel__explore-hint">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" opacity="0.3" />
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
@@ -177,7 +187,17 @@
             Drag to rotate
           </span>
           <span class="carousel__explore-hint">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <rect x="9" y="2" width="6" height="12" rx="3" />
               <path d="M12 6v3" />
               <path d="M8 18l4 4 4-4" />
@@ -185,7 +205,17 @@
             Scroll to zoom
           </span>
           <span class="carousel__explore-hint">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M5 9l-3 3 3 3" />
               <path d="M9 5l3-3 3 3" />
               <path d="M15 19l-3 3-3-3" />
@@ -199,7 +229,17 @@
 
         <div class="carousel__explore-nav">
           <button class="carousel__exit-btn" onclick={() => onExitOrbit?.()}>
-            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              aria-hidden="true"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M9 14L4 9l5-5" />
               <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H16" />
             </svg>
@@ -217,7 +257,15 @@
 
       <div class="carousel__controls">
         <button class="carousel__nav-btn" onclick={() => goToPrev()} aria-label="Previous slide">
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
@@ -235,11 +283,23 @@
           {/each}
         </div>
         <button class="carousel__nav-btn" onclick={() => goToNext()} aria-label="Next slide">
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
-        <button class="carousel__pause-btn" onclick={toggleAutoplay} aria-label={autoplayPaused ? 'Play carousel' : 'Pause carousel'}>
+        <button
+          class="carousel__pause-btn"
+          onclick={toggleAutoplay}
+          aria-label={autoplayPaused ? "Play carousel" : "Pause carousel"}
+        >
           {#if autoplayPaused}
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -502,7 +562,7 @@
   }
 
   .carousel__indicator::after {
-    content: '';
+    content: "";
     display: block;
     width: 100%;
     height: 4px;

@@ -1,17 +1,17 @@
 <svelte:head>
-	<title>Contact - Cosmic Frontier Labs</title>
+  <title>Contact - Cosmic Frontier Labs</title>
 </svelte:head>
 
 <section class="flow contact">
-	<h1>Contact</h1>
-	<p>
-		Email us at <a href="mailto:info@cosmicfrontier.org">info@cosmicfrontier.org</a>.
-	</p>
+  <h1>Contact</h1>
+  <p>
+    Email us at <a href="mailto:info@cosmicfrontier.org">info@cosmicfrontier.org</a>.
+  </p>
 </section>
 
 <style>
-	.contact p {
-		max-width: 800px;
-		margin-block-start: var(--space-l);
-	}
+  .contact p {
+    max-width: 800px;
+    margin-block-start: var(--space-l);
+  }
 </style>
