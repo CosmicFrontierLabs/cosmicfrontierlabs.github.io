@@ -7,17 +7,10 @@
 
   gsap.registerPlugin(ScrollTrigger);
 
-  const MIN_LOADER_MS = 1_000; // 1 second
-
   let heroEl: HTMLDivElement;
   let sectionsEl: HTMLDivElement;
-  /** Empty scroll-trigger anchor for the carousel. Its 200lvh height
-   *  provides the scroll distance that drives the carousel fade-in. */
   let carouselAnchorEl: HTMLDivElement;
-
-  // Bindable state passed down to SimulationCanvas
   let intendedScene = $state<"simulation" | "carousel">("simulation");
-  let minLoaderTimerElapsed = $state(false); // TODO:
 
   // Before mount, derive opacity from raw scroll position so the canvas
   // is hidden if the browser restores a non-zero scroll position.
@@ -40,17 +33,11 @@
   });
 
   let heroScrollProgress = $state(0);
-  let subheroOpacity = $state(0); // TODO: can be 0?
+  let subheroOpacity = $state(0.01);
   let subheroPointerEvents = $derived(subheroOpacity > 0 ? "auto" : "none");
 
   onMount(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    // Ensure the loader is visible for at least MIN_LOADER_MS so the
-    // animation is perceptible and the transition doesn't feel jarring.
-    const minLoaderTimer = setTimeout(() => {
-      minLoaderTimerElapsed = true;
-    }, MIN_LOADER_MS);
 
     // 1. Hero: fade canvas out and drive camera zoom
     //    The 1.5× multiplier makes the canvas fully transparent by ~67% scroll
@@ -111,7 +98,6 @@
     }
 
     return () => {
-      clearTimeout(minLoaderTimer);
       heroTrigger.kill();
       carouselEnterTrigger.kill();
       subheroFadeTrigger.kill();
