@@ -207,7 +207,7 @@ export class CarouselScene {
 
     // Load HDR environment background (async, non-blocking)
     const hdrLoaded = new Promise<void>((resolveHdr) => {
-      new HDRLoader().load("/textures/HDR_multi_nebulae_1_4k.hdr", (texture) => {
+      new HDRLoader().load("/textures/HDR_multi_nebulae_1_2k.hdr", (texture) => {
         // Scene was disposed while loading — clean up and bail
         if (this.disposed) {
           texture.dispose();

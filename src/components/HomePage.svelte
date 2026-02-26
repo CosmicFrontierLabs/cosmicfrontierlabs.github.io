@@ -18,7 +18,7 @@
   let carouselAnchorEl: HTMLDivElement;
 
   // Bindable state passed down to SimulationCanvas
-  let activeScene = $state<"simulation" | "carousel">("simulation");
+  let intendedScene = $state<"simulation" | "carousel">("simulation");
   let isCanvasLoading = $state(true);
   let minLoaderTimerElapsed = $state(false);
   let showLoader = $derived(isCanvasLoading || !minLoaderTimerElapsed);
@@ -59,7 +59,7 @@
       scrub: 0.5,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
-        if (activeScene !== "simulation") activeScene = "simulation";
+        if (intendedScene !== "simulation") intendedScene = "simulation";
         // Skip camera zoom on mobile — the resize/scroll interactions cause jarring size changes
         const isMobile = window.matchMedia("(max-width: 768px)").matches;
         heroScrollProgress = (isMobile || prefersReducedMotion) ? 0 : self.progress;
@@ -75,7 +75,7 @@
       scrub: 0.5,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
-        if (activeScene !== "carousel") activeScene = "carousel";
+        if (intendedScene !== "carousel") intendedScene = "carousel";
         scrollTriggeredOpacity = self.progress;
       },
     });
@@ -154,7 +154,7 @@
 </script>
 
 <div class="simulation-container">
-  <Canvas bind:activeScene {canvasOpacity} {heroScrollProgress} bind:isLoading={isCanvasLoading} />
+  <Canvas bind:intendedScene {canvasOpacity} {heroScrollProgress} bind:isLoading={isCanvasLoading} />
   <div class="simulation-container__loader-overlay" data-loaded={!isCanvasLoading} aria-hidden="true"></div>
 </div>
 

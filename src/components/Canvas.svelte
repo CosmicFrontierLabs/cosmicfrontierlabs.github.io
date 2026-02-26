@@ -7,7 +7,7 @@
   import CarouselOverlay from "./CarouselOverlay.svelte";
 
   interface Props {
-    activeScene: "simulation" | "carousel";
+    intendedScene: "simulation" | "carousel";
     canvasOpacity: number;
     /** 0–1 scroll progress through the hero section, drives camera zoom in the EarthScene */
     heroScrollProgress: number;
@@ -15,7 +15,7 @@
   }
 
   let {
-    activeScene = $bindable("simulation"),
+    intendedScene = $bindable("simulation"),
     canvasOpacity,
     heroScrollProgress = $bindable(0),
     isLoading = $bindable(true),
@@ -37,7 +37,7 @@
   let isTouchDevice = $state(false);
 
   // Allow explore interactions only on non-touch devices when carousel is visible and not already in orbit mode
-  let allowExplore = $derived(!hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0);
+  let allowExplore = $derived(!hadError && !isTouchDevice && intendedScene === "carousel" && !orbitMode && canvasOpacity > 0);
 
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
@@ -223,7 +223,7 @@
         const clock = new THREE.Clock();
 
         let rafId: number;
-        let prevActiveScene: typeof activeScene = activeScene;
+        let prevIntendedScene: typeof intendedScene = intendedScene;
         let prevHeroScrollProgress: number = heroScrollProgress;
 
         function animate() {
@@ -233,11 +233,11 @@
           const elapsedTime = clock.getElapsedTime();
 
           // Reset state when leaving carousel
-          if (prevActiveScene === "carousel" && activeScene !== "carousel") {
+          if (prevIntendedScene === "carousel" && intendedScene !== "carousel") {
             setOrbitMode(false);
             cursorOver = false;
           }
-          prevActiveScene = activeScene;
+          prevIntendedScene = intendedScene;
 
           // Sync hero scroll progress to earth scene when it changes
           if (prevHeroScrollProgress !== heroScrollProgress && earthScene && container) {
@@ -248,14 +248,14 @@
             prevHeroScrollProgress = heroScrollProgress;
           }
 
-          // Read activeScene from the reactive prop on each frame
+          // Read intendedScene from the reactive prop on each frame
           // (captured via the outer closure over the $props binding)
-          if (activeScene === "simulation" && earthScene) {
+          if (intendedScene === "simulation" && earthScene) {
             earthScene.update(delta, elapsedTime);
 
             if (perf) perf.begin();
             earthScene.render();
-          } else if (activeScene === "carousel" && carouselScene && isCarouselReady) {
+          } else if (intendedScene === "carousel" && carouselScene && isCarouselReady) {
             carouselScene.update(delta);
 
             if (perf) {
@@ -395,7 +395,7 @@
     bind:this={container}
     use:containerInteraction
     class="canvas"
-    class:carousel-active={activeScene === "carousel"}
+    class:carousel-active={intendedScene === "carousel"}
     class:allow-explore={allowExplore}
     class:orbit-mode={orbitMode}
     class:pan-mode={orbitMode && spaceHeldForPan}
@@ -427,13 +427,13 @@
   {#if !hadError}
     <div
       class="carousel-overlay-wrapper"
-      class:carousel-overlay-wrapper--hidden={activeScene !== 'carousel'}
-      aria-hidden={activeScene !== 'carousel'}
+      class:carousel-overlay-wrapper--hidden={intendedScene !== 'carousel'}
+      aria-hidden={intendedScene !== 'carousel'}
     >
       <CarouselOverlay
         {carouselScene}
         paused={orbitMode}
-        {activeScene}
+        {intendedScene}
         onExitOrbit={() => {
           setOrbitMode(false);
         }}
