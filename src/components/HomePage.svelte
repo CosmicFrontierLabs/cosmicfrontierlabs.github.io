@@ -2,7 +2,6 @@
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
   import Canvas from "../components/Canvas.svelte";
-  import HeroLoader from "../components/HeroLoader.svelte";
   import { onMount } from "svelte";
   import { scrollY, innerHeight } from "svelte/reactivity/window";
 
@@ -11,7 +10,6 @@
   const MIN_LOADER_MS = 1_000; // 1 second
 
   let heroEl: HTMLDivElement;
-  let subheroEl: HTMLDivElement;
   let sectionsEl: HTMLDivElement;
   /** Empty scroll-trigger anchor for the carousel. Its 200lvh height
    *  provides the scroll distance that drives the carousel fade-in. */
@@ -169,7 +167,7 @@
   </div>
 </div>
 
-<div class="subhero" bind:this={subheroEl} style="pointer-events: {subheroPointerEvents}; opacity: {subheroOpacity};">
+<div class="subhero" style="pointer-events: {subheroPointerEvents}; opacity: {subheroOpacity};">
   <p id="subhero__text">
     We're building a new class of scientific tools to accelerate discovery and exploration of the Universe. Standard
     platforms. Modular instruments. Rapid iteration. Built to put more scientific capability in space, more often.
