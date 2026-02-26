@@ -141,6 +141,10 @@
   ];
 </script>
 
+<svelte:head>
+  <title>Cosmic Frontier Labs</title>
+</svelte:head>
+
 <div class="simulation-container">
   <Canvas {intendedScene} {canvasOpacity} {heroScrollProgress} />
 </div>
