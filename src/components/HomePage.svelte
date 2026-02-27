@@ -33,7 +33,7 @@
   });
 
   let heroScrollProgress = $state(0);
-  let subheroOpacity = $state(0.01);
+  let subheroOpacity = $state(1);
   let subheroPointerEvents = $derived(subheroOpacity > 0 ? "auto" : "none");
 
   onMount(() => {
