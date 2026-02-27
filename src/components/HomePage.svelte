@@ -401,7 +401,7 @@
     position: relative;
     isolation: isolate;
 
-    min-height: 80lvh;
+    min-height: 90lvh;
     border-radius: var(--radius-m);
     overflow: hidden;
     margin-inline: auto;

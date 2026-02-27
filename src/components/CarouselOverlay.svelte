@@ -489,7 +489,7 @@
   }
 
   .carousel__nav-btn {
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     width: 32px;
@@ -503,10 +503,6 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease;
-
-    @container (min-width: 350px) {
-      display: flex;
-    }
   }
 
   .carousel__nav-btn:hover {
