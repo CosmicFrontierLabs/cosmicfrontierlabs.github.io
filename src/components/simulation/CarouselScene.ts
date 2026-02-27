@@ -215,35 +215,32 @@ export class CarouselScene {
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
     this.loaded = (async () => {
-      this.telescope = await this.loadModel(gltfLoader, {
-        url: "/models/20260102_Payload_assy_no_baffle.glb",
-        scale: 5.0,
-        brighten: true,
-        mirrorMeshName: MIRROR_MESH_NAME,
-      });
-      this.telescope.visible = true;
-
-      this.fullAssy = await this.loadModel(gltfLoader, {
-        url: "/models/20260102_Full_Assy.glb",
-        scale: 3.0,
-        brighten: true,
-      });
-      this.fullAssy.visible = false;
-
-      console.log("NETWORK SPEED: ", networkSpeed);
-      // If the network is slow, dont load the background
-      // if (networkSpeed === "slow" || networkSpeed === "medium") {
-      // return;
-      // }
-
-      const texture = await new Promise<THREE.Texture>((resolve) => {
-        new THREE.TextureLoader().load("/textures/carousel-bg.jpg", resolve);
-      });
+      const [telescope, fullAssy, texture] = await Promise.all([
+        this.loadModel(gltfLoader, {
+          url: "/models/20260102_Payload_assy_no_baffle.glb",
+          scale: 5.0,
+          brighten: true,
+          mirrorMeshName: MIRROR_MESH_NAME,
+        }),
+        this.loadModel(gltfLoader, {
+          url: "/models/20260102_Full_Assy.glb",
+          scale: 3.0,
+          brighten: true,
+        }),
+        new Promise<THREE.Texture>((resolve) => {
+          new THREE.TextureLoader().load("/textures/carousel-bg.jpg", resolve);
+        }),
+      ]);
 
       if (this.disposed) {
         texture.dispose();
         return;
       }
+
+      this.telescope = telescope;
+      this.telescope.visible = true;
+      this.fullAssy = fullAssy;
+      this.fullAssy.visible = false;
 
       texture.mapping = THREE.EquirectangularReflectionMapping;
       this.hdrTexture = texture;
