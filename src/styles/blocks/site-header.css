@@ -51,6 +51,8 @@ body:has(.page-type[data-page-type="project"]) .site-header {
   text-transform: uppercase;
   font-weight: 300;
   vertical-align: middle;
+  margin-block-end: 0.125em;
+  display: inline-block;
 }
 
 .site-header__nav-wrapper {
