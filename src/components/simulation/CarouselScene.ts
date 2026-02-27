@@ -205,30 +205,6 @@ export class CarouselScene {
         this.scene.environmentIntensity = v;
       });
 
-    // Load HDR environment background (async, non-blocking)
-    const hdrLoaded = new Promise<void>((resolveHdr) => {
-      new HDRLoader().load("/textures/HDR_multi_nebulae_1_2k.hdr", (texture) => {
-        // Scene was disposed while loading — clean up and bail
-        if (this.disposed) {
-          texture.dispose();
-          return;
-        }
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        this.hdrTexture = texture;
-        // Fade in: start dim and animate backgroundIntensity to target
-        this.scene.background = texture;
-        this.scene.backgroundIntensity = 0;
-        this.scene.environment = texture;
-        this.scene.environmentIntensity = this.metallicParams.envMapIntensity;
-        gsap.to(this.scene, {
-          backgroundIntensity: 5,
-          duration: 1.5,
-          ease: "power2.inOut",
-        });
-        resolveHdr();
-      });
-    });
-
     // Loaders
     this.dracoLoader = new DRACOLoader();
     this.dracoLoader.setDecoderPath("/draco/");
@@ -236,28 +212,41 @@ export class CarouselScene {
     gltfLoader.setDRACOLoader(this.dracoLoader);
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
-    // Load payload model (with mirror reflector)
-    const payloadLoaded = this.loadModel(gltfLoader, {
-      url: "/models/20260102_Payload_assy_no_baffle.glb",
-      scale: 5.0,
-      brighten: true,
-      mirrorMeshName: MIRROR_MESH_NAME,
-    }).then((group) => {
-      this.telescope = group;
-    });
+    // Load the models
+    (async () => {
+      this.telescope = await this.loadModel(gltfLoader, {
+        url: "/models/20260102_Payload_assy_no_baffle.glb",
+        scale: 5.0,
+        brighten: true,
+        mirrorMeshName: MIRROR_MESH_NAME,
+      });
+      this.telescope.visible = true;
 
-    // Load full assembly model
-    const fullAssyLoaded = this.loadModel(gltfLoader, {
-      url: "/models/20260102_Full_Assy.glb",
-      scale: 3.0,
-      brighten: true,
-    }).then((group) => {
-      group.visible = false;
-      this.fullAssy = group;
-    });
+      this.fullAssy = await this.loadModel(gltfLoader, {
+        url: "/models/20260102_Full_Assy.glb",
+        scale: 3.0,
+        brighten: true,
+      });
+      this.fullAssy.visible = false;
 
-    // Resolve loaded promise when all assets are ready
-    this.loaded = Promise.all([hdrLoaded, payloadLoaded, fullAssyLoaded]).then(() => {});
+      const hdrLoaded = new Promise<void>((resolveHdr) => {
+        new HDRLoader().load("/textures/HDR_multi_nebulae_1_2k.hdr", (texture) => {
+          if (this.disposed) {
+            // Scene was disposed while loading — clean up and bail
+            texture.dispose();
+            return;
+          }
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+          this.hdrTexture = texture;
+          this.scene.background = texture;
+          this.scene.backgroundIntensity = 5;
+          this.scene.environment = texture;
+          this.scene.environmentIntensity = this.metallicParams.envMapIntensity;
+          resolveHdr();
+        });
+      });
+      this.loaded = Promise.all([hdrLoaded]).then(() => {});
+    })();
   }
 
   /**
