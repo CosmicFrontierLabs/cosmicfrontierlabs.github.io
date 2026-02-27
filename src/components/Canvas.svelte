@@ -440,6 +440,9 @@
   .canvas {
     position: fixed;
     inset: 0;
+    // Promotes to own compositor layer — prevents iOS Safari from
+    // detaching this fixed element during overscroll bounce.
+    will-change: transform;
     background-color: var(--body-bg);
     z-index: 1;
     // Be careful with transition on opacity since it's canvasOpacity
