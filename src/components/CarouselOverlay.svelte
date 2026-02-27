@@ -331,11 +331,9 @@
     margin-inline: 0;
 
     position: absolute;
-    top: var(--header-height);
+    top: var(--space-s);
     left: calc((100% - var(--content-width)) / 2 + 0.75rem);
-
     z-index: 14;
-
     @media (min-width: 56rem) {
       font-size: var(--size-step-5);
     }

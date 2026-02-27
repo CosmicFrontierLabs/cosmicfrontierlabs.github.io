@@ -189,7 +189,7 @@
   {/each}
 </div>
 
-<div class="carousel-anchor" bind:this={carouselAnchorEl}>
+<div class="carousel-anchor bg-glass2" bind:this={carouselAnchorEl}>
   <CarouselCanvas canvasOpacity={carouselOpacity} loadingEnabled={earthReady} />
 </div>
 
@@ -401,9 +401,10 @@
     position: relative;
     isolation: isolate;
 
-    min-height: 100lvh;
-    width: 100lvw;
-    margin-left: calc(50% - 50vw);
+    min-height: 80lvh;
+    border-radius: var(--radius-m);
+    overflow: hidden;
+    margin-inline: auto;
     z-index: var(--z-carousel-ui);
     pointer-events: none;
   }

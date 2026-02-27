@@ -340,7 +340,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 100lvh;
+    height: 100%;
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
