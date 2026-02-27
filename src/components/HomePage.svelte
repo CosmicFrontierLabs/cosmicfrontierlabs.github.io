@@ -1,7 +1,8 @@
 <script lang="ts">
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
-  import Canvas from "../components/Canvas.svelte";
+  import EarthCanvas from "../components/EarthCanvas.svelte";
+  import CarouselCanvas from "../components/CarouselCanvas.svelte";
   import { onMount } from "svelte";
   import { scrollY, innerHeight } from "svelte/reactivity/window";
 
@@ -10,15 +11,17 @@
   let heroEl: HTMLDivElement;
   let sectionsEl: HTMLDivElement;
   let carouselAnchorEl: HTMLDivElement;
-  let intendedScene = $state<"simulation" | "carousel">("simulation");
 
-  // Before mount, derive opacity from raw scroll position so the canvas
+  // Split opacity: each canvas fades independently
+  let earthTriggeredOpacity = $state<number | null>(null);
+  let carouselTriggeredOpacity = $state<number | null>(null);
+
+  // Before mount, derive earth opacity from raw scroll position so the canvas
   // is hidden if the browser restores a non-zero scroll position.
-  // After mount, ScrollTrigger takes over via scrollTriggeredOpacity.
-  let scrollTriggeredOpacity = $state<number | null>(null);
-  let canvasOpacity = $derived.by(() => {
-    if (scrollTriggeredOpacity !== null) {
-      return scrollTriggeredOpacity;
+  // After mount, ScrollTrigger takes over.
+  let earthOpacity = $derived.by(() => {
+    if (earthTriggeredOpacity !== null) {
+      return earthTriggeredOpacity;
     }
 
     if (
@@ -31,6 +34,11 @@
     }
     return 0;
   });
+
+  let carouselOpacity = $derived(carouselTriggeredOpacity ?? 0);
+
+  // EarthCanvas signals when it's ready so CarouselCanvas can start loading
+  let earthReady = $state(false);
 
   let heroScrollProgress = $state(0);
   let subheroOpacity = $state(1);
@@ -49,11 +57,10 @@
       scrub: 0.5,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
-        if (intendedScene !== "simulation") intendedScene = "simulation";
         // Skip camera zoom on mobile — the resize/scroll interactions cause jarring size changes
         const isMobile = window.matchMedia("(max-width: 768px)").matches;
         heroScrollProgress = isMobile || prefersReducedMotion ? 0 : self.progress;
-        scrollTriggeredOpacity = 1 - self.progress;
+        earthTriggeredOpacity = 1 - self.progress;
       },
     });
 
@@ -65,8 +72,7 @@
       scrub: 0.5,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
-        if (intendedScene !== "carousel") intendedScene = "carousel";
-        scrollTriggeredOpacity = self.progress;
+        carouselTriggeredOpacity = self.progress;
       },
     });
 
@@ -91,10 +97,10 @@
     subheroFadeTrigger.update();
 
     // If we're above both triggers (top of page), neither onUpdate fired,
-    // so scrollTriggeredOpacity is still 1 (fully visible). If a trigger
-    // did fire during refresh, it already set the correct value.
+    // so earthTriggeredOpacity is still null. Set it to 1 (fully visible).
+    // If a trigger did fire during refresh, it already set the correct value.
     if (heroTrigger.progress === 0 && carouselEnterTrigger.progress === 0) {
-      scrollTriggeredOpacity = 1;
+      earthTriggeredOpacity = 1;
     }
 
     return () => {
@@ -146,7 +152,7 @@
 </svelte:head>
 
 <div class="simulation-container">
-  <Canvas {intendedScene} {canvasOpacity} {heroScrollProgress} />
+  <EarthCanvas canvasOpacity={earthOpacity} {heroScrollProgress} onReady={() => earthReady = true} />
 </div>
 
 <div class="hero" bind:this={heroEl}>
@@ -184,10 +190,7 @@
 </div>
 
 <div class="carousel-anchor" bind:this={carouselAnchorEl}>
-  <!-- Empty scroll-trigger anchor. The carousel 3D content is rendered
-       by Canvas's shared WebGL canvas, which is fixed-position.
-       This div's 200lvh height provides the scroll distance that drives
-       the carousel fade-in via ScrollTrigger. -->
+  <CarouselCanvas canvasOpacity={carouselOpacity} loadingEnabled={earthReady} />
 </div>
 
 <style lang="scss">
