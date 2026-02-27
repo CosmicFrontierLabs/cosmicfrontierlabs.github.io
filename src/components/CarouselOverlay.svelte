@@ -419,18 +419,23 @@
 
   .carousel__panel {
     position: absolute;
-    left: calc((100% - var(--content-width)) / 2 + 0.75rem);
     z-index: 14;
-    bottom: 4px;
+    bottom: 0;
 
     overflow: hidden;
-    width: calc(var(--content-width) - 2rem);
+    width: 100%;
     box-sizing: border-box;
     container-type: inline-size;
+    left: 0;
+    right: 0;
+    border: none;
 
     @media (min-width: 40rem) {
+      left: calc((100% - var(--content-width)) / 2 + 0.75rem);
       bottom: 3lvh;
       width: 400px;
+      border: var(--stroke);
+      border-radius: var(--radius-s);
     }
 
     @media (min-width: 56rem) {
@@ -453,10 +458,10 @@
   .carousel__body {
     padding: 1ch 1.5ch;
     font-size: 0.8125rem;
-    max-width: 60ch;
-    min-height: 8lh;
 
     @media (min-width: 56rem) {
+      max-width: 60ch;
+      min-height: 8lh;
       padding: 2ch 2ch;
       font-size: 0.875rem;
     }
