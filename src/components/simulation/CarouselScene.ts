@@ -51,7 +51,7 @@ export class CarouselScene {
   private mirrorDiskGeometry: THREE.BufferGeometry | null = null;
   private mirrorRimGeometry: THREE.TorusGeometry | null = null;
   private mirrorRimMaterial: THREE.MeshStandardMaterial | null = null;
-  private hdrTexture: THREE.Texture | null = null;
+  private backgroundTexture: THREE.Texture | null = null;
   private disposed = false;
   private orbitControls: OrbitControls;
   private dracoLoader: DRACOLoader;
@@ -99,7 +99,7 @@ export class CarouselScene {
   private boundOnMouseEnter: () => void;
   private boundOnMouseLeave: () => void;
 
-  /** Resolves when all async assets (models, HDR) have finished loading. */
+  /** Resolves when all async assets (models, images) have finished loading. */
   readonly loaded: Promise<void>;
 
   constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
@@ -243,9 +243,8 @@ export class CarouselScene {
       this.fullAssy.visible = false;
 
       texture.mapping = THREE.EquirectangularReflectionMapping;
-      this.hdrTexture = texture;
+      this.backgroundTexture = texture;
       this.scene.background = texture;
-      this.scene.backgroundIntensity = 1;
     })();
   }
 
@@ -625,8 +624,8 @@ export class CarouselScene {
 
     this.gui.destroy();
     this.orbitControls.dispose();
-    if (this.hdrTexture) {
-      this.hdrTexture.dispose();
+    if (this.backgroundTexture) {
+      this.backgroundTexture.dispose();
     }
     this.dracoLoader.dispose();
 
