@@ -401,11 +401,16 @@
     position: relative;
     isolation: isolate;
 
-    min-height: 90lvh;
+    min-height: 78lvh;
     border-radius: var(--radius-m);
     overflow: hidden;
-    margin-inline: auto;
     z-index: var(--z-carousel-ui);
     pointer-events: none;
+    width: 100%;
+
+    @media (min-width: 56rem) {
+      min-height: 85lvh;
+      margin-inline: auto;
+    }
   }
 </style>
