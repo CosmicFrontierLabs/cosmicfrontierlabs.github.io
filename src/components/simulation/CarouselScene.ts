@@ -5,7 +5,6 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
-import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { GUI } from "three/examples/jsm/libs/lil-gui.module.min.js";
 import {
   cloneMaterialsPerMesh,
@@ -232,13 +231,13 @@ export class CarouselScene {
       this.fullAssy.visible = false;
 
       console.log("NETWORK SPEED: ", networkSpeed);
-      // If the network is slow, dont load the HDR
-      if (networkSpeed === "slow" || networkSpeed === "medium") {
-        return;
-      }
+      // If the network is slow, dont load the background
+      // if (networkSpeed === "slow" || networkSpeed === "medium") {
+      // return;
+      // }
 
       const texture = await new Promise<THREE.Texture>((resolve) => {
-        new HDRLoader().load("/textures/HDR_multi_nebulae_1_2k.hdr", resolve);
+        new THREE.TextureLoader().load("/textures/carousel-bg.jpg", resolve);
       });
 
       if (this.disposed) {
@@ -249,7 +248,7 @@ export class CarouselScene {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       this.hdrTexture = texture;
       this.scene.background = texture;
-      this.scene.backgroundIntensity = 5;
+      this.scene.backgroundIntensity = 1;
     })();
   }
 
