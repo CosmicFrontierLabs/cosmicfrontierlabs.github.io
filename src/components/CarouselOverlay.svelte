@@ -330,9 +330,9 @@
     margin-block-start: 0.125em;
     margin-inline: 0;
 
-    position: fixed;
+    position: absolute;
     top: var(--header-height);
-    left: calc((100lvw - var(--content-width)) / 2 + 0.75rem);
+    left: calc((100% - var(--content-width)) / 2 + 0.75rem);
 
     z-index: 14;
 
@@ -420,9 +420,9 @@
   }
 
   .carousel__panel {
-    position: fixed;
+    position: absolute;
     bottom: 3lvh;
-    left: calc((100lvw - var(--content-width)) / 2 + 0.75rem);
+    left: calc((100% - var(--content-width)) / 2 + 0.75rem);
     z-index: 14;
 
     overflow: hidden;

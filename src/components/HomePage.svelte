@@ -152,7 +152,7 @@
 </svelte:head>
 
 <div class="simulation-container">
-  <EarthCanvas canvasOpacity={earthOpacity} {heroScrollProgress} onReady={() => earthReady = true} />
+  <EarthCanvas canvasOpacity={earthOpacity} {heroScrollProgress} onReady={() => (earthReady = true)} />
 </div>
 
 <div class="hero" bind:this={heroEl}>
@@ -395,9 +395,15 @@
   // pointer-events: none so the empty anchor doesn't block the
   // carousel overlay rendered inside .simulation-container (z-index 10).
   .carousel-anchor {
-    position: sticky;
-    top: 0;
-    min-height: 200lvh;
+    margin-block-start: clamp(var(--space-xl), 20lvh, 15rem) !important;
+    margin-block-end: var(--space-m);
+
+    position: relative;
+    isolation: isolate;
+
+    min-height: 100lvh;
+    width: 100lvw;
+    margin-left: calc(50% - 50vw);
     z-index: var(--z-carousel-ui);
     pointer-events: none;
   }
