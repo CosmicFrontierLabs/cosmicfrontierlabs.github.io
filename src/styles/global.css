@@ -1,6 +1,6 @@
-/* 
-  Global styles 
-  Low-specificity, global styles that apply to the whole 
+/*
+  Global styles
+  Low-specificity, global styles that apply to the whole
   project: https://cube.fyi/css.html
 */
 
@@ -34,7 +34,7 @@ body {
 
   /* Position header, main content and footer */
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr auto;
   min-height: 100lvh;
 }
 
