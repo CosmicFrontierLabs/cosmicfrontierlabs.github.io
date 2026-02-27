@@ -18,6 +18,7 @@ import gsap from "gsap";
 
 export type { CarouselItem } from "./carouselData";
 export { carouselData } from "./carouselData";
+import { getNetworkSpeed } from "../../lib/utils";
 
 /** Mesh name in the payload GLB that should become a planar reflector. */
 const MIRROR_MESH_NAME = "mesh_0_55";
@@ -167,6 +168,8 @@ export class CarouselScene {
     renderer.domElement.addEventListener("mouseenter", this.boundOnMouseEnter);
     renderer.domElement.addEventListener("mouseleave", this.boundOnMouseLeave);
 
+    const networkSpeed = getNetworkSpeed();
+
     // --- Debug GUI for metallic material parameters ---
     this.metallicParams = { ...defaultMetallicParams };
     const isLocalhost =
@@ -212,8 +215,7 @@ export class CarouselScene {
     gltfLoader.setDRACOLoader(this.dracoLoader);
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
-    // Load the models
-    (async () => {
+    this.loaded = (async () => {
       this.telescope = await this.loadModel(gltfLoader, {
         url: "/models/20260102_Payload_assy_no_baffle.glb",
         scale: 5.0,
@@ -229,23 +231,25 @@ export class CarouselScene {
       });
       this.fullAssy.visible = false;
 
-      const hdrLoaded = new Promise<void>((resolveHdr) => {
-        new HDRLoader().load("/textures/HDR_multi_nebulae_1_2k.hdr", (texture) => {
-          if (this.disposed) {
-            // Scene was disposed while loading — clean up and bail
-            texture.dispose();
-            return;
-          }
-          texture.mapping = THREE.EquirectangularReflectionMapping;
-          this.hdrTexture = texture;
-          this.scene.background = texture;
-          this.scene.backgroundIntensity = 5;
-          this.scene.environment = texture;
-          this.scene.environmentIntensity = this.metallicParams.envMapIntensity;
-          resolveHdr();
-        });
+      console.log("NETWORK SPEED: ", networkSpeed);
+      // If the network is slow, dont load the HDR
+      if (networkSpeed === "slow" || networkSpeed === "medium") {
+        return;
+      }
+
+      const texture = await new Promise<THREE.Texture>((resolve) => {
+        new HDRLoader().load("/textures/HDR_multi_nebulae_1_2k.hdr", resolve);
       });
-      this.loaded = Promise.all([hdrLoaded]).then(() => {});
+
+      if (this.disposed) {
+        texture.dispose();
+        return;
+      }
+
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      this.hdrTexture = texture;
+      this.scene.background = texture;
+      this.scene.backgroundIntensity = 5;
     })();
   }
 
