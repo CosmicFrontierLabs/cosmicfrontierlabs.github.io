@@ -26,72 +26,81 @@
   });
 </script>
 
-<footer class="footer">
-  {#if isRoot}
-    <div class="footer-cta">
-      <p class="footer-cta__title">Cosmic Frontier Labs</p>
-      <nav class="footer-nav" aria-label="Footer">
-        <a href="/blog">blog</a>
-        <span aria-hidden="true" class="dot-separator"></span>
-        <a href="/join-us">join us</a>
-        <span aria-hidden="true" class="dot-separator"></span>
-        <a href="/contact">contact</a>
-      </nav>
-    </div>
-  {/if}
+<div class="footer-wrapper">
+  <footer class="footer">
+    {#if isRoot}
+      <div class="footer-cta">
+        <p class="footer-cta__title">Cosmic Frontier Labs</p>
+        <nav class="footer-nav" aria-label="Footer">
+          <a href="/blog">blog</a>
+          <span aria-hidden="true" class="dot-separator"></span>
+          <a href="/join-us">join us</a>
+          <span aria-hidden="true" class="dot-separator"></span>
+          <a href="/contact">contact</a>
+        </nav>
+      </div>
+    {/if}
 
-  <div class="footer-bottom">
-    <div class="footer-brand">
-      <p>
-        Cosmic Frontier Labs
-        <br />
-        USA, Earth, Milky Way, Laniakea Supercluster
-      </p>
-    </div>
+    <div class="footer-bottom">
+      <div class="footer-brand">
+        <p>
+          Cosmic Frontier Labs
+          <br />
+          USA, Earth, Milky Way, Laniakea Supercluster
+        </p>
+      </div>
 
-    <div class="footer-signup flow">
-      <h3 class="footer-signup-title">Get updates</h3>
-      <p>Sign up for mission updates and new roles.</p>
-      <form
-        class="footer-signup-form formkit-form"
-        action="https://app.kit.com/forms/8948798/subscriptions"
-        method="post"
-        data-sv-form="8948798"
-        data-uid="170ae5b1d6"
-        data-format="inline"
-        data-version="5"
-        data-options={JSON.stringify(kitFormOptions)}
-      >
-        <ul
-          class="footer-alerts formkit-alert formkit-alert-error"
-          data-element="errors"
-          data-group="alert"
-          role="alert"
-          aria-live="polite"
-        ></ul>
-        <div class="footer-fields" data-element="fields" data-stacked="false">
-          <label class="visually-hidden" for="updates-email">Email address</label>
-          <input
-            id="updates-email"
-            name="email_address"
-            type="email"
-            autocomplete="email"
-            placeholder="you@example.com"
-            required
-          />
-          <button class="button formkit-submit" type="submit" data-element="submit" data-smaller>Join list</button>
-        </div>
-      </form>
+      <div class="footer-signup flow">
+        <h3 class="footer-signup-title">Get updates</h3>
+        <p>Sign up for mission updates and new roles.</p>
+        <form
+          class="footer-signup-form formkit-form"
+          action="https://app.kit.com/forms/8948798/subscriptions"
+          method="post"
+          data-sv-form="8948798"
+          data-uid="170ae5b1d6"
+          data-format="inline"
+          data-version="5"
+          data-options={JSON.stringify(kitFormOptions)}
+        >
+          <ul
+            class="footer-alerts formkit-alert formkit-alert-error"
+            data-element="errors"
+            data-group="alert"
+            role="alert"
+            aria-live="polite"
+          ></ul>
+          <div class="footer-fields" data-element="fields" data-stacked="false">
+            <label class="visually-hidden" for="updates-email">Email address</label>
+            <input
+              id="updates-email"
+              name="email_address"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+            />
+            <button class="button formkit-submit" type="submit" data-element="submit" data-smaller>Join list</button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-</footer>
+  </footer>
+</div>
 
 <style>
-  .footer {
+  .footer-wrapper {
+    width: 100%;
+    z-index: var(--z-footer);
     background: var(--body-bg);
+  }
+
+  .footer {
     color: var(--color-text);
     z-index: var(--z-footer);
     position: relative;
+    width: var(--content-width);
+    margin-inline: auto;
   }
 
   /* ── CTA hero section ── */
