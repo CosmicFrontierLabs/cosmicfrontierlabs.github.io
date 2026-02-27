@@ -419,9 +419,9 @@
 
   .carousel__panel {
     position: absolute;
-    bottom: 3lvh;
     left: calc((100% - var(--content-width)) / 2 + 0.75rem);
     z-index: 14;
+    bottom: 4px;
 
     overflow: hidden;
     width: calc(var(--content-width) - 2rem);
@@ -429,6 +429,7 @@
     container-type: inline-size;
 
     @media (min-width: 40rem) {
+      bottom: 3lvh;
       width: 400px;
     }
 
