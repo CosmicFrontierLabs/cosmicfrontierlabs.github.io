@@ -119,7 +119,7 @@
         "The dominant model is to build one massive observatory at a time. It is slow, expensive, and brittle. Each mission takes a decade or more. When everything rides on one launch, cost and schedule explode.",
         "Scarcity shapes the science. When telescope time is rationed and missions cannot fail, the system selects for safe bets. Incremental questions win over bold ones. The proposals most likely to change our understanding, the ones that challenge assumptions and risk being wrong, are the first to get cut. We are optimizing for caution when we should be optimizing for discovery.",
       ],
-      image: "/images/0-Space-512w.jpg",
+      image: "/images/0-Space-512w.webp",
       imageAlt: "A vast expanse of deep space with distant stars and nebulae",
     },
     {
@@ -130,7 +130,7 @@
         "We build iteratively. Each mission informs the next. New detectors, better optics, lessons from flight, and improvements in test and integration flow straight into the next build. The platform evolves continuously instead of freezing technology into decade-long cycles.",
         "The result is fleets of capable observatories instead of lone flagships. Telescope time that is not rationed. Ambitious science that does not wait. Access to the cosmos on the scale of human curiosity.",
       ],
-      image: "/images/1-TelescopesOrbiting-512w.jpg",
+      image: "/images/1-TelescopesOrbiting-512.webp",
       imageAlt: "Multiple telescopes in orbit around Earth, forming a coordinated observation fleet",
     },
     {
@@ -141,7 +141,7 @@
         "A repeatable platform opens space to research groups that have never had a path to orbit. Universities and labs can fly their own instruments and pursue science that would never survive the flagship proposal process. This is not just more observing time. It is more observers, more questions, and more ways of seeing.",
         "When we broaden access to space, we broaden what gets discovered. The next breakthrough will not come only from a single flagship. It will come from the instrument no one expected, asking the question no one else thought to ask.",
       ],
-      image: "/images/2-TheLab-512w.jpg",
+      image: "/images/2-TheLab-512w.webp",
       imageAlt: "Engineers working in a laboratory assembling telescope components",
     },
   ];
