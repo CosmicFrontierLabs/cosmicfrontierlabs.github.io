@@ -498,8 +498,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     flex-shrink: 0;
     background: rgba(255, 255, 255, 0.1);
     border: var(--stroke);
@@ -509,6 +509,11 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease;
+
+    @container (min-width: 400px) {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   .carousel__nav-btn:hover {
@@ -520,8 +525,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     flex-shrink: 0;
     background: rgba(255, 255, 255, 0.1);
     border: var(--stroke);
@@ -531,6 +536,11 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease;
+
+    @container (min-width: 400px) {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   .carousel__pause-btn:hover {
@@ -542,7 +552,7 @@
     display: none;
     gap: 8px;
 
-    @container (min-width: 380px) {
+    @container (min-width: 400px) {
       display: flex;
     }
   }
