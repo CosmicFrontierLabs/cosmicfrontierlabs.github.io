@@ -1,1 +1,6 @@
-
+- The carousel isn't showing a loading state
+- So users are just seeing nothing in the box while it's loading sometimes
+- Can repro with throttling network conditions
+- And the subhero text is visible in there
+- Maybe we can give that back a background so that text never appears
+- Plus some loading text
