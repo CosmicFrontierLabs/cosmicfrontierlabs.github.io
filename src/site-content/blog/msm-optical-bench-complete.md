@@ -18,7 +18,7 @@ The optical bench is machined from stainless steel to mimic the material propert
 
 ## Component Integration
 
-The bench includes mounting provisions for all major payload components: the primary mirror, focal plane array, and gyroscope. Each interface has been verified during our recent [fit check](/blog/fit-check), confirming that the assembly sequence works as planned.
+The bench includes mounting provisions for all major payload components: the primary mirror, focal plane array, and gyroscope. Each interface has been verified during our recent [fit check](/blog/fit-check-ongoing), confirming that the assembly sequence works as planned.
 
 ![Integrated assembly view](/images/blog-msm-optical-bench/optical-bench-1.png)
 
