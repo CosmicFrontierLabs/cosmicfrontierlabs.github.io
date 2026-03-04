@@ -15,8 +15,6 @@ import {
 import type { CarouselItem, ModelConfig } from "$lib/types";
 import gsap from "gsap";
 
-export type { CarouselItem, ModelConfig } from "$lib/types";
-
 /** Maximum reflector render target dimension to limit GPU cost on high-DPI displays. */
 const MAX_REFLECTOR_SIZE = 2048;
 

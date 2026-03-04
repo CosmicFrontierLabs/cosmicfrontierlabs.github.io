@@ -9,7 +9,8 @@
 # Fields:
 #   title       – Short heading shown in the overlay panel (40 chars max).
 #   description – One to three sentences of explanatory text (250 chars max).
-#   model       – Which GLB model to show: "payload". These are named in CarouselScene.ts.
+#   model       – Which GLB model to show: These are named in the MODEL_CONFIGS object
+#                  in CarouselScene.ts.
 #   camera      – Camera pose for this slide, in Three.js world coordinates.
 #     position  – Where the camera sits (x, y, z).
 #     lookAt    – Where the camera points (x, y, z).
