@@ -19,8 +19,8 @@ import gsap from "gsap";
 const MAX_REFLECTOR_SIZE = 2048;
 
 const DEFAULT_CAMERA = {
-  position: { x: 3, y: 1.5, z: 3 },
-  lookAt: { x: 0.5, y: 1, z: 0 },
+  position: { x: 3.5, y: 2.5, z: 3.5 },
+  lookAt: { x: 0.5, y: 1.5, z: 0 },
 };
 
 /**

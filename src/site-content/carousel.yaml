@@ -27,8 +27,8 @@
 #   description: "Introducing a revolutionary optical instrument designed to peer deeper into the cosmos than ever before. This next-generation payload assembly combines precision engineering with cutting-edge materials."
 #   model: "payload"
 #   camera:
-#     position: { x: 3, y: 1.5, z: 3 }
-#     lookAt: { x: 0.5, y: 1, z: 0 }
+#     position: { x: 3.5, y: 2.5, z: 3.5 }
+#     lookAt: { x: 0.5, y: 1.5, z: 0 }
 
 # - title: "Primary Optics Assembly"
 #   description: "The heart of the telescope: a precisely ground primary mirror assembly capable of capturing light from the farthest reaches of the observable universe. Every surface is polished to nanometer-level tolerances."
