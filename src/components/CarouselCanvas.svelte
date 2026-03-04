@@ -12,7 +12,7 @@
 
   // Dev helper: force a slow async step so unmount-disposal paths can be tested.
   // Keep disabled in normal development/production.
-  const FORCED_LOAD_DELAY_MS = 2000;
+  const FORCED_LOAD_DELAY_MS = 0;
 
   let { shouldStartLoading }: Props = $props();
 

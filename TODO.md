@@ -1,20 +1,14 @@
-- The carousel isn't showing a loading state
-- So users are just seeing nothing in the box while it's loading sometimes
-- Can repro with throttling network conditions
-- And the subhero text is visible in there
-- Maybe we can give that back a background so that text never appears
-- Plus some loading text
+- Fix npm run check issues
 
----
-- Fix the carousel loading state
-  - Start by cleaning up the state management. It looks like we didn't clean it up after separating out the canvases
-  - Looked like carousel area in homepage had glass which it shouldn't have.
-  - Detect if carousel is in view in CarouselCanvas and dont render if it's not.
 - Add button to go full screen
   - Questions: should this be a separate page?
     - We could have the full screen button open in a new tab
   - Should it be in a modal? If it's the same page, can we just move the canvas easily?
+
+  
 - Remove the integrated space craft
 - Make a PR without the carousel copy
 - Make a PR with the carousel copy (for aaron to fill in)
   - Let's separate out the copy into a YAML file for Aaron
+
+- We currently have no fallback on slow networks - do we want to change that?
