@@ -161,7 +161,7 @@
   <div class="carousel__panel-inner" bind:this={panelInnerEl}>
     {#if paused}
       <div class="carousel__explore-controls">
-        <p class="carousel__explore-title">Explore our Telescope</p>
+        <p class="carousel__explore-title">Model Controls</p>
 
         <div class="carousel__explore-hints">
           <span class="carousel__explore-hint">
