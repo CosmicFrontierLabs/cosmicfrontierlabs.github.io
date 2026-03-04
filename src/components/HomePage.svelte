@@ -119,7 +119,7 @@
         "We build iteratively. Each mission informs the next. New detectors, better optics, lessons from flight, and improvements in test and integration flow straight into the next build. The platform evolves continuously instead of freezing technology into decade-long cycles.",
         "The result is fleets of capable observatories instead of lone flagships. Telescope time that is not rationed. Ambitious science that does not wait. Access to the cosmos on the scale of human curiosity.",
       ],
-      image: "/images/1-TelescopesOrbiting-512.webp",
+      image: "/images/1-TelescopesOrbiting-512w.webp",
       imageAlt: "Multiple telescopes in orbit around Earth, forming a coordinated observation fleet",
     },
     {
