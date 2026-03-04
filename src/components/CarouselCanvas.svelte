@@ -97,11 +97,35 @@
   // share a local variable.
   // Since these don't drive UI reactivity, they shouldn't be runes
   let container: HTMLDivElement;
-  let resizeObserver: ResizeObserver;
+  let resizeObserver: ResizeObserver | null = null;
   let renderer: WebGLRenderer | null = null;
   let cleanupAnimation: (() => void) | null = null;
-  // Cancelled is an abort flag
+  // Abort flag for async initialization. We check this after every await/import
+  // because async steps may resolve after unmount/navigation. Without these
+  // guards, late continuations can create WebGL resources, attach listeners,
+  // or mutate component state after teardown.
   let loadingCanceled = false;
+
+  function disposeRenderer(): void {
+    if (!renderer) return;
+    renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
+    renderer.domElement.remove();
+    renderer.dispose();
+    renderer = null;
+  }
+
+  function disposeAll(): void {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+
+    carouselScene?.dispose();
+    carouselScene = null;
+
+    cleanupAnimation?.();
+    cleanupAnimation = null;
+
+    disposeRenderer();
+  }
 
   function setupResizeObserver(): ResizeObserver {
     let prevWidth = container.offsetWidth || container.clientWidth;
@@ -193,7 +217,6 @@
 
         return () => {
           cancelAnimationFrame(rafId);
-          renderer?.dispose();
         };
       }
 
@@ -209,14 +232,20 @@
         hadError = true;
         return;
       }
-      if (loadingCanceled) return;
+      if (loadingCanceled) {
+        disposeAll();
+        return;
+      }
 
       cursorX = container.clientWidth / 2;
       cursorY = container.clientHeight / 2;
 
       // Yield a frame
       await new Promise<void>((r) => requestAnimationFrame(() => r()));
-      if (loadingCanceled) return;
+      if (loadingCanceled) {
+        disposeAll();
+        return;
+      }
 
       // --- 2. Build CarouselScene ---
       const width = container.offsetWidth || container.clientWidth;
@@ -224,20 +253,35 @@
 
       try {
         const { CarouselScene: CarouselSceneClass } = await import("./simulation/CarouselScene");
-        carouselScene = new CarouselSceneClass(width, height, renderer!);
-        carouselScene.onShiftHeldChange = (held: boolean) => {
+
+        if (loadingCanceled || !renderer) {
+          disposeAll();
+          return;
+        }
+
+        const scene = new CarouselSceneClass(width, height, renderer);
+        scene.onShiftHeldChange = (held: boolean) => {
           shiftHeldForPan = held;
         };
+        carouselScene = scene;
+
         resizeObserver = setupResizeObserver();
         cleanupAnimation = startAnimationLoop();
 
-        await carouselScene.loaded;
+        await scene.loaded;
+
+        if (loadingCanceled) {
+          disposeAll();
+          return;
+        }
+
         if (!hadError) {
           isCarouselReady = true;
         }
       } catch (err) {
         console.error("CarouselScene failed to load:", err);
         hadError = true;
+        disposeAll();
       }
     })();
   });
@@ -247,12 +291,7 @@
 
     return () => {
       loadingCanceled = true;
-      resizeObserver?.disconnect();
-      if (renderer) {
-        renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
-      }
-      carouselScene?.dispose();
-      cleanupAnimation?.();
+      disposeAll();
     };
   });
 </script>
