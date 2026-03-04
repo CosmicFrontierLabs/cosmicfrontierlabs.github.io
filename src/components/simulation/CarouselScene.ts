@@ -17,7 +17,6 @@ import gsap from "gsap";
 
 export type { CarouselItem } from "./carouselData";
 export { carouselData } from "./carouselData";
-import { getNetworkSpeed } from "../../lib/utils";
 
 /** Mesh name in the payload GLB that should become a planar reflector. */
 const MIRROR_MESH_NAME = "mesh_0_55";
@@ -166,8 +165,6 @@ export class CarouselScene {
     window.addEventListener("pointerup", this.boundOnPointerUp);
     renderer.domElement.addEventListener("mouseenter", this.boundOnMouseEnter);
     renderer.domElement.addEventListener("mouseleave", this.boundOnMouseLeave);
-
-    const networkSpeed = getNetworkSpeed();
 
     // --- Debug GUI for metallic material parameters ---
     this.metallicParams = { ...defaultMetallicParams };
