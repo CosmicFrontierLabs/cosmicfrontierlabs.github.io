@@ -13,10 +13,12 @@
     carouselScene: CarouselScene | null;
     carouselData: CarouselItem[];
     paused: boolean;
+    isFullscreen?: boolean;
+    onToggleFullscreen?: () => void;
     onExitOrbit: () => void;
   }
 
-  let { carouselScene, carouselData, paused, onExitOrbit }: Props = $props();
+  let { carouselScene, carouselData, paused, isFullscreen = false, onToggleFullscreen, onExitOrbit }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
   let hasSlides = $derived(carouselData.length > 0);
@@ -241,6 +243,46 @@
             </svg>
             Back
           </button>
+
+          <button class="carousel__fullscreen-btn" onclick={() => onToggleFullscreen?.()}>
+            {#if isFullscreen}
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="4 14 10 14 10 20" />
+                <polyline points="20 10 14 10 14 4" />
+                <line x1="14" y1="10" x2="21" y2="3" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+              Exit fullscreen
+            {:else}
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+              Fullscreen
+            {/if}
+          </button>
         </div>
       </div>
     {:else if hasSlides}
@@ -410,6 +452,30 @@
   }
 
   .carousel__exit-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: var(--border-color-subtle-hover);
+  }
+
+  .carousel__fullscreen-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.375rem 0.75rem;
+    border: var(--stroke);
+    border-radius: var(--radius-xl);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: var(--size-step--1);
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .carousel__fullscreen-btn:hover {
     background: rgba(255, 255, 255, 0.18);
     border-color: var(--border-color-subtle-hover);
   }

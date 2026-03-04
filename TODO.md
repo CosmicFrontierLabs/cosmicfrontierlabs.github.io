@@ -5,11 +5,5 @@
 
 - Make a PR without the carousel copy
 - Make a PR with the carousel copy (for aaron to fill in)
-  - Let's separate out the copy into a YAML file for Aaron
 
 - We currently have no fallback on slow networks - do we want to change that?
-
-- carouselscene.ts shouldn't be exporting types. fix this.
-
-
-Back to tour to just "back"

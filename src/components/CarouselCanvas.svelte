@@ -27,6 +27,9 @@
   // Orbit controls state
   let orbitMode = $state(false);
 
+  // Fullscreen state for the carousel container
+  let isFullscreen = $state(false);
+
   // Detect touch-only devices — explore mode requires a mouse
   let isTouchDevice = $state(false);
 
@@ -52,6 +55,20 @@
     if (!newOrbitMode && carouselScene) {
       carouselScene.resetPan();
       shiftHeldForPan = false;
+    }
+  }
+
+  async function toggleFullscreen() {
+    if (!outerContainer || !document.fullscreenEnabled) return;
+
+    try {
+      if (document.fullscreenElement === outerContainer) {
+        await document.exitFullscreen();
+      } else {
+        await outerContainer.requestFullscreen();
+      }
+    } catch (error) {
+      console.error("Failed to toggle carousel fullscreen:", error);
     }
   }
 
@@ -213,8 +230,8 @@
         function animate() {
           rafId = requestAnimationFrame(animate);
 
-          // Skip rendering when the carousel is off-screen
-          if (!isInViewport) return;
+          // Skip rendering when off-screen, unless fullscreen is active
+          if (!isInViewport && !isFullscreen) return;
 
           const delta = clock.getDelta();
           if (carouselScene && isCarouselReady) {
@@ -310,8 +327,18 @@
   onMount(() => {
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
 
+    const handleFullscreenChange = () => {
+      isFullscreen = document.fullscreenElement === outerContainer;
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
     return () => {
       loadingCanceled = true;
+      if (document.fullscreenElement === outerContainer) {
+        void document.exitFullscreen();
+      }
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
       disposeAll();
     };
   });
@@ -364,7 +391,9 @@
       <CarouselOverlay
         {carouselScene}
         {carouselData}
-        paused={orbitMode || !isInViewport}
+        paused={orbitMode || (!isInViewport && !isFullscreen)}
+        {isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
         onExitOrbit={() => {
           setOrbitMode(false);
         }}
@@ -386,6 +415,16 @@
 
   .carousel-canvas-container--visible {
     pointer-events: auto;
+  }
+
+  :global(.carousel-canvas-container:fullscreen),
+  :global(.carousel-canvas-container:-webkit-full-screen) {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--body-bg);
+    z-index: 1000;
   }
 
   .carousel-canvas {
