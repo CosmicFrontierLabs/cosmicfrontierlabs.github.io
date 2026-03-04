@@ -4,12 +4,12 @@
 # Slides auto-advance in order, so arrange them to tell a coherent story
 # (e.g. start zoomed in on a subsystem, then pull back to the full assembly).
 #
+# If more than 8 slides are needed, give me (Alex) a heads up. I may need to adjust the layout.
+#
 # Fields:
 #   title       – Short heading shown in the overlay panel (40 chars max).
 #   description – One to three sentences of explanatory text (250 chars max).
-#   model       – Which GLB model to show: "payload" or "fullAssy".
-#                  The first slides typically use "payload" (optics subsystem),
-#                  then transition to "fullAssy" (complete telescope).
+#   model       – Which GLB model to show: "payload". These are named in CarouselScene.ts.
 #   camera      – Camera pose for this slide, in Three.js world coordinates.
 #     position  – Where the camera sits (x, y, z).
 #     lookAt    – Where the camera points (x, y, z).
@@ -45,32 +45,4 @@
   model: "payload"
   camera:
     position: { x: 0, y: 4, z: 4 }
-    lookAt: { x: 0, y: 0.5, z: 0 }
-
-- title: "Complete Optical System"
-  description: "The full assembly reveals the integrated optical path from primary to secondary mirror. The hexapod actuator system provides six degrees of freedom for precise alignment, while real-time wavefront sensing ensures optimal image quality across the entire system."
-  model: "fullAssy"
-  camera:
-    position: { x: 2, y: 5, z: 3 }
-    lookAt: { x: 0, y: 1.5, z: -0.5 }
-
-- title: "Integrated Instrument Suite"
-  description: "The complete assembly showcases how spectrographs, imaging sensors, and data processing units are seamlessly integrated within the instrument bay. This modular architecture enables in-orbit servicing and future capability upgrades while maintaining system integrity."
-  model: "fullAssy"
-  camera:
-    position: { x: 9, y: 1, z: 4 }
-    lookAt: { x: 0, y: 0.5, z: 0 }
-
-- title: "Power & Data Systems"
-  description: "The full assembly integrates high-gain antennas and power distribution systems that connect the telescope to ground stations worldwide. With data transmission rates exceeding 100 Gbps, the complete system enables real-time delivery of high-resolution scientific data."
-  model: "fullAssy"
-  camera:
-    position: { x: 0, y: -2, z: 4 }
-    lookAt: { x: 0, y: 1.5, z: 0 }
-
-- title: "Complete Assembly"
-  description: "The fully integrated telescope assembly represents the culmination of years of engineering refinement. Every subsystem—from optics to power, from instruments to thermal control—works in harmony to create an instrument that will transform our understanding of the cosmos."
-  model: "fullAssy"
-  camera:
-    position: { x: 6, y: 4, z: 12 }
     lookAt: { x: 0, y: 0.5, z: 0 }

@@ -40,7 +40,7 @@ export class CarouselScene {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   private telescope: THREE.Group | null = null;
-  private fullAssy: THREE.Group | null = null;
+  // private fullAssy: THREE.Group | null = null;
   private ambientLight: THREE.AmbientLight;
   private keyLight: THREE.RectAreaLight;
   private rimLight: THREE.PointLight;
@@ -215,18 +215,18 @@ export class CarouselScene {
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
     this.loaded = (async () => {
-      const [telescope, fullAssy, texture] = await Promise.all([
+      const [telescope, texture] = await Promise.all([
         this.loadModel(gltfLoader, {
           url: "/models/20260102_Payload_assy_no_baffle.glb",
           scale: 5.0,
           brighten: true,
           mirrorMeshName: MIRROR_MESH_NAME,
         }),
-        this.loadModel(gltfLoader, {
-          url: "/models/20260102_Full_Assy.glb",
-          scale: 3.0,
-          brighten: true,
-        }),
+        // this.loadModel(gltfLoader, {
+        //   url: "/models/20260102_Full_Assy.glb",
+        //   scale: 3.0,
+        //   brighten: true,
+        // }),
         new Promise<THREE.Texture>((resolve) => {
           new THREE.TextureLoader().load("/textures/carousel-bg.jpg", resolve);
         }),
@@ -239,8 +239,8 @@ export class CarouselScene {
 
       this.telescope = telescope;
       this.telescope.visible = true;
-      this.fullAssy = fullAssy;
-      this.fullAssy.visible = false;
+      // this.fullAssy = fullAssy;
+      // this.fullAssy.visible = false;
 
       texture.mapping = THREE.EquirectangularReflectionMapping;
       this.backgroundTexture = texture;
@@ -583,9 +583,9 @@ export class CarouselScene {
     if (this.telescope) {
       this.telescope.visible = modelType === "payload";
     }
-    if (this.fullAssy) {
-      this.fullAssy.visible = modelType === "fullAssy";
-    }
+    // if (this.fullAssy) {
+    //   this.fullAssy.visible = modelType === "fullAssy";
+    // }
   }
 
   /** Re-apply metallic material enhancement with current GUI params. */
@@ -600,7 +600,7 @@ export class CarouselScene {
       }
     };
     applyToGroup(this.telescope);
-    applyToGroup(this.fullAssy);
+    // applyToGroup(this.fullAssy);
   }
 
   dispose(): void {
@@ -656,6 +656,6 @@ export class CarouselScene {
       });
     };
     disposeGroup(this.telescope);
-    disposeGroup(this.fullAssy);
+    // disposeGroup(this.fullAssy);
   }
 }
