@@ -12,11 +12,10 @@ import {
   defaultMetallicParams,
   type MetallicEnhanceParams,
 } from "./materialUtils";
-import { carouselData } from "./carouselData";
+import type { CarouselItem } from "$lib/types";
 import gsap from "gsap";
 
-export type { CarouselItem } from "./carouselData";
-export { carouselData } from "./carouselData";
+export type { CarouselItem } from "$lib/types";
 
 /** Mesh name in the payload GLB that should become a planar reflector. */
 const MIRROR_MESH_NAME = "mesh_0_55";
@@ -98,18 +97,22 @@ export class CarouselScene {
   private boundOnMouseEnter: () => void;
   private boundOnMouseLeave: () => void;
 
+  /** Carousel slide data (titles, camera positions, model references). */
+  readonly carouselData: CarouselItem[];
+
   /** Resolves when all async assets (models, images) have finished loading. */
   readonly loaded: Promise<void>;
 
-  constructor(width: number, height: number, renderer: THREE.WebGLRenderer) {
+  constructor(width: number, height: number, renderer: THREE.WebGLRenderer, carouselData: CarouselItem[]) {
     RectAreaLightUniformsLib.init();
+    this.carouselData = carouselData;
     this.renderer = renderer;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x03060b); // Same as var(--body-bg)
 
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 50);
-    const initialCamera = carouselData[0].camera;
+    const initialCamera = this.carouselData[0].camera;
     this.camera.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
     this.camera.lookAt(initialCamera.lookAt.x, initialCamera.lookAt.y, initialCamera.lookAt.z);
     this.currentLookAtTarget.set(initialCamera.lookAt.x, initialCamera.lookAt.y, initialCamera.lookAt.z);
@@ -575,7 +578,7 @@ export class CarouselScene {
   }
 
   setActiveModel(carouselIndex: number): void {
-    const modelType = carouselData[carouselIndex].model;
+    const modelType = this.carouselData[carouselIndex].model;
 
     if (this.telescope) {
       this.telescope.visible = modelType === "payload";

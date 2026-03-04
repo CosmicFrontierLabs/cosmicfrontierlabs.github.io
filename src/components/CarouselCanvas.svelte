@@ -2,19 +2,21 @@
   import { onMount } from "svelte";
   import type { WebGLRenderer } from "three";
   import type { CarouselScene } from "./simulation/CarouselScene";
+  import type { CarouselItem } from "$lib/types";
   import CarouselOverlay from "./CarouselOverlay.svelte";
   import CanvasLoader from "./CanvasLoader.svelte";
 
   interface Props {
     /** Gates when to start loading Three.js + CarouselScene */
     shouldStartLoading: boolean;
+    carouselData: CarouselItem[];
   }
 
   // Dev helper: force a slow async step so unmount-disposal paths can be tested.
   // Keep disabled in normal development/production.
   const FORCED_LOAD_DELAY_MS = 0;
 
-  let { shouldStartLoading }: Props = $props();
+  let { shouldStartLoading, carouselData }: Props = $props();
 
   let hadError = $state(false);
   let isCarouselReady = $state(false);
@@ -268,7 +270,7 @@
           return;
         }
 
-        const scene = new CarouselSceneClass(width, height, renderer);
+        const scene = new CarouselSceneClass(width, height, renderer, carouselData);
         scene.onShiftHeldChange = (held: boolean) => {
           shiftHeldForPan = held;
         };
@@ -361,6 +363,7 @@
     <div class="carousel-overlay-wrapper">
       <CarouselOverlay
         {carouselScene}
+        {carouselData}
         paused={orbitMode || !isInViewport}
         onExitOrbit={() => {
           setOrbitMode(false);

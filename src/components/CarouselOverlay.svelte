@@ -3,7 +3,7 @@
   import * as THREE from "three";
   import gsap from "gsap";
   import type { CarouselScene } from "./simulation/CarouselScene";
-  import { carouselData } from "./simulation/CarouselScene";
+  import type { CarouselItem } from "$lib/types";
 
   // Pre-allocated vectors reused every slide transition to avoid GC pressure
   const _tmpPos = new THREE.Vector3();
@@ -11,11 +11,12 @@
 
   interface Props {
     carouselScene: CarouselScene | null;
+    carouselData: CarouselItem[];
     paused: boolean;
     onExitOrbit: () => void;
   }
 
-  let { carouselScene, paused, onExitOrbit }: Props = $props();
+  let { carouselScene, carouselData, paused, onExitOrbit }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
 

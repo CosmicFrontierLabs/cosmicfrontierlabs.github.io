@@ -5,8 +5,15 @@
   import CarouselCanvas from "../components/CarouselCanvas.svelte";
   import { onMount } from "svelte";
   import { scrollY, innerHeight } from "svelte/reactivity/window";
+  import type { CarouselItem } from "$lib/types";
 
   gsap.registerPlugin(ScrollTrigger);
+
+  interface Props {
+    carouselData: CarouselItem[];
+  }
+
+  let { carouselData }: Props = $props();
 
   let heroEl: HTMLDivElement;
   let sectionsEl: HTMLDivElement;
@@ -172,7 +179,7 @@
 </div>
 
 <div class="carousel-anchor">
-  <CarouselCanvas shouldStartLoading={earthReady} />
+  <CarouselCanvas shouldStartLoading={earthReady} {carouselData} />
 </div>
 
 <style lang="scss">
