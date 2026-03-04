@@ -20,7 +20,7 @@ const MAX_REFLECTOR_SIZE = 2048;
 
 const DEFAULT_CAMERA = {
   position: { x: 3, y: 1.5, z: 3 },
-  lookAt: { x: 0, y: 0.5, z: 0 },
+  lookAt: { x: 0.5, y: 1, z: 0 },
 };
 
 /**
