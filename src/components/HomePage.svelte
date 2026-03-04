@@ -171,7 +171,7 @@
   {/each}
 </div>
 
-<div class="carousel-anchor bg-glass2">
+<div class="carousel-anchor">
   <CarouselCanvas loadingEnabled={earthReady} />
 </div>
 
@@ -384,11 +384,15 @@
     isolation: isolate;
 
     min-height: 78lvh;
-    border-radius: var(--radius-m);
     overflow: hidden;
     z-index: var(--z-carousel-ui);
     pointer-events: none;
     width: 100%;
+
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
+    border: var(--stroke);
+    border-radius: var(--radius-m);
+    background: var(--body-bg);
 
     @media (min-width: 56rem) {
       min-height: 85lvh;
