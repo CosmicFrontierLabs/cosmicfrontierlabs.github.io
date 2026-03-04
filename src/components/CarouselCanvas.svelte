@@ -9,6 +9,10 @@
     shouldStartLoading: boolean;
   }
 
+  // Dev helper: force a slow async step so unmount-disposal paths can be tested.
+  // Set to 0 to disable.
+  const FORCED_LOAD_DELAY_MS = 100000;
+
   let { shouldStartLoading }: Props = $props();
 
   let hadError = $state(false);
@@ -246,6 +250,16 @@
       // --- 2. Build CarouselScene ---
       const width = container.offsetWidth || container.clientWidth;
       const height = container.offsetHeight || container.clientHeight;
+
+      if (FORCED_LOAD_DELAY_MS > 0) {
+        // Delay for dev testing
+        await new Promise<void>((resolve) => window.setTimeout(resolve, FORCED_LOAD_DELAY_MS));
+      }
+
+      if (loadingCanceled) {
+        disposeAll();
+        return;
+      }
 
       try {
         const { CarouselScene: CarouselSceneClass } = await import("./simulation/CarouselScene");
