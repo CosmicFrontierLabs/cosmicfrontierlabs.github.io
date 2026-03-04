@@ -3,6 +3,7 @@
   import type { WebGLRenderer } from "three";
   import type { CarouselScene } from "./simulation/CarouselScene";
   import CarouselOverlay from "./CarouselOverlay.svelte";
+  import HeroLoader from "./HeroLoader.svelte";
 
   interface Props {
     /** Gates when to start loading Three.js + CarouselScene */
@@ -10,8 +11,8 @@
   }
 
   // Dev helper: force a slow async step so unmount-disposal paths can be tested.
-  // Set to 0 to disable.
-  const FORCED_LOAD_DELAY_MS = 100000;
+  // Keep disabled in normal development/production.
+  const FORCED_LOAD_DELAY_MS = 2000;
 
   let { shouldStartLoading }: Props = $props();
 
@@ -28,7 +29,7 @@
   let isTouchDevice = $state(false);
 
   // Allow explore interactions only on non-touch devices when carousel is visible
-  let allowExplore = $derived(!hadError && !isTouchDevice && isCarouselReady && !hadError && !orbitMode);
+  let allowExplore = $derived(!hadError && !isTouchDevice && isCarouselReady && !orbitMode);
 
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
@@ -306,6 +307,7 @@
   });
 </script>
 
+<HeroLoader visible={!isCarouselReady && !hadError} />
 <div
   class="carousel-canvas-container"
   class:carousel-canvas-container--visible={isCarouselReady}

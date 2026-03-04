@@ -262,11 +262,13 @@
 
 <style lang="scss">
   .canvas-container {
+    position: fixed;
+    inset: 0;
     opacity: var(--canvas-opacity, 0);
   }
 
   .canvas {
-    position: fixed;
+    position: absolute;
     inset: 0;
     will-change: transform;
     background-color: var(--body-bg);
@@ -274,7 +276,7 @@
   }
 
   .canvas-fallback {
-    position: fixed;
+    position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
