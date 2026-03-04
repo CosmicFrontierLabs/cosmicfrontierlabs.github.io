@@ -78,7 +78,7 @@ export class CarouselScene {
   /** Accumulated pan offset from the base orbit target */
   private panOffset = new THREE.Vector3();
   /** Callback fired when space-held state changes (for cursor feedback) */
-  onSpaceHeldChange: ((held: boolean) => void) | null = null;
+  onShiftHeldChange: ((held: boolean) => void) | null = null;
   /** Whether the mouse is currently over the canvas */
   private mouseOverCanvas = false;
 
@@ -400,7 +400,7 @@ export class CarouselScene {
     // capture pointer events or interfere with our pan drag
     this.orbitControls.disconnect();
     this.orbitControls.enabled = false;
-    this.onSpaceHeldChange?.(true);
+    this.onShiftHeldChange?.(true);
   }
 
   private onKeyUp(e: KeyboardEvent): void {
@@ -412,7 +412,7 @@ export class CarouselScene {
       this.orbitControls.connect(this.renderer.domElement);
       this.orbitControls.enabled = true;
     }
-    this.onSpaceHeldChange?.(false);
+    this.onShiftHeldChange?.(false);
   }
 
   private onPanPointerDown(e: PointerEvent): void {
@@ -486,7 +486,7 @@ export class CarouselScene {
       this.orbitControls.connect(this.renderer.domElement);
       this.orbitControls.enabled = true;
     }
-    this.onSpaceHeldChange?.(false);
+    this.onShiftHeldChange?.(false);
   }
 
   /**
@@ -620,7 +620,7 @@ export class CarouselScene {
     window.removeEventListener("pointerup", this.boundOnPointerUp);
     this.renderer.domElement.removeEventListener("mouseenter", this.boundOnMouseEnter);
     this.renderer.domElement.removeEventListener("mouseleave", this.boundOnMouseLeave);
-    this.onSpaceHeldChange = null;
+    this.onShiftHeldChange = null;
 
     this.gui.destroy();
     this.orbitControls.dispose();

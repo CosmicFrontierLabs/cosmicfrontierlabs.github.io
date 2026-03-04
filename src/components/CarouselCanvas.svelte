@@ -15,7 +15,7 @@
   let isCarouselReady = $state(false);
 
   // Space key held (for pan cursor feedback)
-  let spaceHeldForPan = $state(false);
+  let shiftHeldForPan = $state(false);
 
   // Orbit controls state
   let orbitMode = $state(false);
@@ -41,7 +41,7 @@
     }
     if (!newOrbitMode && carouselScene) {
       carouselScene.resetPan();
-      spaceHeldForPan = false;
+      shiftHeldForPan = false;
     }
   }
 
@@ -225,8 +225,8 @@
       try {
         const { CarouselScene: CarouselSceneClass } = await import("./simulation/CarouselScene");
         carouselScene = new CarouselSceneClass(width, height, renderer!);
-        carouselScene.onSpaceHeldChange = (held: boolean) => {
-          spaceHeldForPan = held;
+        carouselScene.onShiftHeldChange = (held: boolean) => {
+          shiftHeldForPan = held;
         };
         resizeObserver = setupResizeObserver();
         cleanupAnimation = startAnimationLoop();
@@ -268,7 +268,7 @@
     class="carousel-canvas"
     class:allow-explore={allowExplore}
     class:orbit-mode={orbitMode}
-    class:pan-mode={orbitMode && spaceHeldForPan}
+    class:pan-mode={orbitMode && shiftHeldForPan}
     role="img"
     aria-label="Interactive 3D telescope carousel"
   ></div>

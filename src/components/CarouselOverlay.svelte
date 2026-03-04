@@ -11,11 +11,11 @@
 
   interface Props {
     carouselScene: CarouselScene | null;
-    paused?: boolean;
-    onExitOrbit?: () => void;
+    paused: boolean;
+    onExitOrbit: () => void;
   }
 
-  let { carouselScene, paused = false, onExitOrbit }: Props = $props();
+  let { carouselScene, paused, onExitOrbit }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
 
