@@ -7,9 +7,13 @@ export function slugFromTitle(title: string): string {
 
 export function getNetworkSpeed(): "fast" | "medium" | "slow" {
   // Run client side to determine the network speed
-  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nav = navigator as any;
+  const conn = (nav.connection || nav.mozConnection || nav.webkitConnection) as
+    | { downlink?: number }
+    | undefined;
 
-  const downlink = conn ? conn.downlink : 100.0;
+  const downlink = conn?.downlink ?? 100.0;
   if (downlink < 3.0) {
     return "slow";
   } else if (downlink < 10.0) {
