@@ -12,24 +12,28 @@ import {
   defaultMetallicParams,
   type MetallicEnhanceParams,
 } from "./materialUtils";
-import type { CarouselItem } from "$lib/types";
+import type { CarouselItem, ModelConfig } from "$lib/types";
 import gsap from "gsap";
 
-export type { CarouselItem } from "$lib/types";
-
-/** Mesh name in the payload GLB that should become a planar reflector. */
-const MIRROR_MESH_NAME = "mesh_0_55";
+export type { CarouselItem, ModelConfig } from "$lib/types";
 
 /** Maximum reflector render target dimension to limit GPU cost on high-DPI displays. */
 const MAX_REFLECTOR_SIZE = 2048;
 
-interface LoadModelOptions {
-  url: string;
-  scale: number;
-  brighten: boolean;
-  /** Mesh name to replace with a Reflector (only on this model). */
-  mirrorMeshName?: string;
-}
+/**
+ * Registry of all loadable models. Each entry's `name` matches the `model`
+ * field in carousel.yaml. To add a new model: add an entry here, then use
+ * the name as the `model` value in carousel.yaml slides.
+ */
+export const MODEL_CONFIGS: ModelConfig[] = [
+  {
+    name: "payload",
+    url: "/models/20260102_Payload_assy_no_baffle.glb",
+    scale: 5.0,
+    brighten: true,
+    mirrorMeshName: "mesh_0_55",
+  },
+];
 
 /**
  * CarouselScene manages the 3D carousel scene (models, lights, camera, rings).
@@ -39,8 +43,8 @@ export class CarouselScene {
   enableOrbitControls: boolean = false;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
-  private payload: THREE.Group | null = null;
-  // private fullAssy: THREE.Group | null = null;
+  /** Loaded model groups, keyed by MODEL_CONFIGS key (e.g. "payload"). */
+  private models = new Map<string, THREE.Group>();
   private ambientLight: THREE.AmbientLight;
   private keyLight: THREE.RectAreaLight;
   private rimLight: THREE.PointLight;
@@ -147,6 +151,10 @@ export class CarouselScene {
     // Disconnect immediately — listeners will be re-added when orbit mode activates
     this.orbitControls.disconnect();
     this.orbitControls.enabled = false;
+    // Re-apply lookAt after OrbitControls construction — its constructor
+    // internally calls update() with default target (0,0,0), which can
+    // modify the camera rotation before we set the correct target above.
+    this.camera.lookAt(initialCamera.lookAt.x, initialCamera.lookAt.y, initialCamera.lookAt.z);
 
     // --- Pan event listeners ---
     this.boundOnKeyDown = this.onKeyDown.bind(this);
@@ -215,32 +223,28 @@ export class CarouselScene {
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
     this.loaded = (async () => {
-      const [payload, texture] = await Promise.all([
-        this.loadModel(gltfLoader, {
-          url: "/models/20260102_Payload_assy_no_baffle.glb",
-          scale: 5.0,
-          brighten: true,
-          mirrorMeshName: MIRROR_MESH_NAME,
-        }),
-        // this.loadModel(gltfLoader, {
-        //   url: "/models/20260102_Full_Assy.glb",
-        //   scale: 3.0,
-        //   brighten: true,
-        // }),
-        new Promise<THREE.Texture>((resolve) => {
-          new THREE.TextureLoader().load("/textures/carousel-bg.jpg", resolve);
-        }),
-      ]);
+      // Load all models from MODEL_CONFIGS in parallel with the background texture
+      const modelPromises = MODEL_CONFIGS.map((cfg) => this.loadModel(gltfLoader, cfg));
+      const texturePromise = new Promise<THREE.Texture>((resolve) => {
+        new THREE.TextureLoader().load("/textures/carousel-bg.jpg", resolve);
+      });
+
+      const [texture, ...loadedModels] = await Promise.all([texturePromise, ...modelPromises]);
 
       if (this.disposed) {
         texture.dispose();
         return;
       }
 
-      this.payload = payload;
-      this.payload.visible = true;
-      // this.fullAssy = fullAssy;
-      // this.fullAssy.visible = false;
+      // Store loaded groups keyed by config name; hide all initially
+      for (let i = 0; i < MODEL_CONFIGS.length; i++) {
+        const group = loadedModels[i];
+        group.visible = false;
+        this.models.set(MODEL_CONFIGS[i].name, group);
+      }
+      // Show the first slide's model
+      const firstModel = this.models.get(this.carouselData[0].model);
+      if (firstModel) firstModel.visible = true;
 
       texture.mapping = THREE.EquirectangularReflectionMapping;
       this.backgroundTexture = texture;
@@ -252,7 +256,7 @@ export class CarouselScene {
    * Load a GLB model, center it, wrap in a group, add to scene, and apply
    * material processing. Returns the wrapper group.
    */
-  private loadModel(loader: GLTFLoader, opts: LoadModelOptions): Promise<THREE.Group> {
+  private loadModel(loader: GLTFLoader, opts: ModelConfig): Promise<THREE.Group> {
     return new Promise((resolve, reject) => {
       loader.load(
         opts.url,
@@ -578,29 +582,22 @@ export class CarouselScene {
   }
 
   setActiveModel(carouselIndex: number): void {
-    const modelType = this.carouselData[carouselIndex].model;
-
-    if (this.payload) {
-      this.payload.visible = modelType === "payload";
+    const activeKey = this.carouselData[carouselIndex].model;
+    for (const [key, group] of this.models) {
+      group.visible = key === activeKey;
     }
-    // if (this.fullAssy) {
-    //   this.fullAssy.visible = modelType === "fullAssy";
-    // }
   }
 
   /** Re-apply metallic material enhancement with current GUI params. */
   private reapplyMetallicParams(): void {
     const skip = this.materialSkipNames.size > 0 ? this.materialSkipNames : undefined;
-    const applyToGroup = (group: THREE.Group | null) => {
-      if (!group) return;
+    for (const group of this.models.values()) {
       // The model root is the first child of the wrapper group
       const root = group.children[0];
       if (root) {
         enhanceMetallicMaterials(root, skip, this.metallicParams);
       }
-    };
-    applyToGroup(this.payload);
-    // applyToGroup(this.fullAssy);
+    }
   }
 
   dispose(): void {
@@ -642,8 +639,7 @@ export class CarouselScene {
       this.mirrorRimMaterial.dispose();
     }
 
-    const disposeGroup = (group: THREE.Group | null) => {
-      if (!group) return;
+    for (const group of this.models.values()) {
       group.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.geometry.dispose();
@@ -654,8 +650,6 @@ export class CarouselScene {
           }
         }
       });
-    };
-    disposeGroup(this.payload);
-    // disposeGroup(this.fullAssy);
+    }
   }
 }

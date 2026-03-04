@@ -1,5 +1,3 @@
-- Fix npm run check issues
-
 - Add button to go full screen
   - Questions: should this be a separate page?
     - We could have the full screen button open in a new tab
@@ -12,3 +10,5 @@
   - Let's separate out the copy into a YAML file for Aaron
 
 - We currently have no fallback on slow networks - do we want to change that?
+
+- carouselscene.ts shouldn't be exporting types. fix this.
