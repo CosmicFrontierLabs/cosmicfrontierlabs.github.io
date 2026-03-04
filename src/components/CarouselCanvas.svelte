@@ -9,11 +9,12 @@
     shouldStartLoading: boolean;
   }
 
-  let { shouldStartLoading: shouldStartLoading }: Props = $props();
+  let { shouldStartLoading }: Props = $props();
 
   let hadError = $state(false);
   let isCarouselReady = $state(false);
 
+  // TODO: do we need active scene -- check this
   let activeScene: "carousel" | "loading" | "idle" = $derived.by(() => {
     if (hadError) return "idle";
     if (isCarouselReady) return "carousel";
@@ -37,6 +38,8 @@
   let cursorY = $state(0);
   let cursorOver = $state(false);
   let cursorVisible = $derived(allowExplore && cursorOver);
+
+  let carouselScene = $state<CarouselScene | null>(null);
 
   function setOrbitMode(newOrbitMode: boolean) {
     orbitMode = newOrbitMode;
@@ -96,11 +99,16 @@
     };
   }
 
+  // These are written by the $effect during initialization and read by the
+  // onMount cleanup. They live at module scope because the two hooks can't
+  // share a local variable.
+  // Since these don't drive UI reactivity, they shouldn't be runes
   let container: HTMLDivElement;
   let resizeObserver: ResizeObserver;
   let renderer: WebGLRenderer | null = null;
-
-  let carouselScene = $state<CarouselScene | null>(null);
+  let cleanupAnimation: (() => void) | null = null;
+  // Cancelled is an abort flag
+  let loadingCanceled = false;
 
   function setupResizeObserver(): ResizeObserver {
     let prevWidth = container.offsetWidth || container.clientWidth;
@@ -136,121 +144,116 @@
     hadError = true;
   }
 
-  // Wait for shouldStartLoading to become true, then start loading
-  let loadStarted = $derived(shouldStartLoading);
+  $effect(() => {
+    // Watch for shouldStartLoading to trigger initialization
+    // Effects run post-mount, so the bind:this on the container is resolved.
+    // Container is guaranteed to be set by the time this runs.
+    if (!shouldStartLoading || loadingCanceled) {
+      return;
+    }
+
+    // Run async initialization
+    (async () => {
+      const THREE = await import("three");
+
+      if (loadingCanceled) return;
+
+      function createRenderer(container: HTMLDivElement) {
+        const newRenderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance",
+        });
+        newRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+        newRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+        newRenderer.toneMappingExposure = 1.0;
+        const width = container.offsetWidth || container.clientWidth;
+        const height = container.offsetHeight || container.clientHeight;
+        newRenderer.setSize(width, height);
+        container.appendChild(newRenderer.domElement);
+        return newRenderer;
+      }
+
+      function startAnimationLoop(): () => void {
+        if (!renderer || !carouselScene) {
+          return () => {};
+        }
+
+        const clock = new THREE.Clock();
+        let rafId: number;
+
+        function animate() {
+          rafId = requestAnimationFrame(animate);
+
+          const delta = clock.getDelta();
+
+          if (carouselScene && isCarouselReady) {
+            carouselScene.update(delta);
+
+            if (renderer) {
+              renderer.render(carouselScene.scene, carouselScene.camera);
+            }
+          }
+        }
+
+        rafId = requestAnimationFrame(animate);
+
+        return () => {
+          cancelAnimationFrame(rafId);
+          renderer?.dispose();
+        };
+      }
+
+      // --- 1. Create renderer ---
+      try {
+        renderer = createRenderer(container);
+        renderer.setClearColor(0x000000, 0);
+        renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+        // Ensure the canvas can receive pointer events
+        renderer.domElement.style.pointerEvents = "auto";
+      } catch (error) {
+        console.error("CarouselCanvas initialization failed:", error);
+        hadError = true;
+        return;
+      }
+      if (loadingCanceled) return;
+
+      cursorX = container.clientWidth / 2;
+      cursorY = container.clientHeight / 2;
+
+      // Yield a frame
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      if (loadingCanceled) return;
+
+      // --- 2. Build CarouselScene ---
+      const width = container.offsetWidth || container.clientWidth;
+      const height = container.offsetHeight || container.clientHeight;
+
+      try {
+        const { CarouselScene: CarouselSceneClass } = await import("./simulation/CarouselScene");
+        carouselScene = new CarouselSceneClass(width, height, renderer!);
+        carouselScene.onSpaceHeldChange = (held: boolean) => {
+          spaceHeldForPan = held;
+        };
+        resizeObserver = setupResizeObserver();
+        cleanupAnimation = startAnimationLoop();
+
+        await carouselScene.loaded;
+        if (!hadError) {
+          isCarouselReady = true;
+        }
+      } catch (err) {
+        console.error("CarouselScene failed to load:", err);
+        hadError = true;
+      }
+    })();
+  });
 
   onMount(() => {
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
-    let cleanupAnimation: (() => void) | null = null;
-    let cancelled = false;
-
-    // Watch for loadStarted to trigger initialization
-    // TODO: is this reasonable? What is this?
-    const unsubscribe = $effect.root(() => {
-      $effect(() => {
-        if (!loadStarted || cancelled) return;
-
-        // Run async initialization
-        (async () => {
-          const THREE = await import("three");
-
-          if (cancelled) return;
-
-          function createRenderer(container: HTMLDivElement) {
-            const newRenderer = new THREE.WebGLRenderer({
-              antialias: true,
-              alpha: true,
-              powerPreference: "high-performance",
-            });
-            newRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
-            newRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-            newRenderer.toneMappingExposure = 1.0;
-            const width = container.offsetWidth || container.clientWidth;
-            const height = container.offsetHeight || container.clientHeight;
-            newRenderer.setSize(width, height);
-            container.appendChild(newRenderer.domElement);
-            return newRenderer;
-          }
-
-          function startAnimationLoop(): () => void {
-            if (!renderer || !carouselScene) {
-              return () => {};
-            }
-
-            const clock = new THREE.Clock();
-            let rafId: number;
-
-            function animate() {
-              rafId = requestAnimationFrame(animate);
-
-              const delta = clock.getDelta();
-
-              if (carouselScene && isCarouselReady) {
-                carouselScene.update(delta);
-
-                if (renderer) {
-                  renderer.render(carouselScene.scene, carouselScene.camera);
-                }
-              }
-            }
-
-            rafId = requestAnimationFrame(animate);
-
-            return () => {
-              cancelAnimationFrame(rafId);
-              renderer?.dispose();
-            };
-          }
-
-          // --- 1. Create renderer ---
-          try {
-            renderer = createRenderer(container);
-            renderer.setClearColor(0x000000, 0);
-            renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
-            // Ensure the canvas can receive pointer events
-            renderer.domElement.style.pointerEvents = "auto";
-          } catch (error) {
-            console.error("CarouselCanvas initialization failed:", error);
-            hadError = true;
-            return;
-          }
-          if (cancelled) return;
-
-          cursorX = container.clientWidth / 2;
-          cursorY = container.clientHeight / 2;
-
-          // Yield a frame
-          await new Promise<void>((r) => requestAnimationFrame(() => r()));
-          if (cancelled) return;
-
-          // --- 2. Build CarouselScene ---
-          const width = container.offsetWidth || container.clientWidth;
-          const height = container.offsetHeight || container.clientHeight;
-
-          try {
-            const { CarouselScene: CarouselSceneClass } = await import("./simulation/CarouselScene");
-            carouselScene = new CarouselSceneClass(width, height, renderer!);
-            carouselScene.onSpaceHeldChange = (held: boolean) => {
-              spaceHeldForPan = held;
-            };
-            resizeObserver = setupResizeObserver();
-            cleanupAnimation = startAnimationLoop();
-
-            await carouselScene.loaded;
-            if (!hadError) {
-              isCarouselReady = true;
-            }
-          } catch (err) {
-            console.error("CarouselScene failed to load:", err);
-            hadError = true;
-          }
-        })();
-      });
-    });
 
     return () => {
-      cancelled = true;
-      unsubscribe();
+      loadingCanceled = true;
       resizeObserver?.disconnect();
       if (renderer) {
         renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
