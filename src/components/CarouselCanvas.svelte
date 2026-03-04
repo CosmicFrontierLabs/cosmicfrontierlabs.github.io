@@ -6,10 +6,10 @@
 
   interface Props {
     /** Gates when to start loading Three.js + CarouselScene */
-    loadingEnabled: boolean;
+    shouldStartLoading: boolean;
   }
 
-  let { loadingEnabled }: Props = $props();
+  let { shouldStartLoading: shouldStartLoading }: Props = $props();
 
   let hadError = $state(false);
   let isCarouselReady = $state(false);
@@ -30,9 +30,7 @@
   let isTouchDevice = $state(false);
 
   // Allow explore interactions only on non-touch devices when carousel is visible
-  let allowExplore = $derived(
-    !hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode
-  );
+  let allowExplore = $derived(!hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode);
 
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
@@ -138,14 +136,8 @@
     hadError = true;
   }
 
-  // Wait for loadingEnabled to become true, then start loading
-  let loadStarted = $state(false);
-
-  $effect(() => {
-    if (loadingEnabled && !loadStarted) {
-      loadStarted = true;
-    }
-  });
+  // Wait for shouldStartLoading to become true, then start loading
+  let loadStarted = $derived(shouldStartLoading);
 
   onMount(() => {
     isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
@@ -153,6 +145,7 @@
     let cancelled = false;
 
     // Watch for loadStarted to trigger initialization
+    // TODO: is this reasonable? What is this?
     const unsubscribe = $effect.root(() => {
       $effect(() => {
         if (!loadStarted || cancelled) return;

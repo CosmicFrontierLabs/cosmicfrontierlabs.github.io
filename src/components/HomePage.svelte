@@ -172,7 +172,7 @@
 </div>
 
 <div class="carousel-anchor">
-  <CarouselCanvas loadingEnabled={earthReady} />
+  <CarouselCanvas shouldStartLoading={earthReady} />
 </div>
 
 <style lang="scss">
