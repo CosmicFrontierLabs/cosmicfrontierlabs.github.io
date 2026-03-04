@@ -9,9 +9,7 @@ export function getNetworkSpeed(): "fast" | "medium" | "slow" {
   // Run client side to determine the network speed
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nav = navigator as any;
-  const conn = (nav.connection || nav.mozConnection || nav.webkitConnection) as
-    | { downlink?: number }
-    | undefined;
+  const conn = (nav.connection || nav.mozConnection || nav.webkitConnection) as { downlink?: number } | undefined;
 
   const downlink = conn?.downlink ?? 100.0;
   if (downlink < 3.0) {

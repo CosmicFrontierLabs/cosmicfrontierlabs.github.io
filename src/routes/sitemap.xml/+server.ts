@@ -47,7 +47,7 @@ ${staticPages
     <loc>${SITE}${page.path}</loc>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
-  </url>`,
+  </url>`
   )
   .join("\n")}
 ${posts
@@ -57,7 +57,7 @@ ${posts
     <lastmod>${post.lastmod}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
-  </url>`,
+  </url>`
   )
   .join("\n")}
 </urlset>`;
