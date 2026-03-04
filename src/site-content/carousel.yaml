@@ -20,8 +20,9 @@
 #
 # Type definition: CarouselItem in src/lib/types.ts
 
-
 # UNCOMMENT BELOW TO ADD SLIDES
+
+# @Aaron: Update the copy here. Put in titles and descriptions. I can do the camera info. (i'll ask if I don't know where something is)
 
 # - title: "A New Kind of Telescope"
 #   description: "Introducing a revolutionary optical instrument designed to peer deeper into the cosmos than ever before. This next-generation payload assembly combines precision engineering with cutting-edge materials."
