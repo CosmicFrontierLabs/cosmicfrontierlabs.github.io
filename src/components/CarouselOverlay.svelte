@@ -12,11 +12,10 @@
   interface Props {
     carouselScene: CarouselScene | null;
     paused?: boolean;
-    activeScene?: "simulation" | "carousel" | "error" | "loader";
     onExitOrbit?: () => void;
   }
 
-  let { carouselScene, paused = false, activeScene = "simulation", onExitOrbit }: Props = $props();
+  let { carouselScene, paused = false, onExitOrbit }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
 

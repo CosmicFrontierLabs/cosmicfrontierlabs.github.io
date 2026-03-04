@@ -14,13 +14,6 @@
   let hadError = $state(false);
   let isCarouselReady = $state(false);
 
-  // TODO: do we need active scene -- check this
-  let activeScene: "carousel" | "loading" | "idle" = $derived.by(() => {
-    if (hadError) return "idle";
-    if (isCarouselReady) return "carousel";
-    return "loading";
-  });
-
   // Space key held (for pan cursor feedback)
   let spaceHeldForPan = $state(false);
 
@@ -31,7 +24,7 @@
   let isTouchDevice = $state(false);
 
   // Allow explore interactions only on non-touch devices when carousel is visible
-  let allowExplore = $derived(!hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode);
+  let allowExplore = $derived(!hadError && !isTouchDevice && isCarouselReady && !hadError && !orbitMode);
 
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
@@ -309,7 +302,6 @@
       <CarouselOverlay
         {carouselScene}
         paused={orbitMode}
-        activeScene={activeScene === "carousel" ? "carousel" : "simulation"}
         onExitOrbit={() => {
           setOrbitMode(false);
         }}
