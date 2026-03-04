@@ -5,20 +5,18 @@
   import CarouselOverlay from "./CarouselOverlay.svelte";
 
   interface Props {
-    canvasOpacity: number;
     /** Gates when to start loading Three.js + CarouselScene */
     loadingEnabled: boolean;
   }
 
-  let { canvasOpacity, loadingEnabled }: Props = $props();
+  let { loadingEnabled }: Props = $props();
 
   let hadError = $state(false);
   let isCarouselReady = $state(false);
 
   let activeScene: "carousel" | "loading" | "idle" = $derived.by(() => {
     if (hadError) return "idle";
-    if (isCarouselReady && canvasOpacity > 0) return "carousel";
-    if (isCarouselReady) return "idle";
+    if (isCarouselReady) return "carousel";
     return "loading";
   });
 
@@ -33,7 +31,7 @@
 
   // Allow explore interactions only on non-touch devices when carousel is visible
   let allowExplore = $derived(
-    !hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode && canvasOpacity > 0
+    !hadError && !isTouchDevice && activeScene === "carousel" && !orbitMode
   );
 
   // Mouse cursor position for the "click to explore" circle
@@ -192,12 +190,6 @@
             function animate() {
               rafId = requestAnimationFrame(animate);
 
-              // Skip rendering when not visible
-              if (canvasOpacity === 0) {
-                clock.getDelta(); // keep clock ticking
-                return;
-              }
-
               const delta = clock.getDelta();
 
               if (carouselScene && isCarouselReady) {
@@ -278,8 +270,8 @@
 
 <div
   class="carousel-canvas-container"
-  class:carousel-canvas-container--visible={canvasOpacity > 0 && isCarouselReady}
-  style="opacity: {isCarouselReady ? canvasOpacity : 0};"
+  class:carousel-canvas-container--visible={isCarouselReady}
+  style="opacity: {isCarouselReady ? 1 : 0};"
 >
   <div
     bind:this={container}
@@ -317,11 +309,7 @@
   {/if}
 
   {#if !hadError && isCarouselReady}
-    <div
-      class="carousel-overlay-wrapper"
-      class:carousel-overlay-wrapper--hidden={canvasOpacity === 0}
-      aria-hidden={canvasOpacity === 0}
-    >
+    <div class="carousel-overlay-wrapper">
       <CarouselOverlay
         {carouselScene}
         paused={orbitMode}
@@ -399,12 +387,6 @@
   .carousel-overlay-wrapper {
     opacity: 1;
     transition: opacity 0.3s ease;
-  }
-
-  .carousel-overlay-wrapper--hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
   }
 
   .explore-cursor__ring {

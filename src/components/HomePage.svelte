@@ -10,11 +10,9 @@
 
   let heroEl: HTMLDivElement;
   let sectionsEl: HTMLDivElement;
-  let carouselAnchorEl: HTMLDivElement;
 
   // Split opacity: each canvas fades independently
   let earthTriggeredOpacity = $state<number | null>(null);
-  let carouselTriggeredOpacity = $state<number | null>(null);
 
   // Before mount, derive earth opacity from raw scroll position so the canvas
   // is hidden if the browser restores a non-zero scroll position.
@@ -34,8 +32,6 @@
     }
     return 0;
   });
-
-  let carouselOpacity = $derived(carouselTriggeredOpacity ?? 0);
 
   // EarthCanvas signals when it's ready so CarouselCanvas can start loading
   let earthReady = $state(false);
@@ -64,19 +60,7 @@
       },
     });
 
-    // 2. Carousel fade-in: approaching the carousel section from above
-    const carouselEnterTrigger = ScrollTrigger.create({
-      trigger: carouselAnchorEl,
-      start: "top bottom",
-      end: "top 50%",
-      scrub: 0.5,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        carouselTriggeredOpacity = self.progress;
-      },
-    });
-
-    // 3. Subhero: fade out as the content sections scroll up over it
+    // 2. Subhero: fade out as the content sections scroll up over it
     const subheroFadeTrigger = ScrollTrigger.create({
       trigger: sectionsEl,
       start: "top bottom",
@@ -93,19 +77,17 @@
     // (e.g., when the browser restores a non-zero scroll position).
     ScrollTrigger.refresh();
     heroTrigger.update();
-    carouselEnterTrigger.update();
     subheroFadeTrigger.update();
 
-    // If we're above both triggers (top of page), neither onUpdate fired,
+    // If we're above the hero trigger (top of page), onUpdate never fired,
     // so earthTriggeredOpacity is still null. Set it to 1 (fully visible).
-    // If a trigger did fire during refresh, it already set the correct value.
-    if (heroTrigger.progress === 0 && carouselEnterTrigger.progress === 0) {
+    // If the trigger did fire during refresh, it already set the correct value.
+    if (heroTrigger.progress === 0) {
       earthTriggeredOpacity = 1;
     }
 
     return () => {
       heroTrigger.kill();
-      carouselEnterTrigger.kill();
       subheroFadeTrigger.kill();
     };
   });
@@ -189,8 +171,8 @@
   {/each}
 </div>
 
-<div class="carousel-anchor bg-glass2" bind:this={carouselAnchorEl}>
-  <CarouselCanvas canvasOpacity={carouselOpacity} loadingEnabled={earthReady} />
+<div class="carousel-anchor bg-glass2">
+  <CarouselCanvas loadingEnabled={earthReady} />
 </div>
 
 <style lang="scss">

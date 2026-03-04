@@ -7,6 +7,9 @@
 
 ---
 - Fix the carousel loading state
+  - Start by cleaning up the state management. It looks like we didn't clean it up after separating out the canvases
+  - Looked like carousel area in homepage had glass which it shouldn't have.
+  - Detect if carousel is in view in CarouselCanvas and dont render if it's not.
 - Add button to go full screen
   - Questions: should this be a separate page?
     - We could have the full screen button open in a new tab
