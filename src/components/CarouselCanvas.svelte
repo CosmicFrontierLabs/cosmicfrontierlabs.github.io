@@ -3,7 +3,7 @@
   import type { WebGLRenderer } from "three";
   import type { CarouselScene } from "./simulation/CarouselScene";
   import CarouselOverlay from "./CarouselOverlay.svelte";
-  import HeroLoader from "./HeroLoader.svelte";
+  import CanvasLoader from "./CanvasLoader.svelte";
 
   interface Props {
     /** Gates when to start loading Three.js + CarouselScene */
@@ -307,7 +307,7 @@
   });
 </script>
 
-<HeroLoader visible={!isCarouselReady && !hadError} />
+<CanvasLoader visible={!isCarouselReady && !hadError} />
 <div
   class="carousel-canvas-container"
   class:carousel-canvas-container--visible={isCarouselReady}

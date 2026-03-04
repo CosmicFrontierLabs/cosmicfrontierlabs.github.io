@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { WebGLRenderer } from "three";
   import type { EarthScene } from "./simulation/EarthScene";
-  import HeroLoader from "./HeroLoader.svelte";
+  import CanvasLoader from "./CanvasLoader.svelte";
 
   interface Props {
     canvasOpacity: number;
@@ -257,7 +257,7 @@
     role="img"
     aria-label="Interactive 3D scene showing Earth with orbiting telescopes"
   ></div>
-  <HeroLoader visible={activeState === "loader"} />
+  <CanvasLoader visible={activeState === "loader"} />
 </div>
 
 <style lang="scss">
