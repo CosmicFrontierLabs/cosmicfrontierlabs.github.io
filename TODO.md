@@ -3,8 +3,6 @@
     - We could have the full screen button open in a new tab
   - Should it be in a modal? If it's the same page, can we just move the canvas easily?
 
-  
-- Remove the integrated space craft
 - Make a PR without the carousel copy
 - Make a PR with the carousel copy (for aaron to fill in)
   - Let's separate out the copy into a YAML file for Aaron
@@ -12,3 +10,6 @@
 - We currently have no fallback on slow networks - do we want to change that?
 
 - carouselscene.ts shouldn't be exporting types. fix this.
+
+
+Back to tour to just "back"

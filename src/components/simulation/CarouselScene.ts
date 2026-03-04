@@ -18,6 +18,11 @@ import gsap from "gsap";
 /** Maximum reflector render target dimension to limit GPU cost on high-DPI displays. */
 const MAX_REFLECTOR_SIZE = 2048;
 
+const DEFAULT_CAMERA = {
+  position: { x: 3, y: 1.5, z: 3 },
+  lookAt: { x: 0, y: 0.5, z: 0 },
+};
+
 /**
  * Registry of all loadable models. Each entry's `name` matches the `model`
  * field in carousel.yaml. To add a new model: add an entry here, then use
@@ -114,7 +119,7 @@ export class CarouselScene {
     this.scene.background = new THREE.Color(0x03060b); // Same as var(--body-bg)
 
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 50);
-    const initialCamera = this.carouselData[0].camera;
+    const initialCamera = this.carouselData[0]?.camera ?? DEFAULT_CAMERA;
     this.camera.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
     this.camera.lookAt(initialCamera.lookAt.x, initialCamera.lookAt.y, initialCamera.lookAt.z);
     this.currentLookAtTarget.set(initialCamera.lookAt.x, initialCamera.lookAt.y, initialCamera.lookAt.z);
@@ -240,8 +245,10 @@ export class CarouselScene {
         group.visible = false;
         this.models.set(MODEL_CONFIGS[i].name, group);
       }
-      // Show the first slide's model
-      const firstModel = this.models.get(this.carouselData[0].model);
+      // Show the first slide model, or fall back to the first configured model
+      // so explore mode still has something to interact with when slide data is empty.
+      const firstModelKey = this.carouselData[0]?.model ?? MODEL_CONFIGS[0]?.name;
+      const firstModel = firstModelKey ? this.models.get(firstModelKey) : null;
       if (firstModel) firstModel.visible = true;
 
       texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -580,9 +587,10 @@ export class CarouselScene {
   }
 
   setActiveModel(carouselIndex: number): void {
-    const activeKey = this.carouselData[carouselIndex].model;
+    const activeSlide = this.carouselData[carouselIndex];
+    const activeKey = activeSlide?.model;
     for (const [key, group] of this.models) {
-      group.visible = key === activeKey;
+      group.visible = activeKey !== undefined && key === activeKey;
     }
   }
 

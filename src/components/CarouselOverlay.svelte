@@ -19,14 +19,15 @@
   let { carouselScene, carouselData, paused, onExitOrbit }: Props = $props();
 
   const SLIDE_DURATION_MS = 5000;
+  let hasSlides = $derived(carouselData.length > 0);
 
   let activeSlideIndex = $state(0);
   let progress = $state(0);
   let initialized = $state(false);
   let titleEl: HTMLHeadingElement | null = $state(null);
   let descriptionEl: HTMLParagraphElement | null = $state(null);
-  let panelEl: HTMLDivElement;
-  let panelInnerEl: HTMLDivElement;
+  let panelEl: HTMLDivElement | null = $state(null);
+  let panelInnerEl: HTMLDivElement | null = $state(null);
   let autoplayPaused = $state(false);
 
   // GSAP-based autoplay timeline
@@ -35,6 +36,7 @@
   function startAutoplay() {
     stopAutoplay();
     progress = 0;
+    if (!hasSlides) return;
 
     const proxy = { value: 0 };
     autoplayTween = gsap.to(proxy, {
@@ -60,6 +62,7 @@
   }
 
   function toggleAutoplay() {
+    if (!hasSlides) return;
     autoplayPaused = !autoplayPaused;
     if (autoplayTween) {
       if (autoplayPaused) {
@@ -71,7 +74,7 @@
   }
 
   function goToIndex(index: number) {
-    if (!carouselScene) return;
+    if (!hasSlides || !carouselScene) return;
     if (initialized && index === activeSlideIndex) return;
     initialized = true;
 
@@ -100,11 +103,13 @@
   }
 
   function goToNext() {
+    if (!hasSlides) return;
     const nextIndex = (activeSlideIndex + 1) % carouselData.length;
     goToIndex(nextIndex);
   }
 
   function goToPrev() {
+    if (!hasSlides) return;
     const prevIndex = (activeSlideIndex - 1 + carouselData.length) % carouselData.length;
     goToIndex(prevIndex);
   }
@@ -151,6 +156,7 @@
 </script>
 
 <h2 class="carousel__heading">Explore our telescope</h2>
+{#if paused || hasSlides}
 <div class="carousel__panel bg-glass2" bind:this={panelEl} role="region" aria-label="Telescope carousel">
   <div class="carousel__panel-inner" bind:this={panelInnerEl}>
     {#if paused}
@@ -233,11 +239,11 @@
               <path d="M9 14L4 9l5-5" />
               <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H16" />
             </svg>
-            Back to tour
+            Back
           </button>
         </div>
       </div>
-    {:else}
+    {:else if hasSlides}
       <div class="carousel__body" aria-live="polite">
         <h3 class="carousel__title" bind:this={titleEl}>
           {activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}
@@ -305,6 +311,7 @@
     {/if}
   </div>
 </div>
+{/if}
 
 <style>
   .carousel__heading {
