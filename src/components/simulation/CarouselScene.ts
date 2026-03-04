@@ -39,7 +39,7 @@ export class CarouselScene {
   enableOrbitControls: boolean = false;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
-  private telescope: THREE.Group | null = null;
+  private payload: THREE.Group | null = null;
   // private fullAssy: THREE.Group | null = null;
   private ambientLight: THREE.AmbientLight;
   private keyLight: THREE.RectAreaLight;
@@ -215,7 +215,7 @@ export class CarouselScene {
     gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
     this.loaded = (async () => {
-      const [telescope, texture] = await Promise.all([
+      const [payload, texture] = await Promise.all([
         this.loadModel(gltfLoader, {
           url: "/models/20260102_Payload_assy_no_baffle.glb",
           scale: 5.0,
@@ -237,8 +237,8 @@ export class CarouselScene {
         return;
       }
 
-      this.telescope = telescope;
-      this.telescope.visible = true;
+      this.payload = payload;
+      this.payload.visible = true;
       // this.fullAssy = fullAssy;
       // this.fullAssy.visible = false;
 
@@ -580,8 +580,8 @@ export class CarouselScene {
   setActiveModel(carouselIndex: number): void {
     const modelType = this.carouselData[carouselIndex].model;
 
-    if (this.telescope) {
-      this.telescope.visible = modelType === "payload";
+    if (this.payload) {
+      this.payload.visible = modelType === "payload";
     }
     // if (this.fullAssy) {
     //   this.fullAssy.visible = modelType === "fullAssy";
@@ -599,7 +599,7 @@ export class CarouselScene {
         enhanceMetallicMaterials(root, skip, this.metallicParams);
       }
     };
-    applyToGroup(this.telescope);
+    applyToGroup(this.payload);
     // applyToGroup(this.fullAssy);
   }
 
@@ -655,7 +655,7 @@ export class CarouselScene {
         }
       });
     };
-    disposeGroup(this.telescope);
+    disposeGroup(this.payload);
     // disposeGroup(this.fullAssy);
   }
 }
