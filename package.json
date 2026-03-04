@@ -13,7 +13,6 @@
     "@sveltejs/adapter-static": "^3.0.0",
     "@sveltejs/kit": "^2.0.0",
     "@types/three": "^0.181.0",
-    "figlet": "^1.9.3",
     "glsl-film-grain": "^1.0.4",
     "glsl-noise": "^0.0.0",
     "glslify": "^7.1.1",
