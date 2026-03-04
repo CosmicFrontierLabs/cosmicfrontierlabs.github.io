@@ -106,14 +106,6 @@
   // or mutate component state after teardown.
   let loadingCanceled = false;
 
-  function disposeRenderer(): void {
-    if (!renderer) return;
-    renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
-    renderer.domElement.remove();
-    renderer.dispose();
-    renderer = null;
-  }
-
   function disposeAll(): void {
     resizeObserver?.disconnect();
     resizeObserver = null;
@@ -124,7 +116,11 @@
     cleanupAnimation?.();
     cleanupAnimation = null;
 
-    disposeRenderer();
+    if (!renderer) return;
+    renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
+    renderer.domElement.remove();
+    renderer.dispose();
+    renderer = null;
   }
 
   function setupResizeObserver(): ResizeObserver {
