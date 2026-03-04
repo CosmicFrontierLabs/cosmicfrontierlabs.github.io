@@ -19,20 +19,79 @@ Visit `http://localhost:5173` to view the site.
 - `npm run check` - Run svelte-check type checking
 - `npm run format` - Format code with Prettier
 
+## Project structure
+
+- `src/components/` - Svelte components and Three.js simulation code
+- `src/routes/` - SvelteKit routes (blog, contact, join-us)
+- `src/styles/` - Global styles and design tokens
+- `src/site-content/` - Blog posts and CMS content
+
+## Content management
+
+### Blog posts
+
+Create markdown files in `src/site-content/blog/` with frontmatter:
+
+```markdown
+---
+title: "Post Title"
+date: 2024-01-15
+category: "Essays"
+publishedBy: "Author Name"
+publishedDate: 2024-01-20
+isDraft: false
+---
+
+Your blog post content here...
+```
+
+- `title` - Post title (used to generate URL slug)
+- `date` - Publication date
+- `category` - Post category
+- `publishedBy` - Author name (optional)
+- `publishedDate` - Publication date (optional)
+- `isDraft` - Set to `false` to publish, `true` to hide
+
+### Job postings
+
+Edit `src/site-content/jobs.yaml`:
+
+```yaml
+- title: "Job Title"
+  location: "San Francisco"
+  greenhouseLink: "https://boards.greenhouse.io/company/job-id"
+  isDraft: false
+```
+
+- `title` - Job title
+- `location` - Job location
+- `greenhouseLink` - Greenhouse application URL
+- `isDraft` - Set to `false` to publish, `true` to hide
+
+### Carousel slides
+
+Edit `src/site-content/carousel.yaml`. Each entry defines one slide in the 3D telescope carousel on the home page:
+
+```yaml
+- title: "Slide Title"
+  description: "One to three sentences of explanatory text."
+  model: "payload"
+  camera:
+    position: { x: 3, y: 1.5, z: 3 }
+    lookAt: { x: 0.5, y: 1, z: 0 }
+```
+
+- `title` - Short heading shown in the overlay panel (40 chars max)
+- `description` - Explanatory text (250 chars max)
+- `model` - Which GLB model to show (named in `MODEL_CONFIGS` in `CarouselScene.ts`)
+- `camera.position` - Where the camera sits (x, y, z)
+- `camera.lookAt` - Where the camera points (x, y, z). Keep near the model center (~0, 0.5, 0) and vary position to orbit around it.
+
+Slides auto-advance in order, so arrange them to tell a coherent story. Max 8 slides without layout adjustments. Type definition: `CarouselItem` in `src/lib/types.ts`.
+
 ## 3D Model Optimization
 
 GLB models in `public/models/` are optimized for web delivery using [`gltf-transform`](https://gltf-transform.dev/). The original CAD exports from SolidWorks are extremely large (96–275 MB each) and need to be processed before use on the site.
-
-### Optimization results
-
-| Model                                 | Original | Optimized | Reduction                 |
-| ------------------------------------- | -------- | --------- | ------------------------- |
-| `20260102_Payload_assy_no_baffle.glb` | 96 MB    | 1.8 MB    | 98%                       |
-| `20260102_Payload_assy.glb`           | 97 MB    | 1.9 MB    | 98%                       |
-| `20260102_Full_Assy_no_mli.glb`       | 206 MB   | 3.5 MB    | 98%                       |
-| `20260102_Full_Assy.glb`              | 206 MB   | 3.5 MB    | 98%                       |
-| `batmobile.glb`                       | 275 MB   | 1.6 MB    | 99%                       |
-| `tree.glb`                            | 5.2 MB   | 5.2 MB    | already optimized (Draco) |
 
 ### How to optimize a new model
 
@@ -94,80 +153,3 @@ magick public/textures/original/HDR_multi_nebulae_1.hdr \
 - Use `2048x1024` for a smaller file (~6.5 MB) if bandwidth is a concern.
 - `4096x2048` is a good balance between quality and file size.
 - The original 10K×5K file is only needed for re-processing; keep it in `public/textures/original/` but don't commit it.
-
-## Project structure
-
-- `src/components/` - Svelte components and Three.js simulation code
-- `src/routes/` - SvelteKit routes (blog, contact, join-us)
-- `src/styles/` - Global styles and design tokens
-- `src/site-content/` - Blog posts and CMS content
-
-## Content management
-
-### Blog posts
-
-Create markdown files in `src/site-content/blog/` with frontmatter:
-
-```markdown
----
-title: "Post Title"
-date: 2024-01-15
-category: "Essays"
-publishedBy: "Author Name"
-publishedDate: 2024-01-20
-isDraft: false
----
-
-Your blog post content here...
-```
-
-- `title` - Post title (used to generate URL slug)
-- `date` - Publication date
-- `category` - Post category
-- `publishedBy` - Author name (optional)
-- `publishedDate` - Publication date (optional)
-- `isDraft` - Set to `false` to publish, `true` to hide
-
-### Job postings
-
-Edit `src/site-content/jobs.yaml`:
-
-```yaml
-- title: "Job Title"
-  location: "San Francisco"
-  greenhouseLink: "https://boards.greenhouse.io/company/job-id"
-  isDraft: false
-```
-
-- `title` - Job title
-- `location` - Job location
-- `greenhouseLink` - Greenhouse application URL
-- `isDraft` - Set to `false` to publish, `true` to hide
-
-## Dev notes
-
-The canvasOpacity must control if anything in Canvas.svelte and it's children are visible
-That's what must determine whether the loader of carousel or hero animation are visible.
-
-That doesn't look great on slow 4g because it requires all the js to load, so need to think about it a bit more. and what my preferred pattern is for htis kind of thing.
-probably a pen and paper think for a sec.
-
----
-
-Svelte runs onMounts from the inside out, so children are run before their parents.
-Which means the approach, in general, of having the outer component determines what shown, is hard during loading time, when loading is slow and the onMount takes a while.
-
-What's the right way to think about this?
-
-I want the Loading... / loader to be part of the default site
-
-And then on load, it gets swapped out. Or hidden.
-Maybe this:
-The Loading... is an overlay in HomePage.svelte.
-There's a binding from HomePage to Canvas. Which canvas updates when it's loaded and ready to show.
-And that then changes Loading... to be hidden.
-Or, we can just put a foreground on everything. so that it covers up the Loading... because really the only issue is that (a) it's not showing soon enough and
-(b) when it does show soon enough, it's conflicting with the subhero text.
-
-We could also just go simpler: we have a whole site loader, that covers the whole thing until we're ready. Maybe that's what we try.
-And then we have an aborted version.
