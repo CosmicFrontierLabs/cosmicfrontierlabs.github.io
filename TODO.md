@@ -4,3 +4,14 @@
 - And the subhero text is visible in there
 - Maybe we can give that back a background so that text never appears
 - Plus some loading text
+
+---
+- Fix the carousel loading state
+- Add button to go full screen
+  - Questions: should this be a separate page?
+    - We could have the full screen button open in a new tab
+  - Should it be in a modal? If it's the same page, can we just move the canvas easily?
+- Remove the integrated space craft
+- Make a PR without the carousel copy
+- Make a PR with the carousel copy (for aaron to fill in)
+  - Let's separate out the copy into a YAML file for Aaron
