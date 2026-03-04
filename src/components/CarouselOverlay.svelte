@@ -110,7 +110,7 @@
 
   // Reset to slide 0 when the carousel becomes the active scene.
   $effect(() => {
-    if (activeScene === "carousel" && carouselScene) {
+    if (carouselScene) {
       untrack(() => {
         initialized = false;
         goToIndex(0);
