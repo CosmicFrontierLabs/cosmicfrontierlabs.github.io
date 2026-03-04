@@ -31,6 +31,9 @@
   // Allow explore interactions only on non-touch devices when carousel is visible
   let allowExplore = $derived(!hadError && !isTouchDevice && isCarouselReady && !orbitMode);
 
+  // Track whether the carousel is in the viewport to skip rendering when off-screen
+  let isInViewport = $state(false);
+
   // Mouse cursor position for the "click to explore" circle
   let cursorX = $state(0);
   let cursorY = $state(0);
@@ -102,7 +105,9 @@
   // share a local variable.
   // Since these don't drive UI reactivity, they shouldn't be runes
   let container: HTMLDivElement;
+  let outerContainer: HTMLDivElement;
   let resizeObserver: ResizeObserver | null = null;
+  let intersectionObserver: IntersectionObserver | null = null;
   let renderer: WebGLRenderer | null = null;
   let cleanupAnimation: (() => void) | null = null;
   // Abort flag for async initialization. We check this after every await/import
@@ -112,6 +117,9 @@
   let loadingCanceled = false;
 
   function disposeAll(): void {
+    intersectionObserver?.disconnect();
+    intersectionObserver = null;
+
     resizeObserver?.disconnect();
     resizeObserver = null;
 
@@ -203,8 +211,10 @@
         function animate() {
           rafId = requestAnimationFrame(animate);
 
-          const delta = clock.getDelta();
+          // Skip rendering when the carousel is off-screen
+          if (!isInViewport) return;
 
+          const delta = clock.getDelta();
           if (carouselScene && isCarouselReady) {
             carouselScene.update(delta);
 
@@ -233,24 +243,6 @@
         hadError = true;
         return;
       }
-      if (loadingCanceled) {
-        disposeAll();
-        return;
-      }
-
-      cursorX = container.clientWidth / 2;
-      cursorY = container.clientHeight / 2;
-
-      // Yield a frame
-      await new Promise<void>((r) => requestAnimationFrame(() => r()));
-      if (loadingCanceled) {
-        disposeAll();
-        return;
-      }
-
-      // --- 2. Build CarouselScene ---
-      const width = container.offsetWidth || container.clientWidth;
-      const height = container.offsetHeight || container.clientHeight;
 
       if (FORCED_LOAD_DELAY_MS > 0) {
         // Delay for dev testing
@@ -261,6 +253,12 @@
         disposeAll();
         return;
       }
+
+      // --- 2. Build CarouselScene ---
+      cursorX = container.clientWidth / 2;
+      cursorY = container.clientHeight / 2;
+      const width = container.offsetWidth || container.clientWidth;
+      const height = container.offsetHeight || container.clientHeight;
 
       try {
         const { CarouselScene: CarouselSceneClass } = await import("./simulation/CarouselScene");
@@ -277,6 +275,16 @@
         carouselScene = scene;
 
         resizeObserver = setupResizeObserver();
+
+        // Track viewport visibility to skip rendering when off-screen
+        intersectionObserver = new IntersectionObserver(
+          ([entry]) => {
+            isInViewport = entry.isIntersecting;
+          },
+          { threshold: 0 }
+        );
+        intersectionObserver.observe(outerContainer);
+
         cleanupAnimation = startAnimationLoop();
 
         await scene.loaded;
@@ -309,6 +317,7 @@
 
 <CanvasLoader visible={!isCarouselReady && !hadError} />
 <div
+  bind:this={outerContainer}
   class="carousel-canvas-container"
   class:carousel-canvas-container--visible={isCarouselReady}
   style="opacity: {isCarouselReady ? 1 : 0};"
@@ -352,7 +361,7 @@
     <div class="carousel-overlay-wrapper">
       <CarouselOverlay
         {carouselScene}
-        paused={orbitMode}
+        paused={orbitMode || !isInViewport}
         onExitOrbit={() => {
           setOrbitMode(false);
         }}

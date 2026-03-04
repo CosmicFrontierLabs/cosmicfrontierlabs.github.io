@@ -108,16 +108,6 @@
     goToIndex(prevIndex);
   }
 
-  // Reset to slide 0 when the carousel becomes the active scene.
-  $effect(() => {
-    if (carouselScene) {
-      untrack(() => {
-        initialized = false;
-        goToIndex(0);
-      });
-    }
-  });
-
   // Pause/resume autoplay when explore mode toggles
   $effect(() => {
     const shouldPause = paused || autoplayPaused;
