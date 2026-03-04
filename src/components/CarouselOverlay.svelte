@@ -159,200 +159,200 @@
 
 <h2 class="carousel__heading">Explore our telescope</h2>
 {#if paused || hasSlides}
-<div class="carousel__panel bg-glass2" bind:this={panelEl} role="region" aria-label="Telescope carousel">
-  <div class="carousel__panel-inner" bind:this={panelInnerEl}>
-    {#if paused}
-      <div class="carousel__explore-controls">
-        <p class="carousel__explore-title">Model Controls</p>
+  <div class="carousel__panel bg-glass2" bind:this={panelEl} role="region" aria-label="Telescope carousel">
+    <div class="carousel__panel-inner" bind:this={panelInnerEl}>
+      {#if paused}
+        <div class="carousel__explore-controls">
+          <p class="carousel__explore-title">Model Controls</p>
 
-        <div class="carousel__explore-hints">
-          <span class="carousel__explore-hint">
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" opacity="0.3" />
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-            </svg>
-            Drag to rotate
-          </span>
-          <span class="carousel__explore-hint">
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="9" y="2" width="6" height="12" rx="3" />
-              <path d="M12 6v3" />
-              <path d="M8 18l4 4 4-4" />
-            </svg>
-            Scroll to zoom
-          </span>
-          <span class="carousel__explore-hint">
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M5 9l-3 3 3 3" />
-              <path d="M9 5l3-3 3 3" />
-              <path d="M15 19l-3 3-3-3" />
-              <path d="M19 9l3 3-3 3" />
-              <path d="M2 12h20" />
-              <path d="M12 2v20" />
-            </svg>
-            Shift+drag to pan
-          </span>
+          <div class="carousel__explore-hints">
+            <span class="carousel__explore-hint">
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 2L12 22M2 12L22 12M5 5L19 19M19 5L5 19" opacity="0.3" />
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+              </svg>
+              Drag to rotate
+            </span>
+            <span class="carousel__explore-hint">
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="9" y="2" width="6" height="12" rx="3" />
+                <path d="M12 6v3" />
+                <path d="M8 18l4 4 4-4" />
+              </svg>
+              Scroll to zoom
+            </span>
+            <span class="carousel__explore-hint">
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 9l-3 3 3 3" />
+                <path d="M9 5l3-3 3 3" />
+                <path d="M15 19l-3 3-3-3" />
+                <path d="M19 9l3 3-3 3" />
+                <path d="M2 12h20" />
+                <path d="M12 2v20" />
+              </svg>
+              Shift+drag to pan
+            </span>
+          </div>
+
+          <div class="carousel__explore-nav">
+            <button class="carousel__exit-btn" onclick={() => onExitOrbit?.()}>
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 14L4 9l5-5" />
+                <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H16" />
+              </svg>
+              Back
+            </button>
+
+            <button class="carousel__fullscreen-btn" onclick={() => onToggleFullscreen?.()}>
+              {#if isFullscreen}
+                <svg
+                  aria-hidden="true"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="4 14 10 14 10 20" />
+                  <polyline points="20 10 14 10 14 4" />
+                  <line x1="14" y1="10" x2="21" y2="3" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </svg>
+                Exit fullscreen
+              {:else}
+                <svg
+                  aria-hidden="true"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="15 3 21 3 21 9" />
+                  <polyline points="9 21 3 21 3 15" />
+                  <line x1="21" y1="3" x2="14" y2="10" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </svg>
+                Fullscreen
+              {/if}
+            </button>
+          </div>
+        </div>
+      {:else if hasSlides}
+        <div class="carousel__body" aria-live="polite">
+          <h3 class="carousel__title" bind:this={titleEl}>
+            {activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}
+          </h3>
+          <p bind:this={descriptionEl}>{carouselData[activeSlideIndex].description}</p>
         </div>
 
-        <div class="carousel__explore-nav">
-          <button class="carousel__exit-btn" onclick={() => onExitOrbit?.()}>
+        <div class="carousel__controls">
+          <button class="carousel__nav-btn" onclick={() => goToPrev()} aria-label="Previous slide">
             <svg
               aria-hidden="true"
-              width="14"
-              height="14"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
             >
-              <path d="M9 14L4 9l5-5" />
-              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H16" />
+              <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
-            Back
           </button>
-
-          <button class="carousel__fullscreen-btn" onclick={() => onToggleFullscreen?.()}>
-            {#if isFullscreen}
-              <svg
-                aria-hidden="true"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+          <div class="carousel__indicators">
+            {#each carouselData as _, i}
+              <button
+                class="carousel__indicator {i === activeSlideIndex ? 'carousel__indicator--active' : ''}"
+                onclick={() => goToIndex(i)}
+                aria-label="Go to slide {i + 1}"
               >
-                <polyline points="4 14 10 14 10 20" />
-                <polyline points="20 10 14 10 14 4" />
-                <line x1="14" y1="10" x2="21" y2="3" />
-                <line x1="3" y1="21" x2="10" y2="14" />
+                {#if i === activeSlideIndex}
+                  <div class="carousel__progress" style="width: {progress}%"></div>
+                {/if}
+              </button>
+            {/each}
+          </div>
+          <button class="carousel__nav-btn" onclick={() => goToNext()} aria-label="Next slide">
+            <svg
+              aria-hidden="true"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+          <button
+            class="carousel__pause-btn"
+            onclick={toggleAutoplay}
+            aria-label={autoplayPaused ? "Play carousel" : "Pause carousel"}
+          >
+            {#if autoplayPaused}
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
-              Exit fullscreen
             {:else}
-              <svg
-                aria-hidden="true"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polyline points="15 3 21 3 21 9" />
-                <polyline points="9 21 3 21 3 15" />
-                <line x1="21" y1="3" x2="14" y2="10" />
-                <line x1="3" y1="21" x2="10" y2="14" />
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
               </svg>
-              Fullscreen
             {/if}
           </button>
         </div>
-      </div>
-    {:else if hasSlides}
-      <div class="carousel__body" aria-live="polite">
-        <h3 class="carousel__title" bind:this={titleEl}>
-          {activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}
-        </h3>
-        <p bind:this={descriptionEl}>{carouselData[activeSlideIndex].description}</p>
-      </div>
-
-      <div class="carousel__controls">
-        <button class="carousel__nav-btn" onclick={() => goToPrev()} aria-label="Previous slide">
-          <svg
-            aria-hidden="true"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-        <div class="carousel__indicators">
-          {#each carouselData as _, i}
-            <button
-              class="carousel__indicator {i === activeSlideIndex ? 'carousel__indicator--active' : ''}"
-              onclick={() => goToIndex(i)}
-              aria-label="Go to slide {i + 1}"
-            >
-              {#if i === activeSlideIndex}
-                <div class="carousel__progress" style="width: {progress}%"></div>
-              {/if}
-            </button>
-          {/each}
-        </div>
-        <button class="carousel__nav-btn" onclick={() => goToNext()} aria-label="Next slide">
-          <svg
-            aria-hidden="true"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-        <button
-          class="carousel__pause-btn"
-          onclick={toggleAutoplay}
-          aria-label={autoplayPaused ? "Play carousel" : "Pause carousel"}
-        >
-          {#if autoplayPaused}
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-          {:else}
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-          {/if}
-        </button>
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
-</div>
 {/if}
 
 <style>
@@ -426,7 +426,6 @@
   .carousel__explore-nav {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 0.75rem;
     padding-block-start: 0.875rem;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
