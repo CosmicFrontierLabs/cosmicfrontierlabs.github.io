@@ -1,6 +1,6 @@
 # Cosmic Frontier
 
-Website for [Cosmic Frontier](https://cosmicfrontier.org), built with Astro and Svelte 5. Features interactive 3D space telescope simulations using Three.js.
+Website for [Cosmic Frontier](https://cosmicfrontier.org), built with SvelteKit and Svelte 5. Features interactive 3D space telescope simulations using Three.js. Deployed as a static site on GitHub Pages.
 
 ## Quick start
 
@@ -9,14 +9,14 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:4321` to view the site.
+Visit `http://localhost:5173` to view the site.
 
 ## Development
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
-- `npm run check` - Run Astro type checking
+- `npm run check` - Run svelte-check type checking
 - `npm run format` - Format code with Prettier
 
 ## 3D Model Optimization
@@ -98,7 +98,7 @@ magick public/textures/original/HDR_multi_nebulae_1.hdr \
 ## Project structure
 
 - `src/components/` - Svelte components and Three.js simulation code
-- `src/pages/` - Astro pages (blog, contact, join-us)
+- `src/routes/` - SvelteKit routes (blog, contact, join-us)
 - `src/styles/` - Global styles and design tokens
 - `src/site-content/` - Blog posts and CMS content
 
