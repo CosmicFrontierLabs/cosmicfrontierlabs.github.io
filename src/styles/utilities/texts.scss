@@ -68,11 +68,15 @@
 }
 
 .text-primary-gradient {
-  background: linear-gradient(90deg, #61792e 0%, #7c8e56 40%, #779c40 100%);
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--color-primary-light);
+
+  @supports (background-clip: text) or (-webkit-background-clip: text) {
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 /* Text Alignments */

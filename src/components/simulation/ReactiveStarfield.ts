@@ -1,7 +1,23 @@
 import * as THREE from "three";
 import { simulationConfig } from "./simulationConfig";
 import { vertexShader, fragmentShader } from "./shaders/reactiveStarfieldShaders";
-import { convertWorldRadiusToNDC, lineSphereIntersection, projectWorldPositionsToNDC } from "./simulationUtils";
+import { convertWorldRadiusToNDC, projectWorldPositionsToNDC } from "./projectionUtils";
+import { lineSphereIntersection } from "./mathUtils";
+
+/**
+ * Optional overrides for ReactiveStarfield configuration.
+ * Any provided values override the defaults from simulationConfig.
+ */
+export interface ReactiveStarfieldOptions {
+  /** Sphere radius in world units */
+  radius?: number;
+  /** Base opacity when no frustums are nearby (0.0 - 1.0) */
+  opacityBase?: number;
+  /** Opacity when frustums are nearby (0.0 - 1.0) */
+  opacityHover?: number;
+  /** Brightness multiplier for the texture */
+  brightness?: number;
+}
 
 /**
  * Reactive starfield mesh with animated shader effects
@@ -10,18 +26,33 @@ import { convertWorldRadiusToNDC, lineSphereIntersection, projectWorldPositionsT
  */
 export class ReactiveStarfield {
   private bgMesh: THREE.Mesh;
+  private scene: THREE.Scene;
   private worldRadius: number;
   private frustumTargetsArray: THREE.Vector2[];
   private frustumIntersectionsArray: THREE.Vector2[];
 
-  constructor(scene: THREE.Scene, width: number, height: number, renderer?: THREE.WebGLRenderer) {
+  // Pre-allocated temporaries for updateFrustums to avoid per-frame allocations
+  private _ndcTargets: THREE.Vector2[];
+  private _ndcIntersections: THREE.Vector2[];
+  private _intersectionOut: THREE.Vector3[];
+  private _intersectionPoints: THREE.Vector3[];
+  private _referencePoint: THREE.Vector3;
+
+  constructor(
+    scene: THREE.Scene,
+    width: number,
+    height: number,
+    renderer?: THREE.WebGLRenderer,
+    options?: ReactiveStarfieldOptions
+  ) {
+    this.scene = scene;
     const config = simulationConfig.background;
     this.worldRadius = config.circleRadius;
 
     // Create a sphere geometry that wraps around the scene
-    // SphereGeometry: radius, widthSegments, heightSegments
+    const sphereRadius = options?.radius ?? config.geometry.radius;
     const bgGeometry = new THREE.SphereGeometry(
-      config.geometry.radius,
+      sphereRadius,
       config.geometry.widthSegments,
       config.geometry.heightSegments
     );
@@ -30,13 +61,20 @@ export class ReactiveStarfield {
     const placeholderTexture = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1, THREE.RGBAFormat);
     placeholderTexture.needsUpdate = true;
 
-    // Create a single material for the sphere
-    // Initialize with positions far outside screen bounds to prevent unwanted lighting
     // Pre-allocate arrays to reuse each frame (avoid per-frame allocations)
     this.frustumTargetsArray = new Array(config.maxTelescopes).fill(0).map(() => new THREE.Vector2(9999, 9999));
     this.frustumIntersectionsArray = new Array(config.maxTelescopes * 2)
       .fill(0)
       .map(() => new THREE.Vector2(9999, 9999));
+
+    // Pre-allocate NDC projection output arrays
+    this._ndcTargets = new Array(config.maxTelescopes).fill(0).map(() => new THREE.Vector2());
+    this._ndcIntersections = new Array(config.maxTelescopes * 2).fill(0).map(() => new THREE.Vector2());
+    // Pre-allocate intersection scratch buffers
+    this._intersectionOut = [new THREE.Vector3(), new THREE.Vector3()];
+    this._intersectionPoints = new Array(config.maxTelescopes * 2).fill(0).map(() => new THREE.Vector3());
+    this._referencePoint = new THREE.Vector3();
+
     const bgMaterial = new THREE.ShaderMaterial({
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
@@ -48,19 +86,19 @@ export class ReactiveStarfield {
         uRadius: { value: 0.1 }, // Will be updated with converted radius
         uResolution: { value: new THREE.Vector2(width, height) },
         uTexture: { value: placeholderTexture }, // Placeholder, will be replaced when texture loads
-        uOpacityBase: { value: config.opacity.base },
-        uOpacityHover: { value: config.opacity.hover },
-        uBrightness: { value: config.brightness }, // Brightness multiplier
+        uOpacityBase: { value: options?.opacityBase ?? config.opacity.base },
+        uOpacityHover: { value: options?.opacityHover ?? config.opacity.hover },
+        uBrightness: { value: options?.brightness ?? config.brightness },
       },
-      transparent: true, // Enable transparency for opacity effects
+      transparent: true,
       depthTest: true,
       depthWrite: false,
-      side: THREE.BackSide, // Render texture on the inside surface
+      side: THREE.BackSide,
     });
 
     this.bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
     this.bgMesh.renderOrder = -1;
-    this.bgMesh.position.set(0, 0, 0); // Center at origin
+    this.bgMesh.position.set(0, 0, 0);
     scene.add(this.bgMesh);
 
     // Load texture asynchronously with proper filtering settings
@@ -68,21 +106,17 @@ export class ReactiveStarfield {
     bgTextureLoader.load(
       config.texture.url,
       (texture) => {
-        // Texture loaded successfully - configure for high quality
-        texture.minFilter = THREE.LinearMipmapLinearFilter; // Best quality minification
-        texture.magFilter = THREE.LinearFilter; // Best quality magnification
-        texture.generateMipmaps = true; // Enable mipmaps for better quality at distance
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = true;
 
-        // Set anisotropy for better quality when viewing at angles
         if (renderer) {
           texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
         }
 
-        // Clamp texture edges to avoid seams on sphere
         texture.wrapS = THREE.ClampToEdgeWrapping;
         texture.wrapT = THREE.ClampToEdgeWrapping;
 
-        // Update the uniform
         const material = this.bgMesh.material as THREE.ShaderMaterial;
         material.uniforms.uTexture.value = texture;
         material.needsUpdate = true;
@@ -96,8 +130,6 @@ export class ReactiveStarfield {
 
   /**
    * Updates the resolution uniform for the material
-   * @param width - New width
-   * @param height - New height
    */
   setResolution(width: number, height: number): void {
     const material = this.bgMesh.material as THREE.ShaderMaterial;
@@ -106,57 +138,81 @@ export class ReactiveStarfield {
 
   updateFrustums(frustumOrigins: THREE.Vector3[], frustumTargets: THREE.Vector3[], camera: THREE.Camera): void {
     const config = simulationConfig.background;
+    const numFrustums = Math.min(frustumTargets.length, config.maxTelescopes);
 
-    // Project targets to NDC
-    const ndcTargets = projectWorldPositionsToNDC(frustumTargets, camera);
+    // Project targets to NDC (writes into pre-allocated _ndcTargets)
+    projectWorldPositionsToNDC(frustumTargets, camera, this._ndcTargets, numFrustums);
 
     // Use first frustum target as reference for radius conversion
-    const referencePoint = frustumTargets.length > 0 ? frustumTargets[0] : new THREE.Vector3(0, 0, 0);
-    const ndcRadius = convertWorldRadiusToNDC(this.worldRadius, referencePoint, camera);
+    if (numFrustums > 0) {
+      this._referencePoint.copy(frustumTargets[0]);
+    } else {
+      this._referencePoint.set(0, 0, 0);
+    }
+    const ndcRadius = convertWorldRadiusToNDC(this.worldRadius, this._referencePoint, camera);
 
     // Calculate intersection points of frustum lines with reactive starfield sphere
-    const sphereCenter = new THREE.Vector3(0, 0, 0); // Reactive starfield sphere is centered at origin
-    const sphereRadius = config.geometry.radius; // Scaled sphere radius
+    const sphereRadius = config.geometry.radius;
 
-    const intersectionPoints: THREE.Vector3[] = [];
-    for (let i = 0; i < frustumOrigins.length && i < frustumTargets.length; i++) {
-      const intersections = lineSphereIntersection(frustumOrigins[i], frustumTargets[i], sphereCenter, sphereRadius);
-      intersectionPoints.push(...intersections);
+    let totalIntersections = 0;
+    for (let i = 0; i < numFrustums && i < frustumOrigins.length; i++) {
+      const count = lineSphereIntersection(
+        frustumOrigins[i],
+        frustumTargets[i],
+        this._referencePoint.set(0, 0, 0), // sphere centered at origin
+        sphereRadius,
+        this._intersectionOut
+      );
+      for (let j = 0; j < count && totalIntersections < config.maxTelescopes * 2; j++) {
+        this._intersectionPoints[totalIntersections].copy(this._intersectionOut[j]);
+        totalIntersections++;
+      }
     }
 
-    // Project intersection points to NDC
-    const ndcIntersections = projectWorldPositionsToNDC(intersectionPoints, camera);
+    // Project intersection points to NDC (writes into pre-allocated _ndcIntersections)
+    if (totalIntersections > 0) {
+      projectWorldPositionsToNDC(this._intersectionPoints, camera, this._ndcIntersections, totalIntersections);
+    }
 
     const material = this.bgMesh.material as THREE.ShaderMaterial;
-    const count = Math.min(ndcTargets.length, config.maxTelescopes);
-    const intersectionCount = Math.min(ndcIntersections.length, config.maxTelescopes * 2);
+    const intersectionCount = Math.min(totalIntersections, config.maxTelescopes * 2);
 
-    material.uniforms.uFrustumCount.value = count;
+    material.uniforms.uFrustumCount.value = numFrustums;
     material.uniforms.uFrustumIntersectionCount.value = intersectionCount;
     material.uniforms.uRadius.value = ndcRadius;
 
-    // Reuse pre-allocated Vector2 arrays instead of creating new ones each frame
     // Update values in-place to avoid allocations
     for (let i = 0; i < config.maxTelescopes; i++) {
-      if (i < count) {
-        this.frustumTargetsArray[i].set(ndcTargets[i].x, ndcTargets[i].y);
+      if (i < numFrustums) {
+        this.frustumTargetsArray[i].set(this._ndcTargets[i].x, this._ndcTargets[i].y);
       } else {
-        // Place unused positions far outside NDC bounds (-1 to 1) to prevent any lighting effect
         this.frustumTargetsArray[i].set(999, 999);
       }
     }
-    // Mark uniforms as needing update (Three.js will detect the change)
     material.uniforms.uFrustumTargets.value = this.frustumTargetsArray;
 
-    // Update intersection points
     for (let i = 0; i < config.maxTelescopes * 2; i++) {
       if (i < intersectionCount) {
-        this.frustumIntersectionsArray[i].set(ndcIntersections[i].x, ndcIntersections[i].y);
+        this.frustumIntersectionsArray[i].set(this._ndcIntersections[i].x, this._ndcIntersections[i].y);
       } else {
-        // Place unused positions far outside NDC bounds
         this.frustumIntersectionsArray[i].set(999, 999);
       }
     }
     material.uniforms.uFrustumIntersections.value = this.frustumIntersectionsArray;
+  }
+
+  /**
+   * Disposes of all Three.js resources to prevent memory leaks
+   */
+  dispose(): void {
+    const material = this.bgMesh.material as THREE.ShaderMaterial;
+
+    if (material.uniforms.uTexture.value) {
+      material.uniforms.uTexture.value.dispose();
+    }
+
+    material.dispose();
+    this.bgMesh.geometry.dispose();
+    this.scene.remove(this.bgMesh);
   }
 }

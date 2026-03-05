@@ -4,7 +4,7 @@ date: 2025-11-29
 category: "Engineering"
 ---
 
-Following our [Manufacturing Readiness Review](/blog/mass-simulator-manufacturing-readiness-review-complete) earlier this month, we've received the first batch of parts for the mass simulator build.
+Following our [Manufacturing Readiness Review](/blog/dynamic-test-model-manufacturing-readiness-review-complete) earlier this month, we've received the first batch of parts for the mass simulator build.
 
 ![Parts array](/images/blog-first-parts/parts-array.png)
 

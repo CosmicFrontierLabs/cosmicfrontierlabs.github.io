@@ -4,7 +4,7 @@ date: 2025-12-17
 category: "Engineering"
 ---
 
-We completed a fit check of the major mechanical assemblies for our [dynamic test model](/blog/mass-simulator-manufacturing-readiness-review-complete), verifying that all components interface correctly before vibration and assembly testing.
+We completed a fit check of the major mechanical assemblies for our [dynamic test model](/blog/dynamic-test-model-manufacturing-readiness-review-complete), verifying that all components interface correctly before vibration and assembly testing.
 
 ![Fit check of optical bench and metering structure](/images/blog-fit-check/fit-check.jpg)
 

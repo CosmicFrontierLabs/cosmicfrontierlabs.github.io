@@ -23,12 +23,18 @@
   --body-bg: var(--color-gray-100);
   --footer-bg: var(--color-gray-100);
   --color-text: var(--bloomparis-gray);
-  --color-text-on-primary: var(--color-gray-850);
+  --color-text-on-primary: var(--color-gray-900);
   --color-text-mid: var(--color-gray-700);
   --color-heading: var(--color-primary-light);
   --color-focus: var(--color-primary-light);
+  --bg-gradient: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
 
-  --content-width: clamp(min(calc(100% - 2rem), 400px), calc(100% - 2rem), 74rem);
+  /* Glass-replacement gradient base colors */
+  --glass-color-1: oklch(7% 0.015 270);
+  --glass-color-2: oklch(11% 0.025 270);
+  --glass-color-3: oklch(9% 0.02 265);
+
+  --content-width: clamp(min(calc(100% - 1rem), 400px), calc(100% - 2rem), 74rem);
   --content-width-narrow: clamp(min(100%, 250px), calc(100% - 2rem), 40rem);
 
   /* Typography */
@@ -56,8 +62,12 @@
   /* Flow Space */
   --flow-space: 1em;
 
+  /* Border Colors */
+  --border-color-subtle: rgba(255, 255, 255, 0.2);
+  --border-color-subtle-hover: rgba(255, 255, 255, 0.4);
+
   /* Borders */
-  --stroke: 1px solid rgba(255, 255, 255, 0.15);
+  --stroke: 1px solid var(--border-color-subtle);
   --stroke-solid: 1px solid var(--color-gray-600);
 
   /* Border Radius */
@@ -66,6 +76,10 @@
   --radius-l: 1rem;
   --radius-xl: 2rem;
   --radius-2xl: 4rem;
+
+  /* Shadows */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-card-elevated: 0 -4px 20px rgba(0, 0, 0, 0.3);
 
   /* Forms */
   --form-input-bg: var(--color-gray-100);

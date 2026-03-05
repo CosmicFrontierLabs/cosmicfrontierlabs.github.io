@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { simulationConfig } from "./simulationConfig";
-import { earthCRTVertexShader, earthCRTFragmentShader } from "./shaders/earthCRTShaders";
+import { earthVertexShader, earthFragmentShader } from "./shaders/earthShaders";
 
 /**
  * Earth mesh with texture and rotation animation
@@ -8,6 +8,7 @@ import { earthCRTVertexShader, earthCRTFragmentShader } from "./shaders/earthCRT
  */
 export class Earth {
   mesh: THREE.Mesh | null = null;
+  loaded: Promise<void>;
   private geometry: THREE.SphereGeometry;
   private material: THREE.ShaderMaterial | null = null;
   private texture: THREE.Texture | null = null;
@@ -22,44 +23,49 @@ export class Earth {
 
     // Load texture asynchronously
     const textureLoader = new THREE.TextureLoader();
-    textureLoader.load(
-      config.textureUrl,
-      (texture) => {
-        this.texture = texture;
-        // Configure texture settings
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    this.loaded = new Promise<void>((resolve, reject) => {
+      textureLoader.load(
+        config.textureUrl,
+        (texture) => {
+          this.texture = texture;
+          // Configure texture settings
+          texture.wrapS = THREE.ClampToEdgeWrapping;
+          texture.wrapT = THREE.ClampToEdgeWrapping;
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
-        // Create CRT shader material
-        // Note: ShaderMaterial doesn't respond to lights by default
-        // We'll make it self-illuminated by using the texture colors directly
-        this.material = new THREE.ShaderMaterial({
-          vertexShader: earthCRTVertexShader,
-          fragmentShader: earthCRTFragmentShader,
-          uniforms: {
-            uTexture: { value: texture },
-            uGridDensity: { value: 180.0 }, // Grid density (higher = more lines)
-            uGridThickness: { value: 0.2 }, // Grid line thickness
-            uGridAntialiasWidth: { value: 0.5 }, // Antialiasing width for smooth grid edges
-          },
-          transparent: false,
-          depthTest: true,
-          depthWrite: true,
-          side: THREE.FrontSide,
-        });
+          // Create CRT shader material
+          // Note: ShaderMaterial doesn't respond to lights by default
+          // We'll make it self-illuminated by using the texture colors directly
+          this.material = new THREE.ShaderMaterial({
+            vertexShader: earthVertexShader,
+            fragmentShader: earthFragmentShader,
+            uniforms: {
+              uTexture: { value: texture },
+              uGridDensity: { value: 180.0 }, // Grid density (higher = more lines)
+              uGridThickness: { value: 0.2 }, // Grid line thickness
+              uGridAntialiasWidth: { value: 0.5 }, // Antialiasing width for smooth grid edges
+            },
+            transparent: false,
+            depthTest: true,
+            depthWrite: true,
+            side: THREE.FrontSide,
+          });
 
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.mesh.position.copy(config.position);
-        this.scene.add(this.mesh);
-      },
-      undefined,
-      (error) => {
-        console.error("Error loading earth texture:", error);
-      }
-    );
+          this.mesh = new THREE.Mesh(this.geometry, this.material);
+          this.mesh.position.copy(config.position);
+          this.scene.add(this.mesh);
+          // Delay so the GPU can compile shaders and render initial frames
+          setTimeout(resolve, 500);
+        },
+        undefined,
+        (error) => {
+          console.error("Error loading earth texture:", error);
+          reject(error);
+        }
+      );
+    });
   }
 
   /**

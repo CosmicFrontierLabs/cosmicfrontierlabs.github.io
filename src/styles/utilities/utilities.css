@@ -59,7 +59,41 @@
 
   background: rgb(from var(--bg-glass-color) r g b / var(--bg-glass-opacity));
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(var(--bg-glass-blur));
-  -webkit-backdrop-filter: blur(var(--bg-glass-blur));
   border: 1px solid rgb(from var(--bg-glass-color) r g b / 0.21);
+}
+
+.bg-glass2 {
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklch, var(--glass-color-1) 90%, transparent) 0%,
+    color-mix(in oklch, var(--glass-color-2) 82%, transparent) 35%,
+    color-mix(in oklch, var(--glass-color-3) 85%, transparent) 70%,
+    color-mix(in oklch, var(--glass-color-1) 92%, transparent) 100%
+  );
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
+
+  border: var(--stroke);
+  border-radius: var(--radius-s);
+}
+
+.bg-stars {
+  position: relative;
+  background: var(--bg-gradient);
+}
+
+.bg-stars::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, white, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, white, transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 160px 120px, white, transparent),
+    radial-gradient(1px 1px at 200px 50px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 250px 150px, white, transparent),
+    radial-gradient(1px 1px at 300px 100px, rgba(255, 255, 255, 0.5), transparent);
+  background-size: 350px 200px;
+  opacity: 0.5;
 }

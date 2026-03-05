@@ -1,8 +1,8 @@
 # build output
 dist/
 
-# generated types
-.astro/
+# SvelteKit generated files
+.svelte-kit/
 
 # dependencies
 node_modules/
@@ -25,3 +25,7 @@ pnpm-debug.log*
 
 *.blend
 .netlify
+
+# Unoptimized original assets (keep locally for re-processing)
+static/textures/original/
+static/models/original/
