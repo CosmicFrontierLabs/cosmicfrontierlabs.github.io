@@ -218,7 +218,7 @@
           </div>
 
           <div class="carousel__explore-nav">
-            <button class="carousel__exit-btn" onclick={() => onExitOrbit?.()}>
+            <button class="carousel__exit-btn" onclick={() => { if (isFullscreen) onToggleFullscreen?.(); onExitOrbit?.(); }}>
               <svg
                 aria-hidden="true"
                 width="14"
