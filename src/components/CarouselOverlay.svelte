@@ -218,7 +218,13 @@
           </div>
 
           <div class="carousel__explore-nav">
-            <button class="carousel__exit-btn" onclick={() => { if (isFullscreen) onToggleFullscreen?.(); onExitOrbit?.(); }}>
+            <button
+              class="carousel__exit-btn"
+              onclick={() => {
+                if (isFullscreen) onToggleFullscreen?.();
+                onExitOrbit?.();
+              }}
+            >
               <svg
                 aria-hidden="true"
                 width="14"
@@ -573,11 +579,6 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease;
-
-    @media (min-width: 40rem) {
-      width: 32px;
-      height: 32px;
-    }
   }
 
   .carousel__nav-btn:hover {
@@ -600,11 +601,6 @@
     transition:
       background 0.2s ease,
       border-color 0.2s ease;
-
-    @media (min-width: 40rem) {
-      width: 32px;
-      height: 32px;
-    }
   }
 
   .carousel__pause-btn:hover {
