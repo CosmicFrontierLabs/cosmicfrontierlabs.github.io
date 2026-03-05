@@ -8,6 +8,16 @@ export interface CarouselItem {
   };
 }
 
+export type CarouselItemRaw = {
+  title?: unknown;
+  description?: unknown;
+  model?: unknown;
+  camera?: {
+    position?: unknown;
+    lookAt?: unknown;
+  };
+};
+
 /**
  * Configuration for a single GLB model that can appear in the carousel.
  * The `name` field matches the `model` value in carousel.yaml.

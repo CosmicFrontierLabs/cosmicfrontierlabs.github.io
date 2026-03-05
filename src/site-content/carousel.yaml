@@ -23,19 +23,35 @@
 
 # UNCOMMENT BELOW TO ADD SLIDES
 
-# - title: "A New Kind of Telescope"
-#   description: "Introducing a revolutionary optical instrument designed to peer deeper into the cosmos than ever before. This next-generation payload assembly combines precision engineering with cutting-edge materials."
-#   model: "payload"
-#   camera:
-#     position: { x: 3.5, y: 2.5, z: 3.5 }
-#     lookAt: { x: 0.5, y: 1.5, z: 0 }
+- model: "payload"
+  camera:
+    position: { x: 3.5, y: 2.5, z: 3.5 }
+    lookAt: { x: 0.5, y: 1.5, z: 0 }
+  title: ""
+  description: ""
 
-# - title: "Primary Optics Assembly"
-#   description: "The heart of the telescope: a precisely ground primary mirror assembly capable of capturing light from the farthest reaches of the observable universe. Every surface is polished to nanometer-level tolerances."
-#   model: "payload"
-#   camera:
-#     position: { x: -2, y: 1.5, z: 2.5 }
-#     lookAt: { x: 0, y: 0.5, z: 0 }
+- model: "payload"
+  camera:
+    position: { x: -2, y: 1.5, z: 2.5 }
+    lookAt: { x: 0, y: 0.5, z: 0 }
+  title: ""
+  description: ""
+
+
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: 0, y: 1, z: 10 }
+    lookAt: { x: 0, y: 0, z: 0 }
+
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: 0, y: 4, z: 4 }
+    lookAt: { x: 0, y: 0.5, z: 0 }
+
 
 # - title: "Structural Framework"
 #   description: "A carbon-fiber composite truss structure provides exceptional rigidity while minimizing weight. This lattice design maintains optical alignment even under extreme thermal cycling in the vacuum of space."

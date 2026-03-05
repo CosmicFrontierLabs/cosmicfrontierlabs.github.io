@@ -24,10 +24,10 @@
   let hasSlides = $derived(carouselData.length > 0);
 
   let activeSlideIndex = $state(0);
+  let activeTitle = $derived(carouselData[activeSlideIndex]?.title.trim() ?? "");
+  let activeDescription = $derived(carouselData[activeSlideIndex]?.description.trim() ?? "");
   let progress = $state(0);
   let initialized = $state(false);
-  let titleEl: HTMLHeadingElement | null = $state(null);
-  let descriptionEl: HTMLParagraphElement | null = $state(null);
   let panelEl: HTMLDivElement | null = $state(null);
   let panelInnerEl: HTMLDivElement | null = $state(null);
   let autoplayPaused = $state(false);
@@ -87,16 +87,8 @@
     const tl = gsap.timeline();
     const nextItem = carouselData[index];
 
-    // Fade out current text (elements may not exist during orbit mode)
-    if (titleEl) tl.to(titleEl, { opacity: 0, duration: 0.3 }, 0);
-    if (descriptionEl) tl.to(descriptionEl, { opacity: 0, duration: 0.3 }, 0);
-
     // Update model
     carouselScene.setActiveModel(index);
-
-    // Fade in new text (elements may not exist during orbit mode)
-    if (titleEl) tl.fromTo(titleEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
-    if (descriptionEl) tl.fromTo(descriptionEl, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
 
     // Camera animation
     _tmpPos.set(nextItem.camera.position.x, nextItem.camera.position.y, nextItem.camera.position.z);
@@ -286,12 +278,20 @@
           </div>
         </div>
       {:else if hasSlides}
-        <div class="carousel__body" aria-live="polite">
-          <h3 class="carousel__title" bind:this={titleEl}>
-            {activeSlideIndex + 1}. {carouselData[activeSlideIndex].title}
-          </h3>
-          <p bind:this={descriptionEl}>{carouselData[activeSlideIndex].description}</p>
-        </div>
+        {#key activeSlideIndex}
+          {#if activeTitle || activeDescription}
+            <div class="carousel__body" aria-live="polite">
+              {#if activeTitle}
+                <h3 class="carousel__title">
+                  {activeSlideIndex + 1}. {activeTitle}
+                </h3>
+              {/if}
+              {#if activeDescription}
+                <p>{activeDescription}</p>
+              {/if}
+            </div>
+          {/if}
+        {/key}
 
         <div class="carousel__controls">
           <button class="carousel__nav-btn" onclick={() => goToPrev()} aria-label="Previous slide">
@@ -479,37 +479,41 @@
     border-color: var(--border-color-subtle-hover);
   }
 
+  @keyframes carousel-body-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   .carousel__panel {
     position: absolute;
     z-index: 14;
     bottom: 0;
-
-    overflow: hidden;
-    width: 100%;
-    box-sizing: border-box;
-    container-type: inline-size;
     left: 0;
     right: 0;
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
     border: none;
 
     @media (min-width: 40rem) {
       left: calc((100% - var(--content-width)) / 2 + 0.75rem);
+      right: auto;
       bottom: 3lvh;
-      width: 400px;
+      width: auto;
+      /*min-width: 18rem;*/
+      max-width: min(90vw, 500px);
       border: var(--stroke);
       border-radius: var(--radius-s);
-    }
-
-    @media (min-width: 56rem) {
-      width: 500px;
     }
   }
 
   .carousel__panel-inner {
-    display: flex;
+    display: inline-flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     padding-block: 0.75rem;
 
     @media (min-width: 56rem) {
@@ -520,11 +524,11 @@
   .carousel__body {
     padding: 1ch 1.5ch;
     font-size: 0.8125rem;
+    animation: carousel-body-fade-in 1.4s ease 0.3s both;
 
     @media (min-width: 56rem) {
       max-width: 60ch;
-      min-height: 8lh;
-      padding: 2ch 2ch;
+      padding: 2ch;
       font-size: 0.875rem;
     }
   }
@@ -542,17 +546,15 @@
 
   .carousel__controls {
     margin-block: 0.5rem;
-    padding-inline: 0.5rem;
+    padding-inline: 1rem;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     margin-inline-end: auto;
-    gap: 8px;
+    gap: 0.625rem;
 
     @media (min-width: 56rem) {
-      margin-block: 1rem;
-      padding-inline: 1rem;
-      gap: 12px;
+      margin-block: 0.5rem;
     }
   }
 
@@ -572,7 +574,7 @@
       background 0.2s ease,
       border-color 0.2s ease;
 
-    @container (min-width: 400px) {
+    @media (min-width: 40rem) {
       width: 32px;
       height: 32px;
     }
@@ -599,7 +601,7 @@
       background 0.2s ease,
       border-color 0.2s ease;
 
-    @container (min-width: 400px) {
+    @media (min-width: 40rem) {
       width: 32px;
       height: 32px;
     }
@@ -611,12 +613,8 @@
   }
 
   .carousel__indicators {
-    display: none;
+    display: flex;
     gap: 8px;
-
-    @container (min-width: 400px) {
-      display: flex;
-    }
   }
 
   .carousel__indicator {
