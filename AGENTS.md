@@ -32,6 +32,7 @@ When writing Svelte components:
 - **Three.js types**: Use `@types/three` for Three.js type definitions
 - **Import patterns**: Use TypeScript imports for type checking
 - **Path aliases**: Use `$lib/` for imports from `src/lib/`
+- Key shared types live in `src/lib/types.ts` (`CarouselItem`, `ModelConfig`, etc.)
 - Run `npm run check` to verify type safety
 
 ## Styling Guidelines
@@ -42,6 +43,7 @@ When writing Svelte components:
   - Global styles in `src/styles/global.css` for base element styling
   - Utility classes in `src/styles/utilities/` for reusable patterns
   - Composition classes in `src/styles/compositions/` for layout patterns
+  - Block styles in `src/styles/blocks/` for component-scoped styles (e.g., `blog-post.css`, `button.css`, `card.css`, `site-header.css`)
 - **Color system**: Use design tokens (e.g., `var(--color-primary)`, `var(--color-text)`) instead of hardcoded colors
 - **Typography**: Use size step variables (`--size-step-0`, `--size-step-1`, etc.) and font family tokens
 - **Z-index layers** defined in `src/styles/tokens.scss`: simulation=1, hero=2, subhero=3, items=4, carousel-ui=10; canvas elevates to 13 when carousel is active
@@ -54,6 +56,7 @@ When writing Svelte components:
   - Limit pixel ratio: `Math.min(window.devicePixelRatio, 2.0)` to prevent excessive rendering
   - Use ResizeObserver for responsive canvas sizing
   - Clean up resources (dispose geometries, materials, textures) when components unmount
+  - Pre-allocate temporary vectors/objects to avoid per-frame GC pressure
 - **Camera setup**: Prefer orthographic cameras for consistent scaling, use perspective when depth perception is needed
 - **Lighting**: Configure ambient and directional lights through simulation config
 
@@ -64,47 +67,58 @@ When writing Svelte components:
 - `src/routes/+layout.svelte` — Root layout with Header, Footer, and global styles
 - `src/routes/+layout.ts` — Enables `prerender = true` for all pages
 - `src/routes/+page.svelte` — Home page (renders `HomePage.svelte`)
+- `src/routes/+page.server.ts` — Home page server load: reads `carousel.yaml` and returns typed `CarouselItem[]`
 - `src/routes/blog/+page.server.ts` — Blog index data loading (gray-matter)
 - `src/routes/blog/[slug]/+page.ts` — Blog post loading via mdsvex + `import.meta.glob`
 - `src/routes/join-us/+page.server.ts` — Job listings data loading (js-yaml)
 - `src/routes/contact/+page.svelte` — Contact page
+- `src/routes/sitemap.xml/+server.ts` — Generates XML sitemap from static pages + blog posts
+- `src/routes/+error.svelte` — Custom error page
 - `src/app.html` — HTML shell (Google Analytics, meta tags, fonts)
 
-### Dual-Scene Rendering Pattern
+### Dual-Canvas Rendering Pattern
 
-The core visual experience uses **two Three.js scenes sharing one WebGLRenderer**, orchestrated by scroll position:
+The core visual experience uses **two independent Svelte canvas components**, each owning its own `WebGLRenderer`, shown/hidden by scroll:
 
-1. **EarthScene** (`src/components/simulation/EarthScene.ts`) — Earth with orbiting telescopes and a reactive starfield. Uses an orthographic camera with post-processing (film grain via EffectComposer).
-2. **CarouselScene** (`src/components/simulation/CarouselScene.ts`) — 3D product carousel showing GLB telescope models with a planar mirror (Reflector), OrbitControls, and GSAP-driven camera animations between slides.
+1. **EarthCanvas.svelte** — Owns the `EarthScene`. Fades out as the user scrolls past the hero. Accepts `canvasOpacity` and `heroScrollProgress` props, and fires `onReady` when rendering begins.
+2. **CarouselCanvas.svelte** — Owns the `CarouselScene`. Lazy-loads Three.js only after `EarthCanvas` signals ready (via `shouldStartLoading`). Embeds `CarouselOverlay.svelte` for slide navigation UI.
 
-**Canvas.svelte** owns the WebGLRenderer and animation loop but does not own the scenes — it injects the renderer into each scene class. Scene switching is triggered by GSAP ScrollTrigger in **HomePage.svelte**.
+`CanvasLoader.svelte` is a shared loading indicator shown inside each canvas while assets load.
+
+**HomePage.svelte** orchestrates both canvases via GSAP ScrollTrigger and passes `carouselData` (loaded server-side from `carousel.yaml`) down to `CarouselCanvas`.
 
 ### Scroll-Driven UI Flow
 
-`HomePage.svelte` sets up three GSAP ScrollTrigger zones that control:
+`HomePage.svelte` sets up GSAP ScrollTrigger zones that control:
 
-- `canvasOpacity` — fades the canvas in/out between sections
-- `activeScene` — switches between `"simulation"` and `"carousel"`
-- `heroScrollProgress` — drives camera zoom on the hero
+- `earthTriggeredOpacity` — fades `EarthCanvas` out as the user scrolls through the hero
+- `subheroOpacity` — fades the subhero text section as content sections scroll up over it
+- `heroScrollProgress` — drives camera zoom on the hero (disabled on mobile/reduced-motion)
 
-`CarouselOverlay.svelte` provides slide navigation UI on top of the carousel scene.
+`CarouselCanvas.svelte` has its own `isInViewport` state and skips rendering when off-screen.
 
 ### Key Simulation Modules
 
+- `EarthScene.ts` — Earth with orbiting telescopes and a reactive starfield. Orthographic camera, post-processing via EffectComposer.
+- `CarouselScene.ts` — 3D product carousel with GLB models, planar mirror (Reflector), OrbitControls, and GSAP-driven slide transitions.
 - `Telescope.ts` — Orbital mechanics, trail rendering, frustum visualization
 - `ReactiveStarfield.ts` — Shader-based starfield responsive to telescope frustum positions
 - `Earth.ts` — Textured sphere with custom CRT grid shader
+- `ArcLoader.ts` — Animated arc graphic shown in the hero while the scene loads
+- `GrainShader.ts` — Film grain post-processing shader (used by EffectComposer in EarthScene)
+- `MouseTracker.ts` — Raycasting and mouse–sphere intersection; pre-allocates temporaries to avoid GC pressure
+- `projectionUtils.ts` — World-to-NDC projection utilities (pre-allocated temporaries)
 - `materialUtils.ts` — Enhances GLB metallic materials with tweakable parameters
 - `mathUtils.ts` — Kepler orbit math, spherical coordinates, ray-sphere intersection
-- `carouselData.ts` — Slide definitions (camera positions, model visibility, text)
 - `simulationConfig.ts` — Shared constants for both scenes
 
-GLSL shaders are in `src/components/simulation/shaders/` and bundled via `vite-plugin-glslify`.
+Shaders live in `src/components/simulation/shaders/` as TypeScript modules that export inline GLSL strings (`earthShaders.ts`, `reactiveStarfieldShaders.ts`). The `glslify` tagged-template literal is used inside these modules for GLSL includes; bundled via `vite-plugin-glslify`.
 
 ### Content
 
 - Blog posts: Markdown in `src/site-content/blog/` with frontmatter (`title`, `date`, `category`, `isDraft`, etc.), compiled by mdsvex
 - Job postings: `src/site-content/jobs.yaml`
+- Carousel slides: `src/site-content/carousel.yaml` — defines slide title, description, model filename, and camera position/lookAt for each slide
 - Dynamic blog routes: `src/routes/blog/[slug]/+page.ts`
 
 ### Build Configuration
@@ -114,6 +128,7 @@ GLSL shaders are in `src/components/simulation/shaders/` and bundled via `vite-p
 - GLB models in `static/models/` are meshopt-compressed; CarouselScene loads them with both MeshoptDecoder and DRACOLoader
 - HDR environment texture in `static/textures/`
 - Static assets (images, models, draco, textures) in `static/`
+- Utility scripts in `scripts/`: `optimize-models.sh` (meshopt compression), `deploy-temp.sh`
 
 ## General Best Practices
 
@@ -122,3 +137,4 @@ GLSL shaders are in `src/components/simulation/shaders/` and bundled via `vite-p
 - **Error handling**: Check for null/undefined before accessing properties, especially for Three.js objects
 - **Resource cleanup**: Always clean up Three.js resources (geometries, materials, textures, event listeners) in cleanup functions
 - **Reactive patterns**: Prefer `$derived` for computed values, use `$state` only for mutable state that needs to trigger reactivity
+- **Performance**: Pre-allocate temporary `THREE.Vector2/3` and similar objects at class construction time, not inside per-frame methods
