@@ -1,53 +1,57 @@
 # Carousel Slide Data
 # --------------------
 # Each entry defines one slide in the 3D telescope carousel on the home page.
-# Slides auto-advance in order, so arrange them to tell a coherent story
-# (e.g. start zoomed in on a subsystem, then pull back to the full assembly).
+# Slides are displayed in the order listed here.
 #
-# If more than 8 slides are needed, give me (Alex) a heads up. I may need to adjust the layout.
+# If you need more than 8 slides, let me (Alex) know because
+# the layout may need to be adjusted.
 #
 # Fields:
 #   title       – Short heading shown in the overlay panel (40 chars max).
 #   description – One to three sentences of explanatory text (250 chars max).
-#   model       – Which GLB model to show: These are named in the MODEL_CONFIGS object
-#                  in CarouselScene.ts.
-#   camera      – Camera pose for this slide, in Three.js world coordinates.
+#   model       – Which 3D model to show. See MODEL_CONFIGS in CarouselScene.ts.
+#   camera      – Camera pose for this slide, in 3D world coordinates.
 #     position  – Where the camera sits (x, y, z).
 #     lookAt    – Where the camera points (x, y, z).
-#                  Tip: keep the lookAt near the model center (roughly 0, 0.5, 0)
-#                  and vary position to orbit around it. Larger z values pull the
-#                  camera further back for wider shots.
+#                   Tip: keep lookAt near the model center (roughly 0, 0.5, 0)
+#                   and vary position to orbit around it. Larger z values pull
+#                   the camera further back for a wider shot.
 #
-# Type definition: CarouselItem in src/lib/types.ts
-
-# UNCOMMENT BELOW TO ADD SLIDES
-
-# @Aaron: Update the copy here. Put in titles and descriptions. I can do the camera info. (i'll ask if I don't know where something is)
-
-# - title: "A New Kind of Telescope"
-#   description: "Introducing a revolutionary optical instrument designed to peer deeper into the cosmos than ever before. This next-generation payload assembly combines precision engineering with cutting-edge materials."
+# Example slide (copy and edit as needed):
+#
+# - title: "Structural Framework"
+#   description: "A carbon-fiber composite truss structure provides exceptional rigidity while minimizing weight. This lattice design maintains optical alignment under extreme thermal cycling."
 #   model: "payload"
 #   camera:
 #     position: { x: 3.5, y: 2.5, z: 3.5 }
 #     lookAt: { x: 0.5, y: 1.5, z: 0 }
 
-# - title: "Primary Optics Assembly"
-#   description: "The heart of the telescope: a precisely ground primary mirror assembly capable of capturing light from the farthest reaches of the observable universe. Every surface is polished to nanometer-level tolerances."
-#   model: "payload"
-#   camera:
-#     position: { x: -2, y: 1.5, z: 2.5 }
-#     lookAt: { x: 0, y: 0.5, z: 0 }
+# Aaron - update here
 
-# - title: "Structural Framework"
-#   description: "A carbon-fiber composite truss structure provides exceptional rigidity while minimizing weight. This lattice design maintains optical alignment even under extreme thermal cycling in the vacuum of space."
-#   model: "payload"
-#   camera:
-#     position: { x: 0, y: 1, z: 10 }
-#     lookAt: { x: 0, y: 0, z: 0 }
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: 3.5, y: 2.5, z: 3.5 }
+    lookAt: { x: 0.5, y: 1.5, z: 0 }
 
-# - title: "Thermal Management"
-#   description: "Advanced thermal control systems regulate temperature across the entire assembly. Multi-layer insulation and active heaters ensure stable operating conditions from -150°C to +100°C."
-#   model: "payload"
-#   camera:
-#     position: { x: 0, y: 4, z: 4 }
-#     lookAt: { x: 0, y: 0.5, z: 0 }
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: -2, y: 1.5, z: 2.5 }
+    lookAt: { x: 0, y: 0.5, z: 0 }
+
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: 0, y: 1, z: 10 }
+    lookAt: { x: 0, y: 0, z: 0 }
+
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: 0, y: 4, z: 4 }
+    lookAt: { x: 0, y: 0.5, z: 0 }

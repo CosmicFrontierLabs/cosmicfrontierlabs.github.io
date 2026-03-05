@@ -1,9 +1,19 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import yaml from "js-yaml";
-import type { CarouselItem, CarouselItemRaw } from "$lib/types";
+import type { CarouselItem } from "$lib/types";
 
 type Vec3 = { x: number; y: number; z: number };
+
+type CarouselItemRaw = {
+  title?: unknown;
+  description?: unknown;
+  model?: unknown;
+  camera?: {
+    position?: unknown;
+    lookAt?: unknown;
+  };
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -11,12 +21,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isVec3(value: unknown): value is Vec3 {
   if (!isRecord(value)) return false;
+
   return typeof value.x === "number" && typeof value.y === "number" && typeof value.z === "number";
 }
 
-function toOptionalString(value: unknown): string {
-  if (typeof value !== "string") return "";
-  return value.trim();
+function toOptionalString(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 function toCarouselItem(value: unknown): CarouselItem | null {

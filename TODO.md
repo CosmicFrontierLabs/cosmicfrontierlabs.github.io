@@ -1,2 +1,0 @@
-- Make a PR without the carousel copy
-- Make a PR with the carousel copy (for aaron to fill in)
