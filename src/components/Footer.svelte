@@ -46,8 +46,14 @@
         <p>
           Cosmic Frontier Labs
           <br />
-          USA, Earth, Milky Way, Laniakea Supercluster
+          Oakland, CA, USA
+          <br />
+          Earth, Milky Way, Laniakea Supercluster
         </p>
+        <a class="footer-brand__renphil" href="https://renphil.org/" target="_blank" rel="noopener noreferrer">
+          <img src="/images/renphil-icon.svg" alt="" class="footer-brand__renphil-icon" />
+          <span>A program of Renaissance Philanthropy</span>
+        </a>
       </div>
 
       <div class="footer-signup flow">
@@ -172,13 +178,34 @@
   }
 
   .footer-brand {
-    max-width: 28ch;
+    max-width: 40ch;
     font-size: var(--size-step--1);
     color: var(--color-text-mid);
 
     & p {
       margin-block-start: 0;
     }
+  }
+
+  .footer-brand__renphil {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3xs);
+    margin-block-start: var(--space-xs);
+    font-size: var(--size-step--2);
+    color: var(--color-text-mid);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .footer-brand__renphil-icon {
+    height: 1.25em;
+    width: auto;
   }
 
   /* ── Signup ── */
