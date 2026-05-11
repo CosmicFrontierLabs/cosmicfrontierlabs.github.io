@@ -4,6 +4,7 @@ import matter from "gray-matter";
 import { slugFromTitle } from "$lib/utils";
 
 const SITE = "https://www.cosmicfrontier.org";
+const MAX_DESCRIPTION_LENGTH = 200;
 
 type RssItem = {
   title: string;
@@ -48,7 +49,7 @@ function getBlogPosts(): RssItem[] {
 
       const slug = slugFromTitle(data.title);
       const url = `${SITE}/blog/${slug}`;
-      const description = stripMarkdown(content).slice(0, 200).trim();
+      const description = stripMarkdown(content).slice(0, MAX_DESCRIPTION_LENGTH).trim();
 
       return {
         title: data.title as string,

@@ -42,7 +42,6 @@
 
   .blog__rss {
     margin: 0;
-    font-size: var(--size-step--1);
   }
 
   .blog li {
