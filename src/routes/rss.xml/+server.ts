@@ -36,6 +36,18 @@ function stripMarkdown(value: string): string {
     .trim();
 }
 
+function getDescription(content: string): string {
+  const plainText = stripMarkdown(content);
+  if (plainText.length <= MAX_DESCRIPTION_LENGTH) return plainText;
+
+  const clipped = plainText.slice(0, MAX_DESCRIPTION_LENGTH + 1);
+  const lastWordBoundary = clipped.lastIndexOf(" ");
+  const truncated =
+    lastWordBoundary > 0 ? clipped.slice(0, lastWordBoundary).trim() : plainText.slice(0, MAX_DESCRIPTION_LENGTH).trim();
+
+  return `${truncated}...`;
+}
+
 function getBlogPosts(): RssItem[] {
   const blogDir = join(process.cwd(), "src/site-content/blog");
   const files = readdirSync(blogDir).filter((f) => f.endsWith(".md"));
@@ -49,7 +61,7 @@ function getBlogPosts(): RssItem[] {
 
       const slug = slugFromTitle(data.title);
       const url = `${SITE}/blog/${slug}`;
-      const description = stripMarkdown(content).slice(0, MAX_DESCRIPTION_LENGTH).trim();
+      const description = getDescription(content);
 
       return {
         title: data.title as string,
@@ -68,6 +80,18 @@ export const prerender = true;
 
 export function GET() {
   const posts = getBlogPosts();
+  const itemsXml = posts
+    .map(
+      (post) => `    <item>
+      <title>${escapeXml(post.title)}</title>
+      <link>${escapeXml(post.link)}</link>
+      <guid isPermaLink="true">${escapeXml(post.guid)}</guid>
+      <pubDate>${escapeXml(post.pubDate)}</pubDate>
+      <description>${escapeXml(post.description)}</description>
+      <category>${escapeXml(post.category)}</category>
+    </item>`
+    )
+    .join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
@@ -76,18 +100,7 @@ export function GET() {
     <link>${SITE}/blog</link>
     <description>Updates from Cosmic Frontier Labs</description>
     <language>en-us</language>
-    ${posts
-      .map(
-        (post) => `    <item>
-      <title>${escapeXml(post.title)}</title>
-      <link>${escapeXml(post.link)}</link>
-      <guid isPermaLink="true">${escapeXml(post.guid)}</guid>
-      <pubDate>${escapeXml(post.pubDate)}</pubDate>
-      <description>${escapeXml(post.description)}</description>
-      <category>${escapeXml(post.category)}</category>
-    </item>`
-      )
-      .join("\n")}
+${itemsXml}
   </channel>
 </rss>`;
 
