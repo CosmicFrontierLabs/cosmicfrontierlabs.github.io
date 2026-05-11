@@ -19,7 +19,7 @@
       "onAutoForward": "openBrowser"
     }
   },
-  "postCreateCommand": "sudo mkdir -p ${containerWorkspaceFolder}/node_modules && sudo chown -R node:node ${containerWorkspaceFolder}/node_modules && npm ci",
+  "postCreateCommand": "sudo chown -R node:node ${containerWorkspaceFolder}/node_modules && npm ci",
   "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
   "containerEnv": {
     "NODE_ENV": "development"
