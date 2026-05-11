@@ -5,6 +5,7 @@ import { slugFromTitle } from "$lib/utils";
 
 const SITE = "https://www.cosmicfrontier.org";
 const MAX_DESCRIPTION_LENGTH = 200;
+const RSS_FEED_PATH = "/rss.xml";
 
 type RssItem = {
   title: string;
@@ -94,12 +95,13 @@ export function GET() {
     .join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Cosmic Frontier Labs Blog</title>
     <link>${SITE}/blog</link>
     <description>Updates from Cosmic Frontier Labs</description>
     <language>en-us</language>
+    <atom:link href="${SITE}${RSS_FEED_PATH}" rel="self" type="application/rss+xml" />
 ${itemsXml}
   </channel>
 </rss>`;
