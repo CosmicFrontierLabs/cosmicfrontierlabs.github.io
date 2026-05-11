@@ -1,0 +1,28 @@
+{
+  "name": "Cosmic Frontier",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "mounts": [
+    "source=cosmicfrontier-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Svelte dev server",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postCreateCommand": "npm ci",
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "containerEnv": {
+    "NODE_ENV": "development"
+  },
+  "remoteUser": "node"
+}
