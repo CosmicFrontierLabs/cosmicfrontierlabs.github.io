@@ -20,7 +20,7 @@
     }
   },
   "postCreateCommand": "sudo chown -R node:node ${containerWorkspaceFolder}/node_modules && npm ci",
-  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "postStartCommand": "sudo chown -R node:node ${containerWorkspaceFolder}/node_modules && git config --global --add safe.directory ${containerWorkspaceFolder}",
   "containerEnv": {
     "NODE_ENV": "development"
   },
