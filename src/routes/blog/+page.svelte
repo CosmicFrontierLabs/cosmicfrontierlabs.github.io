@@ -8,6 +8,9 @@
 
 <section class="flow blog">
   <h1>Blog</h1>
+  <a class="button blog__rss-link" data-type="ghost" data-smaller href="/rss.xml" type="application/rss+xml">
+    Subscribe via RSS
+  </a>
 
   {#if data.posts.length > 0}
     <ul class="flow">
@@ -33,8 +36,17 @@
   .blog ul {
     padding-inline: 0;
     max-width: 800px;
-    margin-block-start: var(--space-l);
+    margin-block-start: var(--space-m);
     font-size: var(--size-step--1);
+  }
+
+  .blog__rss-link {
+    --button-text: var(--color-primary-light);
+    --button-border: 1px solid var(--color-primary-dark);
+    --button-border-radius: var(--radius-xl);
+    --button-x-padding: 0.9em;
+    --button-y-padding: 0.35em;
+    margin-block-start: var(--space-2xs);
   }
 
   .blog li {
