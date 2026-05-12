@@ -8,6 +8,7 @@ type Position = {
   title: string;
   location: string;
   description: string;
+  linkedinUrl?: string;
   isDraft?: boolean;
 };
 
@@ -69,6 +70,7 @@ export function load() {
     .map((position) => ({
       title: position.title,
       location: position.location,
+      linkedinUrl: position.linkedinUrl,
       descriptionBlocks: parseDescription(position.description),
     }));
 

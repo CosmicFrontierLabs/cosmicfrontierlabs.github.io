@@ -1,25 +1,31 @@
-- title: "Telescope Systems Engineer"
-  location: "SF Bay Area"
+- title: "Senior — Telescope Systems Lead Engineer"
+  location: "San Francisco, CA"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4399613817"
   description: |
-    We’re looking for a systems engineer to own the end to end architecture of our telescope platform and keep the whole system coherent as it evolves.
+    Own the end to end architecture of our Telescope Assembly and keep it technically coherent as designs evolve. You will be measured by whether the telescope works, not by the thickness of the documentation.
 
-    You will:  
-    - Drive requirements, interfaces, and trade studies across optics, structures, thermal, avionics, and software
-    - Own system budgets and margins (mass, power, pointing, thermal stability) and keep them honest as designs change
-    - Plan verification and integration milestones so we learn fast without losing rigor
+    You will
+    - Drive requirements, interfaces, and trade studies across optics, optomechanical, thermal, avionics, controls, firmware, and software
+    - Build and maintain optical, stability, jitter, thermal, and resource budgets with explicit margin policy and change control
+    - Own analysis-to-test correlation and verification planning, and be in the lab during integration when it matters
 
     In your first 90 days
-    - Publish a v1 system budget with margin policy and the interfaces that matter most
-    - Turn the next integration milestone into a concrete verification plan and test matrix
-    - Unblock at least two cross discipline decisions with clear trades, rationale, and owners
+    - Publish a v1 telescope assembly performance budget with margin policy, top sensitivities, and the interfaces that dominate outcomes
+    - Publish a v1 resource budget (mass, power, data, timing) and a process to keep it honest through design change
+    - Deliver a concrete verification plan and test matrix for the next integration milestone
+    - Unblock at least two cross discipline decisions with documented options, rationale, owners, and follow-up actions
+
+    Why this role matters
+    We are building a fleet of telescopes, not one flagship per decade. The architect who keeps optics, structure, controls, and software coherent as we iterate is the difference between a program that ships in 500 days and one that drifts. This role sets the technical pace at which we drive cost per high quality observing second toward our target.
 
     If you can balance rigor with velocity and keep complex systems aligned toward mission goals, we should talk.
   isDraft: false
 
-- title: "Instrument Scientist"
-  location: "SF Bay Area"
+- title: "Senior Instrument Scientist"
+  location: "Oakland, CA"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4402108836"
   description: |
-    We’re looking for an instrument scientist to bridge science goals and instrument design, defining what our telescopes should measure and how we prove the data delivers.
+    Bridge science goals and instrument design — define what our telescopes should measure and prove the data delivers.
 
     You will
     - Translate science questions into requirements, observing modes, calibration strategy, and data quality metrics
@@ -31,13 +37,17 @@
     - Write the calibration and commissioning plan, including what we measure on the ground versus in orbit
     - Define a v1 pipeline and validation approach tied to lab truth data and on orbit checks
 
+    Why this role matters
+    Telescope-seconds are the most precious resource in space science. Hubble is oversubscribed by 6x, Webb by 12x. A fleet only matters if the data is trustworthy and the observing modes match the science the field actually wants to do. You define what "good" means for every photon we collect.
+
     If you want to shape the questions we can answer and make sure the data is actually good, we want to talk.
   isDraft: false
 
 - title: "Computational Optics Engineer"
-  location: "SF Bay Area"
+  location: "Oakland, CA"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4402123057"
   description: |
-    We’re looking for a computational optics engineer to model, simulate, and improve the imaging performance of our space telescopes, and to connect those models to what we build and measure.
+    Model, simulate, and improve the imaging performance of our space telescopes — and connect those models to what we build and measure.
 
     You will
     - Build and own wavefront and image performance models (PSF, MTF, WFE budgets) and make them useful for design decisions
@@ -49,13 +59,17 @@
     - Deliver a v1 performance and stability budget and identify the top sensitivity drivers
     - Define an optical verification plan that ties lab measurements to on orbit performance
 
+    Why this role matters
+    Diffraction-limited imaging in orbit is first an alignment problem, and faithful models are how we catch the failure modes before we cut metal. Faster, more honest optical models directly compress our iteration cycle — which is the lever we have over decade-long flagship programs.
+
     If you love turning physics into capability and can translate models into buildable hardware, we want to talk.
   isDraft: false
 
 - title: "Optomechanical Engineer"
   location: "SF Bay Area"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4402113406"
   description: |
-    We’re looking for an optomechanical engineer to design and build the structures that keep precision optics aligned through launch and stable on orbit.
+    Design and build the structures that keep precision optics aligned through launch and stable on orbit.
 
     You will
     - Design mounts, benches, kinematic interfaces, and alignment features that preserve optical performance through vibration and thermal swings
@@ -67,13 +81,17 @@
     - Define the alignment flow and metrology plan for the next build
     - Deliver a short list of the top mechanical stability risks and the design changes that retire them
 
+    Why this role matters
+    Holding alignment to fractions of a wavelength through launch and orbit is what separates a telescope that survives from one that delivers science. Repeatable, manufacturable optomechanics are also the precondition for ever building telescopes at the scale our mission requires.
+
     If you enjoy making optics survive the real world without losing performance, we want to talk.
   isDraft: false
 
-- title: "Thermal + Structural Modeling Engineer"
-  location: "SF Bay Area"
+- title: "Thermal Engineer"
+  location: "Oakland, CA"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4402128178"
   description: |
-    We’re looking for a thermal and structural modeling engineer to predict how our telescopes behave under launch loads and the extremes of orbit, and to turn those predictions into confident design decisions.
+    Predict how our telescopes behave under launch loads and the extremes of orbit, and turn those predictions into confident design decisions.
 
     You will
     - Build coupled thermal and structural models (thermoelastic stability matters as much as strength) and use them to drive design
@@ -85,13 +103,41 @@
     - Define the test correlation plan and what data we need to collect during TVAC and vibe
     - Identify the top stability drivers and propose concrete mitigations with quantified impact
 
+    Why this role matters
+    Thermoelastic distortion is one of the dominant failure modes for precision space optics. Predicting it well is how we earn the margin to fly the first system in under 500 days without overbuilding everything for fear of what we don't know.
+
     If you like turning analysis into decisions and decisions into hardware, we want to talk.
   isDraft: false
 
-- title: "Precision Mechanisms Engineer"
-  location: "SF Bay Area"
+- title: "Senior Thermal / Structural Modeling Engineer (Space Optics)"
+  location: "Oakland, CA"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4388946573"
   description: |
-    We’re looking for a precision mechanisms engineer to design reliable moving systems for space telescopes that must work in vacuum, across thermal extremes, for years.
+    Own the thermal and structural analysis that determines whether our hardware merely survives, or actually performs.
+
+    You will
+    - Build structural, thermal, and coupled thermo-structural models of telescope assemblies and subsystems
+    - Drive portions of the structural-thermal-optical performance (STOP) workflow and translate predicted behavior into implications for alignment, stability, and optical performance
+    - Identify dominant drivers of thermoelastic drift and instability, propose practical mitigations with quantified impact, and clearly separate what is known from what is inferred
+    - Correlate models to hardware data from vibration, TVAC, and related campaigns
+
+    In your first 90 days
+    - Deliver a first-pass coupled model that resolves the highest-priority open questions in the current design
+    - Define a model correlation plan, including the instrumentation and data needed during TVAC and vibration testing
+    - Identify the top structural and thermal stability drivers and recommend concrete mitigations with estimated impact
+    - Establish a credible path for maturing the model as design and test data evolve
+
+    Why this role matters
+    The difference between a telescope that survives and a telescope that delivers is often hidden in thermal distortion, structural compliance, and the quality of the assumptions behind the models. Senior judgment on STOP is how we make better decisions earlier and build hardware we can trust at fleet scale.
+
+    If you have owned STOP-style analysis on real precision hardware and want to do it on a program that flies fast, we want to talk.
+  isDraft: false
+
+- title: "Precision Mechanisms Engineer"
+  location: "Oakland, CA"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4402126202"
+  description: |
+    Design reliable moving systems for space telescopes that must work in vacuum, across thermal extremes, for years.
 
     You will
     - Design and build precision mechanisms such as focus stages, filter wheels, shutters, deployables, and latches
@@ -103,13 +149,17 @@
     - Build or upgrade a life test or characterization setup that produces actionable data quickly
     - Retire at least one high risk mechanism unknown with a focused experiment or prototype
 
+    Why this role matters
+    A fleet that iterates fast still has to work for years in vacuum. Mechanisms are the floor that everything else stands on — when one fails on orbit, none of the rest of the telescope matters.
+
     If you love building mechanisms that work every time in the hardest conditions, we want to talk.
   isDraft: false
 
 - title: "Controls Engineer"
   location: "SF Bay Area"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4402118170"
   description: |
-    We’re looking for a controls engineer to design the feedback systems that keep our telescopes stable, pointed, and precise, and to prove it in simulation and hardware in the loop.
+    Design the feedback systems that keep our telescopes stable, pointed, and precise — and prove it in simulation and hardware in the loop.
 
     You will
     - Develop control laws and estimation filters for attitude control, fine pointing, and focus or wavefront control where needed
@@ -121,13 +171,16 @@
     - Define the sensing and actuation interfaces and the data rates that the rest of the system must support
     - Run one HIL style validation on a real subsystem and document what it changed in the design
 
+    Why this role matters
+    Diffraction-limited imaging in orbit is first a pointing problem — about a third of our team works on controls for that reason. Your loops directly set how much sky we can stare at well, and how stably we can hold a target for the long-baseline observations no current mission will do.
+
     If you care about precision and enjoy turning math into stable hardware, we want to talk.
   isDraft: false
 
 - title: "Firmware Engineer"
   location: "SF Bay Area"
   description: |
-    We’re looking for a firmware engineer to build the embedded layer that makes the telescope behave, bridging sensors, actuators, timing, and flight software.
+    Build the embedded layer that makes the telescope behave — bridging sensors, actuators, timing, and flight software.
 
     You will
     - Write and maintain firmware for embedded controllers that interface with sensors and mechanisms, with deterministic timing and robust fault handling
@@ -139,13 +192,17 @@
     - Establish a repeatable firmware build, test, and hardware regression loop
     - Define the interface and telemetry contract that flight software will depend on
 
+    Why this role matters
+    Reliable firmware is what makes everything above it trustworthy. Without a tight, well-instrumented embedded layer, no amount of beautiful optics or clever control law reaches orbit on the schedule we need.
+
     If you care deeply about reliability and like living close to the hardware, we want to talk.
   isDraft: false
 
 - title: "Test Engineer"
   location: "SF Bay Area"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4402120283"
   description: |
-    We’re looking for a test engineer to validate hardware and software across our telescope systems and to build the test infrastructure that turns iteration into a competitive advantage.
+    Validate hardware and software across our telescope systems and build the test infrastructure that turns iteration into a competitive advantage.
 
     You will
     - Design and run test campaigns across subsystems and integrated builds, from bench tests to vibe and TVAC
@@ -157,13 +214,17 @@
     - Run one end to end subsystem test campaign and produce a clear report with actions
     - Improve one piece of test infrastructure that directly increases iteration speed or confidence
 
+    Why this role matters
+    Iteration is our edge over decade-long flagship programs. Test infrastructure is what converts that iteration from chaos into compounding capability — every campaign you make faster and more trustworthy is one we can run again on the next build.
+
     If you love breaking things before they break themselves, we want to talk.
   isDraft: false
 
-- title: "Intern"
+- title: "Engineer Intern"
   location: "SF Bay Area"
+  linkedinUrl: "https://www.linkedin.com/jobs/view/4402192359"
   description: |
-    We’re looking for interns across engineering and science. Any job listed above can be an internship depending on timing and fit.
+    Internships across engineering and science. Any role on this page can be an internship depending on timing and fit. Open to current students working toward a degree in physics, astronomy, engineering, or a related field, available 20 hours per week during the school year and full-time during summers.
 
     You will
     - Work alongside the team shipping real hardware and software
@@ -175,13 +236,16 @@
     - Present your work and what you would do next
     - Leave behind documentation or tooling that makes the team faster
 
+    Why this role matters
+    Our team is small and shipping flight hardware now. Interns work on the same problems as everyone else, and the artifacts they leave behind go to orbit.
+
     If you want to build real space hardware and learn by doing, we want to talk.
   isDraft: false
 
 - title: "Write Your Own Role"
   location: "SF Bay Area"
   description: |
-    Don’t see your role listed We might still need you.
+    Don't see your role listed? We might still need you.
 
     Tell us what you do, what you have built, and what you think we should be building next to make space discovery abundant.
 
@@ -189,6 +253,9 @@
     - Identify a concrete gap we have and propose how you would close it
     - Ship something real, whether that is hardware, software, a test capability, or a design that unblocks a build
     - Make the team faster by making one messy interface or process cleaner
+
+    Why this role matters
+    The roles we have posted are the ones we already know we need. The roles we haven't posted are the ones that come from people who see a gap we missed.
 
     If you are the kind of person who turns ambiguity into shipped capability, we want to hear from you.
   isDraft: false
