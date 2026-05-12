@@ -16,7 +16,7 @@
     - Unblock at least two cross discipline decisions with documented options, rationale, owners, and follow-up actions
 
     Why this role matters
-    We are building a fleet of telescopes, not one flagship per decade. The architect who keeps optics, structure, controls, and software coherent as we iterate is the difference between a program that ships in 500 days and one that drifts. This role sets the technical pace at which we drive cost per high quality observing second toward our target.
+    We are building a fleet of telescopes, not one flagship per decade. The architect who keeps optics, structure, controls, and software coherent as we iterate is the difference between a program that ships in 500 days and one that drifts. This role sets the technical pace at which we drive down our key metric: cost per high quality observing second.
 
     If you can balance rigor with velocity and keep complex systems aligned toward mission goals, we should talk.
   isDraft: false
@@ -60,7 +60,7 @@
     - Define an optical verification plan that ties lab measurements to on orbit performance
 
     Why this role matters
-    Diffraction-limited imaging in orbit is first an alignment problem, and faithful models are how we catch the failure modes before we cut metal. Faster, more honest optical models directly compress our iteration cycle — which is the lever we have over decade-long flagship programs.
+    Diffraction-limited imaging in orbit is first an alignment problem, and faithful models are how we catch the failure modes before we cut metal. Faster, more accurate optical models directly compress our iteration cycle and let us get more telescopes to space faster.
 
     If you love turning physics into capability and can translate models into buildable hardware, we want to talk.
   isDraft: false
@@ -82,7 +82,7 @@
     - Deliver a short list of the top mechanical stability risks and the design changes that retire them
 
     Why this role matters
-    Holding alignment to fractions of a wavelength through launch and orbit is what separates a telescope that survives from one that delivers science. Repeatable, manufacturable optomechanics are also the precondition for ever building telescopes at the scale our mission requires.
+    Holding alignment to fractions of a wavelength through launch and orbit is what allows a telescope to deliver science. Repeatable, manufacturable optomechanics are also the precondition for ever building telescopes at the scale our mission requires.
 
     If you enjoy making optics survive the real world without losing performance, we want to talk.
   isDraft: false
@@ -128,7 +128,7 @@
     - Establish a credible path for maturing the model as design and test data evolve
 
     Why this role matters
-    The difference between a telescope that survives and a telescope that delivers is often hidden in thermal distortion, structural compliance, and the quality of the assumptions behind the models. Senior judgment on STOP is how we make better decisions earlier and build hardware we can trust at fleet scale.
+    A telescope that actually delivers is defined by thermal distortion, structural compliance, and the quality of the assumptions behind the models. Senior judgment on STOP is how we make better decisions earlier and build hardware we can trust at fleet scale.
 
     If you have owned STOP-style analysis on real precision hardware and want to do it on a program that flies fast, we want to talk.
   isDraft: false
@@ -150,7 +150,7 @@
     - Retire at least one high risk mechanism unknown with a focused experiment or prototype
 
     Why this role matters
-    A fleet that iterates fast still has to work for years in vacuum. Mechanisms are the floor that everything else stands on — when one fails on orbit, none of the rest of the telescope matters.
+    Our telescopes will have to work for years in vacuum. Mechanisms are the floor that everything else stands on — when one fails on orbit, none of the rest of the telescope matters.
 
     If you love building mechanisms that work every time in the hardest conditions, we want to talk.
   isDraft: false
@@ -194,7 +194,7 @@
     - Improve one piece of test infrastructure that directly increases iteration speed or confidence
 
     Why this role matters
-    Iteration is our edge over decade-long flagship programs. Test infrastructure is what converts that iteration from chaos into compounding capability — every campaign you make faster and more trustworthy is one we can run again on the next build.
+    Iteration speed is our fundemntal edge over decade-long flagship programs. Test infrastructure is what allows that iteration to happen. Every campaign you make faster and more trustworthy is one we can run again and again as our technology improves.
 
     If you love breaking things before they break themselves, we want to talk.
   isDraft: false
@@ -232,9 +232,6 @@
     - Identify a concrete gap we have and propose how you would close it
     - Ship something real, whether that is hardware, software, a test capability, or a design that unblocks a build
     - Make the team faster by making one messy interface or process cleaner
-
-    Why this role matters
-    The roles we have posted are the ones we already know we need. The roles we haven't posted are the ones that come from people who see a gap we missed.
 
     If you are the kind of person who turns ambiguity into shipped capability, we want to hear from you.
   isDraft: false
