@@ -1,4 +1,4 @@
-- title: "Senior — Telescope Systems Lead Engineer"
+- title: "Senior - Telescope Systems Lead Engineer"
   location: "San Francisco, CA"
   linkedinUrl: "https://www.linkedin.com/jobs/view/4399613817"
   description: |
@@ -15,7 +15,7 @@
     - Deliver a concrete verification plan and test matrix for the next integration milestone
     - Unblock at least two cross discipline decisions with documented options, rationale, owners, and follow-up actions
 
-    Why this role matters
+    Why this role matters:
     We are building a fleet of telescopes, not one flagship per decade. The architect who keeps optics, structure, controls, and software coherent as we iterate is the difference between a program that ships in 500 days and one that drifts. This role sets the technical pace at which we drive down our key metric: cost per high quality observing second.
 
     If you can balance rigor with velocity and keep complex systems aligned toward mission goals, we should talk.
@@ -25,7 +25,7 @@
   location: "Oakland, CA"
   linkedinUrl: "https://www.linkedin.com/jobs/view/4402108836"
   description: |
-    Bridge science goals and instrument design — define what our telescopes should measure and prove the data delivers.
+    Bridge science goals and instrument design, define what our telescopes should measure and prove the data delivers.
 
     You will
     - Translate science questions into requirements, observing modes, calibration strategy, and data quality metrics
@@ -37,7 +37,7 @@
     - Write the calibration and commissioning plan, including what we measure on the ground versus in orbit
     - Define a v1 pipeline and validation approach tied to lab truth data and on orbit checks
 
-    Why this role matters
+    Why this role matters:
     Telescope-seconds are the most precious resource in space science. Hubble is oversubscribed by 6x, Webb by 12x. A fleet only matters if the data is trustworthy and the observing modes match the science the field actually wants to do. You define what "good" means for every photon we collect.
 
     If you want to shape the questions we can answer and make sure the data is actually good, we want to talk.
@@ -47,7 +47,7 @@
   location: "Oakland, CA"
   linkedinUrl: "https://www.linkedin.com/jobs/view/4402123057"
   description: |
-    Model, simulate, and improve the imaging performance of our space telescopes — and connect those models to what we build and measure.
+    Model, simulate, and improve the imaging performance of our space telescopes. Connect our models to what we build and measure.
 
     You will
     - Build and own wavefront and image performance models (PSF, MTF, WFE budgets) and make them useful for design decisions
@@ -59,7 +59,7 @@
     - Deliver a v1 performance and stability budget and identify the top sensitivity drivers
     - Define an optical verification plan that ties lab measurements to on orbit performance
 
-    Why this role matters
+    Why this role matters:
     Diffraction-limited imaging in orbit is first an alignment problem, and faithful models are how we catch the failure modes before we cut metal. Faster, more accurate optical models directly compress our iteration cycle and let us get more telescopes to space faster.
 
     If you love turning physics into capability and can translate models into buildable hardware, we want to talk.
@@ -81,7 +81,7 @@
     - Define the alignment flow and metrology plan for the next build
     - Deliver a short list of the top mechanical stability risks and the design changes that retire them
 
-    Why this role matters
+    Why this role matters:
     Holding alignment to fractions of a wavelength through launch and orbit is what allows a telescope to deliver science. Repeatable, manufacturable optomechanics are also the precondition for ever building telescopes at the scale our mission requires.
 
     If you enjoy making optics survive the real world without losing performance, we want to talk.
@@ -103,7 +103,7 @@
     - Define the test correlation plan and what data we need to collect during TVAC and vibe
     - Identify the top stability drivers and propose concrete mitigations with quantified impact
 
-    Why this role matters
+    Why this role matters:
     Thermoelastic distortion is one of the dominant failure modes for precision space optics. Predicting it well is how we earn the margin to fly the first system in under 500 days without overbuilding everything for fear of what we don't know.
 
     If you like turning analysis into decisions and decisions into hardware, we want to talk.
@@ -127,7 +127,7 @@
     - Identify the top structural and thermal stability drivers and recommend concrete mitigations with estimated impact
     - Establish a credible path for maturing the model as design and test data evolve
 
-    Why this role matters
+    Why this role matters:
     A telescope that actually delivers is defined by thermal distortion, structural compliance, and the quality of the assumptions behind the models. Senior judgment on STOP is how we make better decisions earlier and build hardware we can trust at fleet scale.
 
     If you have owned STOP-style analysis on real precision hardware and want to do it on a program that flies fast, we want to talk.
@@ -149,8 +149,8 @@
     - Build or upgrade a life test or characterization setup that produces actionable data quickly
     - Retire at least one high risk mechanism unknown with a focused experiment or prototype
 
-    Why this role matters
-    Our telescopes will have to work for years in vacuum. Mechanisms are the floor that everything else stands on — when one fails on orbit, none of the rest of the telescope matters.
+    Why this role matters:
+    Our telescopes will have to work for years in vacuum. Mechanisms are the floor that everything else stands on... when one fails on orbit, none of the rest of the telescope matters.
 
     If you love building mechanisms that work every time in the hardest conditions, we want to talk.
   isDraft: false
@@ -159,7 +159,7 @@
   location: "SF Bay Area"
   linkedinUrl: "https://www.linkedin.com/jobs/view/4402118170"
   description: |
-    Design the feedback systems that keep our telescopes stable, pointed, and precise — and prove it in simulation and hardware in the loop.
+    Design the feedback systems that keep our telescopes stable, pointed, and precise, and prove it in simulation and hardware in the loop.
 
     You will
     - Develop control laws and estimation filters for attitude control, fine pointing, and focus or wavefront control where needed
@@ -171,8 +171,8 @@
     - Define the sensing and actuation interfaces and the data rates that the rest of the system must support
     - Run one HIL style validation on a real subsystem and document what it changed in the design
 
-    Why this role matters
-    Diffraction-limited imaging in orbit is first a pointing problem — about a third of our team works on controls for that reason. Your loops directly set how much sky we can stare at well, and how stably we can hold a target for the long-baseline observations no current mission will do.
+    Why this role matters:
+    Diffraction-limited imaging in orbit is first a pointing problem, about a third of our team works on controls for that reason. Your loops directly set how much sky we can stare at well, and how stably we can hold a target for the long-baseline observations no current mission will do.
 
     If you care about precision and enjoy turning math into stable hardware, we want to talk.
   isDraft: false
@@ -193,7 +193,7 @@
     - Run one end to end subsystem test campaign and produce a clear report with actions
     - Improve one piece of test infrastructure that directly increases iteration speed or confidence
 
-    Why this role matters
+    Why this role matters:
     Iteration speed is our fundemntal edge over decade-long flagship programs. Test infrastructure is what allows that iteration to happen. Every campaign you make faster and more trustworthy is one we can run again and again as our technology improves.
 
     If you love breaking things before they break themselves, we want to talk.
@@ -215,7 +215,7 @@
     - Present your work and what you would do next
     - Leave behind documentation or tooling that makes the team faster
 
-    Why this role matters
+    Why this role matters:
     Our team is small and shipping flight hardware now. Interns work on the same problems as everyone else, and the artifacts they leave behind go to orbit.
 
     If you want to build real space hardware and learn by doing, we want to talk.
