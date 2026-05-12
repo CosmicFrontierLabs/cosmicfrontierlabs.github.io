@@ -8,6 +8,9 @@
 
 <section class="flow blog">
   <h1>Blog</h1>
+  <p class="blog__rss">
+    <a href="/rss.xml"> RSS</a>
+  </p>
 
   {#if data.posts.length > 0}
     <ul class="flow">
@@ -35,6 +38,11 @@
     max-width: 800px;
     margin-block-start: var(--space-l);
     font-size: var(--size-step--1);
+  }
+
+  .blog__rss {
+    margin: 0;
+    font-size: var(--size-step--2);
   }
 
   .blog li {
