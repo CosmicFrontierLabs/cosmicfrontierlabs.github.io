@@ -177,27 +177,6 @@
     If you care about precision and enjoy turning math into stable hardware, we want to talk.
   isDraft: false
 
-- title: "Firmware Engineer"
-  location: "SF Bay Area"
-  description: |
-    Build the embedded layer that makes the telescope behave — bridging sensors, actuators, timing, and flight software.
-
-    You will
-    - Write and maintain firmware for embedded controllers that interface with sensors and mechanisms, with deterministic timing and robust fault handling
-    - Own hardware bring up, drivers, and communications interfaces between embedded controllers and higher level compute
-    - Build test hooks and HIL infrastructure so firmware can be validated continuously, not only at the end
-
-    In your first 90 days
-    - Bring up one real board or subsystem end to end and make it boring and reliable
-    - Establish a repeatable firmware build, test, and hardware regression loop
-    - Define the interface and telemetry contract that flight software will depend on
-
-    Why this role matters
-    Reliable firmware is what makes everything above it trustworthy. Without a tight, well-instrumented embedded layer, no amount of beautiful optics or clever control law reaches orbit on the schedule we need.
-
-    If you care deeply about reliability and like living close to the hardware, we want to talk.
-  isDraft: false
-
 - title: "Test Engineer"
   location: "SF Bay Area"
   linkedinUrl: "https://www.linkedin.com/jobs/view/4402120283"
