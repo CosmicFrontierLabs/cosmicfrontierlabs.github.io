@@ -57,6 +57,13 @@
                 </ul>
               {/if}
             {/each}
+            {#if position.linkedinUrl}
+              <p class="join-us__position-linkedin">
+                <a href={position.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                  >View &amp; apply on LinkedIn →</a
+                >
+              </p>
+            {/if}
           </div>
         </details>
       {/each}
@@ -133,6 +140,11 @@
 
   .join-us__position-description li {
     margin-block: var(--space-2xs);
+  }
+
+  .join-us__position-linkedin {
+    margin-block-start: var(--space-m);
+    font-weight: 500;
   }
 
   .join-us__apply {
