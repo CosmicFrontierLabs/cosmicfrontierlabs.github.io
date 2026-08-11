@@ -1,0 +1,55 @@
+# Carousel Slide Data
+# --------------------
+# Each entry defines one slide in the 3D telescope carousel on the home page.
+# Slides are displayed in the order listed here.
+#
+# If you need more than 8 slides, let me (Alex) know because
+# the layout may need to be adjusted.
+#
+# Fields:
+#   title       – Short heading shown in the overlay panel (40 chars max).
+#   description – One to three sentences of explanatory text (250 chars max).
+#   model       – Which 3D model to show. See MODEL_CONFIGS in CarouselScene.ts.
+#   camera      – Camera pose for this slide, in 3D world coordinates.
+#     position  – Where the camera sits (x, y, z).
+#     lookAt    – Where the camera points (x, y, z).
+#                   Tip: keep lookAt near the model center (roughly 0, 0.5, 0)
+#                   and vary position to orbit around it. Larger z values pull
+#                   the camera further back for a wider shot.
+#
+# Example slide (copy and edit as needed):
+#
+# - title: "Structural Framework"
+#   description: "A carbon-fiber composite truss structure provides exceptional rigidity while minimizing weight. This lattice design maintains optical alignment under extreme thermal cycling."
+#   model: "payload"
+#   camera:
+#     position: { x: 3.5, y: 2.5, z: 3.5 }
+#     lookAt: { x: 0.5, y: 1.5, z: 0 }
+
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: 3.5, y: 2.5, z: 3.5 }
+    lookAt: { x: 0.5, y: 1.5, z: 0 }
+
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: -2, y: 1.5, z: 2.5 }
+    lookAt: { x: 0, y: 0.5, z: 0 }
+
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: 0, y: 1, z: 10 }
+    lookAt: { x: 0, y: 0, z: 0 }
+
+- title: ""
+  description: ""
+  model: "payload"
+  camera:
+    position: { x: 0, y: 4, z: 4 }
+    lookAt: { x: 0, y: 0.5, z: 0 }

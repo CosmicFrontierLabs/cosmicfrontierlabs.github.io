@@ -1,0 +1,39 @@
+.card {
+  --card-bg-color: var(--color-gray-200);
+  --card-border-color: var(--color-primary);
+  --card-text-color: var(--color-primary-dark);
+  --card-border: none;
+  --card-border-radius: var(--radius-xl);
+  --gutter: 0;
+  --card-padding-inline: var(--space-s-m);
+  --card-padding-block: var(--space-s-m);
+
+  background-color: var(--card-bg-color);
+  color: var(--card-text-color);
+  padding-inline: var(--card-padding-inline);
+  padding-block: var(--card-padding-block);
+  border: var(--card-border);
+  border-radius: var(--card-border-radius);
+}
+
+.card[data-background="none"] {
+  /* This can be used with .bg-glass to make the card have a glassmorphic effect */
+  --card-bg-color: transparent;
+}
+
+.card[data-type="big"] {
+  width: clamp(100%, 66vw, 50rem);
+  max-width: 50rem;
+  margin-inline: auto;
+  --card-padding-block: var(--space-l) var(--space-xl);
+}
+
+.card[data-type="big"] h2,
+.card[data-type="big"] h3 {
+  text-align: center;
+}
+
+.card[data-type="big"] p {
+  text-align: center;
+  margin-inline: auto;
+}
